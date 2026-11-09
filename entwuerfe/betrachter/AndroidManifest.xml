@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" package="show.jangregersen.entwurf" android:versionCode="2" android:versionName="2">
+  <uses-sdk android:minSdkVersion="26" android:targetSdkVersion="31"/>
+  <application android:label="Entwürfe">
+    <activity android:name=".Ansicht" android:exported="true" android:screenOrientation="portrait" android:theme="@android:style/Theme.Black.NoTitleBar.Fullscreen">
+      <intent-filter><action android:name="android.intent.action.MAIN"/><category android:name="android.intent.category.LAUNCHER"/></intent-filter>
+    </activity>
+  </application>
+</manifest>

@@ -1,0 +1,111 @@
+# Backing-Track-App für den Mudita Kompakt — Plan (Entwurf, 2026-11-09)
+
+Stand: GrillMe Welle 1 mit Jan, noch kein Code.
+
+## Entscheidungen von Jan
+
+- Der Kompakt wird **alleiniger Zuspieler** auf der Bühne. Das alte Handy fällt weg.
+- Ton: **erst Stereo wie bisher** (links Band fürs Publikum, rechts Click/Ansagen fürs Ohr),
+  **USB-Multitrack zum CQ20B später** als zweiter Schritt.
+- Mit einem Blick am Mikrofonständer lesbar: **jetziger + nächster Song, Restzeit, Lyrics**.
+- Lyrics laufen **abschnittsweise** (ganze Strophe/Refrain als ruhige Seite, Umblättern beim
+  Abschnittswechsel, Zeitpunkte aus der bisherigen Kalibrierung). Kein weiches Scrollen.
+- Bedienung wie bisher, **Show-Automatik** trägt das Set. Das Verhalten der alten App ist gut
+  und wird übernommen.
+- **Loop fällt weg** (wird nie benutzt).
+- Alles andere aus der alten App funktioniert laut Jan und wird übernommen: Archiv mit
+  Ordner-Import, Song-Editor, Tempo-Filter, PDF-Lyrics, Gigs/Sets (Umschalten, Sortieren,
+  gespielt, Restzeit), Ansagen, Pausen, Warnton, End-Aktionen, Mixer, Teleprompter-Kalibrierung.
+- **Neu anfangen**: keine Datenübernahme vom alten Handy.
+- **Vorbereitung komplett am Kompakt** (kein Laptop-Programm).
+- **Schwarz auf Weiß**, wie Papier, Frontlicht für dunkle Bühnen.
+
+## Gerätefakten (per adb gelesen)
+
+- Android 12, arm64, 480×800 px bei 213 dpi (360×600 dp), 16 GB frei.
+- Audio-Ausgänge laut System: Lautsprecher, Hörer, Bluetooth, USB-Audio (USB_DEVICE/USB_HEADSET).
+  Ob eine Klinkenbuchse verbaut ist, lässt sich aus der Systemdatei nicht sicher ablesen →
+  Ton-Test mit Jans echtem Kabel klärt das.
+- Bekannte Kompakt-Fallen: Offline+-Schalter trennt die Mikrofone (Ansagen aufnehmen geht dann
+  nicht), Mudita bremst nachinstallierte Apps im Hintergrund (RUN_ANY_IN_BACKGROUND,
+  DuraSpeed), Lautstärketasten sind in vielen Apps zum Blättern belegt.
+
+## Technik
+
+- **Neue App mit eigenem Paketnamen in eigenem Repo** (`charmeundmelone-lab/Backing-Tracks-Kompakt`,
+  privat, von Jan am 2026-11-09 so entschieden). Die alte App bleibt unverändert als Vorlage. Bewährter Kern wird übernommen
+  und dabei durchgesehen ("sauber machen"): AudioEngine (ExoPlayer, Click rechts),
+  Show-Automatik samt der Fixes vom 31.10., Datenmodell Songs/Gigs/Sets ohne Loop.
+- **Oberfläche komplett neu für E-Ink**: keine Animationen, keine Wischgesten als einziger Weg,
+  Seiten statt Scrollen, große Lato-Schrift, nur Schwarz/Weiß.
+- Reihenfolge:
+  1. Ton-Test am Kompakt: Stereo-Track über Jans Kabel, Click nur rechts. Scheitert das, ist
+     alles andere egal.
+  2. Entwürfe für den Bühnen-Bildschirm zeigen und mit Jan schärfen.
+  3. Kern übernehmen und prüfen, dann Bildschirm für Bildschirm bauen, am Kompakt testen.
+
+## Ton-Test am Kompakt (2026-11-09, erledigt)
+
+Mini-App `show.jangregersen.tontest` (ohne Gradle gebaut, bleibt für den Kabeltest installiert):
+Stereo-AudioTrack, links Akkord, rechts Click 120 BPM, Lautstärke 12 %.
+
+- 48 kHz und 44,1 kHz laufen, Gerät arbeitet intern mit 48 kHz (256 Frames pro Puffer).
+- 0 Aussetzer in 20 s, 15 s und 55 s. Wiedergabeuhr und echte Zeit laufen gleich
+  (Abweichung unter 60 ms über 55 s).
+- **Bildschirm 30 s aus: Ton läuft ohne Aussetzer weiter** (Vordergrund-Dienst, ohne eigene
+  Ausnahmen für Muditas Hintergrund-Sperren).
+- Latenz ca. 150–240 ms (großer Puffer, für Backing-Tracks ohne Belang).
+- Ausgänge laut System: Hörer (mono), Lautsprecher (stereo), Telefon. USB-Audio meldet das
+  System, ein USB-Gerät war nicht angesteckt (Port war mit dem Laptop belegt).
+- **Nicht getestet:** der Weg über Jans echtes Kabel ins Pult. Das geht erst ohne
+  Laptop-Kabel; Kommando dafür (Laptop per WLAN-adb oder Jan startet die App selbst):
+  `adb shell am start -n show.jangregersen.tontest/.Start --ei sek 60 --ei rate 44100`.
+
+## Design-Entscheidung (Claude, von Jan freigegeben: "volle Kontrolle")
+
+Entwürfe: https://claude.ai/artifact/7BXLnocEYEibvLqdEqzeHo (sieben Bildschirme, 360×600 dp).
+Auf dem Kompakt: App "Entwürfe" (`show.jangregersen.entwurf`), zeigt dieselben Bilder pixelgenau.
+
+**Gewählt: Richtung B "Signal".** Jan hat B am 2026-11-09 am Kompakt geprüft: "sieht richtig gut aus".
+Begründung aus dem Vergleich am echten Gerät:
+- Schmale Schrift (Barlow Condensed / Semi Condensed) bringt bei gleicher Größe mehr
+  Zeichen pro Zeile. Bei Richtung A (Serifen, Literata) brachen schon die Platzhalter-Zeilen
+  und der Songtitel um, bei B nicht.
+- Schwarzes Kopfband trennt "was läuft" sofort vom Rest, auch aus dem Augenwinkel.
+- Nur Schwarz und Weiß, keine Grautöne (E-Ink zeigt Grau unruhig), keine Animationen.
+- Lyrics 27 dp halbfett, Titel 38 dp, Restzeit 46 dp.
+
+Festgelegte Bausteine:
+- Kopfband: JETZT · Platz/Gesamt, Titel, Restzeit, Fortschritt als 20 Kästchen
+  (gefüllt = gespielt). Ändert sich nur alle 5 %, also selten ein neues E-Ink-Bild.
+- Lyrics abschnittsweise, Abschnittsname + Seitenpunkte. Schrift passt sich pro Abschnitt an
+  (so groß wie möglich, nicht unter 24 dp). Zu lange Abschnitte werden an Leerzeilen geteilt,
+  die Umblätter-Zeit wird anteilig nach Zeilen aus der Kalibrierung berechnet.
+- Fußbereich: DANACH + nächster Song + Übergang (Ansage 0:20 / Pause 0:30 / nahtlos).
+- Bedienleiste: Liste · Stopp · Pause/Play (schwarz) · Weiter, je 56 dp hoch.
+
+## Bedienen ohne Scrollen
+
+- **Bühne ↔ Setliste jederzeit, auch während der Song läuft** (Jans ausdrücklicher Wunsch):
+  Knopf "Liste" in der Bedienleiste der Bühne und im Ansage-Bildschirm; in der Setliste ist
+  das Kopfband der laufende Song mit Knopf "Bühne". Der Wechsel berührt die Wiedergabe nie.
+  Tippen auf einen Song in der Setliste öffnet seine Karte (Ansage/Pause, als Nächstes),
+  startet ihn aber nicht (Lehre aus der alten App: selectSong() würgte laufende Musik ab).
+- **Listen sind Seiten**: feste Zeilenzahl pro Seite (Setliste 6 Songs à 64 dp),
+  Blättern mit großen Knöpfen ‹ › unten, mit den Lautstärketasten (wie in Books) und per
+  Wischen als dritter Weg. Seitenanzeige "Seite 1 von 2" mit Balken.
+- **Springen statt Suchen** im Archiv: Tipp auf die Seitenanzeige öffnet ein A–Z-Raster
+  (Buchstaben ohne Songs gestrichelt), darüber der Tempo-Filter.
+- **Song verschieben = Aufnehmen und Ablegen**: "Verschieben" an, Song antippen → er ist
+  "in der Hand" (gestrichelte Karte oben). Dann Zielsong antippen = "davor einfügen", oder
+  "Ans Ende vom Set". Blättern nimmt den Song mit. Für kleine Schritte ▲ ▼ an der Karte.
+  Kein Ziehen nötig.
+- **Ansage/Pause** bekommt einen eigenen ruhigen Bildschirm: riesiger Countdown, nächster
+  Song, Knöpfe Liste · Stopp · Starten.
+
+## Offen (Welle 2)
+
+- Kabeltest ins Pult mit Jans echtem Kabel (siehe Ton-Test).
+- Restliche Bildschirme zeichnen: Gig-Übersicht, Set wechseln, Song-Karte, Song-Editor,
+  Lyrics-Kalibrierung, Mixer.
+- Danach: Kern aus der alten App übernehmen und dabei durchsehen, Bildschirm für Bildschirm bauen.

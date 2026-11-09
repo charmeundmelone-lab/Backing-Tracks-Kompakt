@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Song verschieben</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#000}a:hover{color:#000}
+</style>
+</helmet>
+<div style="width: 360px; height: 600px; box-sizing: border-box; background: #fff; color: #000; font-family: 'Barlow Semi Condensed', 'Arial Narrow', sans-serif; display: flex; flex-direction: column">
+  <div style="background: #000; color: #fff; padding: 8px 10px 8px 18px; display: flex; justify-content: space-between; align-items: center">
+    <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700">Verschieben</div>
+    <button style="height: 40px; padding: 0 18px; border: none; border-radius: 10px; background: #fff; color: #000; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 17px; font-weight: 700">Fertig</button>
+  </div>
+  <div style="margin: 10px 10px 0; border: 2.5px dashed #000; border-radius: 14px; padding: 8px 8px 8px 12px; display: flex; align-items: center; gap: 10px">
+    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M4 7 h14 M4 11 h14 M4 15 h14" stroke="#000" stroke-width="2.5" stroke-linecap="round"></path></svg>
+    <div style="flex-grow: 1">
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.16em">IN DER HAND · VON 5</div>
+      <div style="font-size: 22px; font-weight: 700; line-height: 1.1">Get Lucky</div>
+    </div>
+    <button aria-label="Einen Platz nach oben" style="width: 48px; height: 48px; border: 2.5px solid #000; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 0">
+      <svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M3 11 L10 4 L17 11" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </button>
+    <button aria-label="Einen Platz nach unten" style="width: 48px; height: 48px; border: 2.5px solid #000; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 0">
+      <svg width="20" height="14" viewBox="0 0 20 14" aria-hidden="true"><path d="M3 3 L10 10 L17 3" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </button>
+  </div>
+  <div style="padding: 10px 18px 4px; font-size: 15px; font-weight: 600">Tippe auf den Song, vor den er soll.</div>
+  <div style="flex-grow: 1; display: flex; flex-direction: column">
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+      <button style="height: 56px; margin: 0 10px; padding: 0 10px 0 6px; border: none; border-bottom: 1px solid #000; background: #fff; color: #000; display: flex; align-items: center; gap: 8px; text-align: left; font-family: 'Barlow Semi Condensed', sans-serif">
+        <svg width="26" height="20" viewBox="0 0 26 20" aria-hidden="true"><path d="M3 4 v4 a4 4 0 0 0 4 4 h14 M16 7 l5 5 l-5 5" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        <span style="font-family: 'Barlow Condensed', sans-serif; font-size: 20px; font-weight: 700; width: 20px">{{r.nr}}</span>
+        <span style="flex-grow: 1; font-size: 21px; font-weight: 600">{{r.title}}</span>
+        <span style="font-size: 13px; font-weight: 700; letter-spacing: 0.08em">DAVOR</span>
+      </button>
+    </sc-for>
+    <button style="height: 48px; margin: 6px 10px 0; border: 2px solid #000; border-radius: 12px; background: #fff; color: #000; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 16px; font-weight: 700">Ans Ende vom Set</button>
+  </div>
+  <div style="display: flex; align-items: center; gap: 10px; padding: 8px 14px 14px">
+    <button aria-label="Vorige Seite" style="width: 64px; height: 52px; border: 2.5px solid #000; border-radius: 14px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 0">
+      <svg width="16" height="24" viewBox="0 0 16 24" aria-hidden="true"><path d="M13 3 L4 12 L13 21" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </button>
+    <div style="flex-grow: 1; text-align: center; font-size: 15px; font-weight: 600; line-height: 1.25">Seite 1 von 2<br><span style="font-size: 13px; font-weight: 500">Blättern nimmt den Song mit</span></div>
+    <button aria-label="Nächste Seite" style="width: 64px; height: 52px; border: 2.5px solid #000; border-radius: 14px; background: #000; display: flex; align-items: center; justify-content: center; padding: 0">
+      <svg width="16" height="24" viewBox="0 0 16 24" aria-hidden="true"><path d="M3 3 L12 12 L3 21" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":600}}'>
+class Component extends DCLogic {
+renderVals() {
+return { rows: [
+  { nr: 1, title: 'No Woman No Cry' },
+  { nr: 2, title: 'Forget You' },
+  { nr: 3, title: 'Country Roads' },
+  { nr: 4, title: 'Dancing Queen' },
+  { nr: 6, title: 'Grenade' }
+] };
+}
+}
+</script>
+</body>
+</html>
