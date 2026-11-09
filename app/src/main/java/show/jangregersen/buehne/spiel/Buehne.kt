@@ -4,7 +4,6 @@ import android.app.Application
 import android.content.Intent
 import android.util.Log
 import androidx.core.content.ContextCompat
-import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -35,7 +34,6 @@ private const val TAG = "Buehne"
  * Bildschirmwechsel die Wiedergabe nie berühren. Ein Vordergrund-Dienst hält den Prozess
  * am Leben, solange gespielt wird.
  */
-@UnstableApi
 class Buehne(private val app: Application, private val ablage: Ablage) {
 
     data class Pause(

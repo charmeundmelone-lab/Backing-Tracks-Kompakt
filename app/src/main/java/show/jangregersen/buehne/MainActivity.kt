@@ -12,13 +12,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
-import androidx.media3.common.util.UnstableApi
 import show.jangregersen.buehne.ui.Navi
 import show.jangregersen.buehne.ui.Seite
 import show.jangregersen.buehne.ui.Tasten
 import show.jangregersen.buehne.ui.Wurzel
 
-@UnstableApi
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

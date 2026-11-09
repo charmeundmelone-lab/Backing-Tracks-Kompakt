@@ -2,89 +2,76 @@ package show.jangregersen.buehne.audio
 
 import android.content.Context
 import android.media.MediaPlayer
-import android.net.Uri
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
-import androidx.media3.common.AudioAttributes
-import androidx.media3.common.C
-import androidx.media3.common.MediaItem
-import androidx.media3.common.PlaybackException
-import androidx.media3.common.Player
-import androidx.media3.common.audio.AudioProcessor
-import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.DefaultRenderersFactory
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.SeekParameters
-import androidx.media3.exoplayer.audio.AudioSink
-import androidx.media3.exoplayer.audio.DefaultAudioSink
 import kotlin.math.pow
 
 private const val TAG = "Engine"
 
 /**
- * Spielt einen Song (eine Stereo-Datei oder mehrere Einzelspuren) über je einen ExoPlayer pro
- * Spur ab. Jede Spur bekommt einen [KanalMischer], der Band fest nach links und Click/Ansage
- * fest nach rechts legt. Nur vom Haupt-Thread aus benutzen (ExoPlayer-Regel).
+ * Spielt einen Song (eine Stereo-Datei oder mehrere Einzelspuren) über ein [Mischpult] ab:
+ * alle Spuren laufen sample-genau gemeinsam in einer Tonausgabe. Band liegt fest links,
+ * Click/Cue/Ansage fest rechts. Nur vom Haupt-Thread aus benutzen.
  */
-@UnstableApi
 class Engine(private val context: Context) {
 
-    private class SpurSpieler(val spur: Spur, val player: ExoPlayer, val mischer: KanalMischer)
-    private class Geladen(val songId: Long, val spieler: List<SpurSpieler>)
+    private class Geladen(val songId: Long, val spuren: List<Spur>, val pult: Mischpult?)
 
     private var aktuell: Geladen? = null
     private var vorrat: Geladen? = null
+    private val haupt = Handler(Looper.getMainLooper())
+    private var gemeldet: String? = null
 
     var onFehler: ((String) -> Unit)? = null
 
     val geladeneSongId: Long? get() = aktuell?.songId
-    val hatSpuren: Boolean get() = aktuell?.spieler?.isNotEmpty() == true
+    val hatSpuren: Boolean get() = aktuell?.pult != null
 
-    private val leit: ExoPlayer? get() = aktuell?.spieler?.firstOrNull()?.player
+    private val pult: Mischpult? get() = aktuell?.pult
 
-    val spielt: Boolean get() = leit?.playWhenReady == true && leit?.playbackState != Player.STATE_ENDED
-    val positionMs: Long get() = leit?.currentPosition ?: 0L
-    val dauerMs: Long get() = leit?.duration?.takeIf { it > 0 && it != C.TIME_UNSET } ?: 0L
-    val istZuEnde: Boolean get() = leit?.playbackState == Player.STATE_ENDED
+    val spielt: Boolean get() = pult?.spielt == true
+    val positionMs: Long get() = pult?.let { p -> p.positionFrames * 1000 / p.rate }.also { fehlerPruefen() } ?: 0L
+    val dauerMs: Long get() = pult?.let { p -> if (p.frames > 0) p.frames * 1000 / p.rate else 0L } ?: 0L
+    val istZuEnde: Boolean get() = pult?.zuEnde == true
 
     // ── Laden ────────────────────────────────────────────────────────────────
 
     fun laden(songId: Long, spuren: List<Spur>, mix: Map<String, Int>) {
         val v = vorrat
-        if (v != null && v.songId == songId && v.spieler.size == spuren.size) {
+        if (v != null && v.songId == songId && v.spuren == spuren) {
             vorrat = null
             freigeben(aktuell)
             aktuell = v
         } else {
             freigeben(aktuell)
-            aktuell = Geladen(songId, spuren.map { bauen(it) })
+            aktuell = bauen(songId, spuren)
         }
+        gemeldet = null
         mixSetzen(mix)
-        aktuell?.spieler?.forEach { it.player.seekTo(0L) }
+        aktuell?.pult?.springen(0L)
     }
 
     fun vorladen(songId: Long, spuren: List<Spur>, mix: Map<String, Int>) {
         if (vorrat?.songId == songId || aktuell?.songId == songId) return
         freigeben(vorrat)
-        vorrat = Geladen(songId, spuren.map { bauen(it) }).also { g -> mixAnwenden(g, mix) }
+        vorrat = bauen(songId, spuren).also { g -> mixAnwenden(g, mix) }
     }
 
     fun entladen() { freigeben(aktuell); aktuell = null }
 
     // ── Wiedergabe ───────────────────────────────────────────────────────────
 
-    fun play() {
-        val sp = aktuell?.spieler ?: return
-        if (istZuEnde) sp.forEach { it.player.seekTo(0L) }
-        sp.forEach { it.player.play() }
-    }
+    fun play() { pult?.play() }
 
-    fun pause() { aktuell?.spieler?.forEach { it.player.pause() } }
+    fun pause() { pult?.pause() }
 
-    fun stop() { pause(); aktuell?.spieler?.forEach { it.player.seekTo(0L) } }
+    fun stop() { pult?.let { it.pause(); it.springen(0L) } }
 
     fun seek(ms: Long) {
+        val p = pult ?: return
         val ziel = ms.coerceIn(0L, maxOf(0L, dauerMs - 50))
-        aktuell?.spieler?.forEach { it.player.seekTo(ziel) }
+        p.springen(ziel * p.rate / 1000)
     }
 
     // ── Mixer ────────────────────────────────────────────────────────────────
@@ -92,13 +79,22 @@ class Engine(private val context: Context) {
     fun mixSetzen(mix: Map<String, Int>) { aktuell?.let { mixAnwenden(it, mix) } }
 
     private fun mixAnwenden(g: Geladen, mix: Map<String, Int>) {
-        g.spieler.forEach { s ->
-            when (s.spur.rolle) {
-                Rolle.STEREO -> s.mischer.setze(verstaerkung(mix[Spuren.KANAL_BAND]), 0f, 0f, verstaerkung(mix[Spuren.KANAL_CLICK]))
-                Rolle.BAND -> { val v = verstaerkung(mix[s.spur.name.lowercase()]) / 2f; s.mischer.setze(v, v, 0f, 0f) }
-                Rolle.OHR -> { val v = verstaerkung(mix[s.spur.name.lowercase()]) / 2f; s.mischer.setze(0f, 0f, v, v) }
+        val p = g.pult ?: return
+        g.spuren.forEachIndexed { i, spur ->
+            val pg = p.pegel[i]
+            when (spur.rolle) {
+                Rolle.STEREO -> pg.setze(verstaerkung(mix[Spuren.KANAL_BAND]), 0f, 0f, verstaerkung(mix[Spuren.KANAL_CLICK]))
+                Rolle.BAND -> { val v = verstaerkung(mix[spur.name.lowercase()]) / 2f; pg.setze(v, v, 0f, 0f) }
+                Rolle.OHR -> { val v = verstaerkung(mix[spur.name.lowercase()]) / 2f; pg.setze(0f, 0f, v, v) }
             }
         }
+    }
+
+    private fun fehlerPruefen() {
+        val f = pult?.fehler ?: return
+        if (f == gemeldet) return
+        gemeldet = f
+        haupt.post { onFehler?.invoke(f) }
     }
 
     // ── Sprachnotizen (Ansagen, Warnton): hart rechts ────────────────────────
@@ -137,31 +133,24 @@ class Engine(private val context: Context) {
 
     // ── Bauen ────────────────────────────────────────────────────────────────
 
-    private fun freigeben(g: Geladen?) { g?.spieler?.forEach { runCatching { it.player.release() } } }
+    private fun freigeben(g: Geladen?) { g?.pult?.let { runCatching { it.freigeben() } } }
 
-    private fun bauen(spur: Spur): SpurSpieler {
-        val mischer = KanalMischer()
-        val renderer = object : DefaultRenderersFactory(context) {
-            override fun buildAudioSink(context: Context, enableFloatOutput: Boolean, enableAudioTrackPlaybackParams: Boolean): AudioSink =
-                DefaultAudioSink.Builder(context).setAudioProcessors(arrayOf<AudioProcessor>(mischer)).build()
+    private fun bauen(songId: Long, spuren: List<Spur>): Geladen {
+        if (spuren.isEmpty()) return Geladen(songId, spuren, null)
+        val quellen = ArrayList<Quelle>()
+        return try {
+            spuren.forEach { quellen += Quellen.oeffnen(context, it.uri) }
+            // Alle Spuren auf die Rate der ersten bringen (normalerweise sind sie gleich).
+            val rate = quellen[0].rate
+            val gleich = quellen.map { if (it.rate == rate) it else Umrechner(it, rate) }
+            Geladen(songId, spuren, Mischpult(context, gleich, gleich.map { Pegel() }, "song$songId"))
+        } catch (e: Exception) {
+            Log.e(TAG, "Song $songId nicht ladbar", e)
+            quellen.forEach { runCatching { it.close() } }
+            val text = "${spuren.first().name}: ${e.javaClass.simpleName} ${e.message ?: ""}"
+            haupt.post { onFehler?.invoke(text) }
+            Geladen(songId, spuren, null)
         }
-        val p = ExoPlayer.Builder(context, renderer)
-            .setAudioAttributes(AudioAttributes.Builder().setUsage(C.USAGE_MEDIA).setContentType(C.AUDIO_CONTENT_TYPE_MUSIC).build(), false)
-            .setWakeMode(C.WAKE_MODE_LOCAL)
-            .build()
-        p.repeatMode = Player.REPEAT_MODE_OFF
-        p.setSeekParameters(SeekParameters.EXACT)
-        p.addListener(object : Player.Listener {
-            override fun onPlayerError(error: PlaybackException) {
-                val wurzel = generateSequence<Throwable>(error) { it.cause }.last()
-                val text = "${spur.name}: ${wurzel.javaClass.simpleName} ${wurzel.message ?: error.errorCodeName}"
-                Log.e(TAG, "Wiedergabefehler $text", error)
-                onFehler?.invoke(text)
-            }
-        })
-        p.setMediaItem(MediaItem.fromUri(Uri.parse(spur.uri)))
-        p.prepare()
-        return SpurSpieler(spur, p, mischer)
     }
 
     companion object {

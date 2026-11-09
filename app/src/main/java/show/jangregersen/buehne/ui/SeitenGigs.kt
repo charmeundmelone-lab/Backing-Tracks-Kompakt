@@ -25,7 +25,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.media3.common.util.UnstableApi
 import show.jangregersen.buehne.App
 import show.jangregersen.buehne.daten.Gig
 import show.jangregersen.buehne.daten.SetListe
@@ -70,7 +69,6 @@ fun datumText(tag: Long): String = if (tag <= 0) "" else LocalDate.ofEpochDay(ta
 
 // ── Gigs ─────────────────────────────────────────────────────────────────────
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun GigsSeite(navi: Navi) {
     val b by App.ablage.stand.collectAsState()
@@ -151,7 +149,6 @@ private fun neuerGig(navi: Navi) {
 
 // ── Sets eines Gigs ──────────────────────────────────────────────────────────
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun GigSetsSeite(navi: Navi, gigId: Long) {
     val b by App.ablage.stand.collectAsState()

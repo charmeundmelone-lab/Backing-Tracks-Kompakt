@@ -25,7 +25,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.media3.common.util.UnstableApi
 import show.jangregersen.buehne.App
 import show.jangregersen.buehne.daten.Eintrag
 import show.jangregersen.buehne.daten.Ende
@@ -35,7 +34,6 @@ import show.jangregersen.buehne.daten.gespieltZuruecksetzen
 import show.jangregersen.buehne.daten.schieben
 import show.jangregersen.buehne.daten.verschieben
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun SetlisteSeite(navi: Navi) {
     val b by App.ablage.stand.collectAsState()
@@ -135,7 +133,6 @@ private fun SetZeile(nr: Int, s: Song, e: Eintrag, aktuell: Boolean, spielt: Boo
 
 fun pauseText(sek: Int): String = if (sek <= 0) "keine" else if (sek < 60) "0:%02d".format(sek) else "%d:%02d".format(sek / 60, sek % 60)
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 private fun VerschiebenAnsicht(navi: Navi, setId: Long, eintraege: List<Eintrag>, songs: List<Song>, inHand: Long?, onNehmen: (Long?) -> Unit, onFertig: () -> Unit) {
     val songVon = { id: Long -> songs.firstOrNull { it.id == id } }

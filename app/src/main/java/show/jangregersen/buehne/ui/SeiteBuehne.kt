@@ -32,7 +32,6 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.media3.common.util.UnstableApi
 import show.jangregersen.buehne.App
 import show.jangregersen.buehne.daten.Ende
 import show.jangregersen.buehne.daten.Song
@@ -41,7 +40,6 @@ import show.jangregersen.buehne.lyrics.Abschnitte
 import show.jangregersen.buehne.lyrics.LyricsSeite
 import show.jangregersen.buehne.lyrics.Seitenlauf
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun BuehneSeite(navi: Navi) {
     val b by App.ablage.stand.collectAsState()
@@ -94,7 +92,6 @@ fun BuehneSeite(navi: Navi) {
     }
 }
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 private fun BuehnenKopf(song: Song, ober: String, dauerMs: Long, spielt: Boolean) {
     val pos by App.buehne.position.collectAsState()
@@ -199,7 +196,6 @@ private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boo
 
 // ── Lyrics: abschnittsweise Seiten ───────────────────────────────────────────
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 private fun LyricsBereich(song: Song, dauerMs: Long) {
     val messer = rememberTextMeasurer()
@@ -299,7 +295,6 @@ private fun seitenBauen(text: String, breite: Int, hoehe: Int, messen: (List<Str
 
 // ── Ansage / Pause zwischen den Songs ────────────────────────────────────────
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 private fun AnsageAnsicht(navi: Navi, pause: show.jangregersen.buehne.spiel.Buehne.Pause, kommt: Song) {
     val b = App.ablage.jetzt

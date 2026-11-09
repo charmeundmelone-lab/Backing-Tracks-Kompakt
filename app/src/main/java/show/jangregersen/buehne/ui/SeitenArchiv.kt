@@ -31,7 +31,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -54,7 +53,6 @@ fun songInfo(s: Song): String = listOfNotNull(
     if (s.bpm > 0) "${s.bpm} BPM" else null
 ).joinToString(" · ").ifEmpty { s.interpret }
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun ArchivSeite(navi: Navi, zielSetId: Long?) {
     val b by App.ablage.stand.collectAsState()

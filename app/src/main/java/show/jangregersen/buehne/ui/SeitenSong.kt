@@ -44,7 +44,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
-import androidx.media3.common.util.UnstableApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -77,7 +76,6 @@ private fun songAendern(id: Long, f: (Song) -> Song) = App.ablage.aendern { it.s
 
 // ── Song-Karte im Set ────────────────────────────────────────────────────────
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
     val b by App.ablage.stand.collectAsState()
@@ -171,7 +169,6 @@ fun Stufen(wert: String, minus: () -> Unit, plus: () -> Unit) {
 
 // ── Editor ───────────────────────────────────────────────────────────────────
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun EditorSeite(navi: Navi, songId: Long, startReiter: Int) {
     val b by App.ablage.stand.collectAsState()
@@ -206,7 +203,6 @@ private fun Feld(etikett: String, wert: String, modifier: Modifier = Modifier, z
     }
 }
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 private fun DatenReiter(navi: Navi, song: Song) {
     val ctx = LocalContext.current
@@ -288,7 +284,6 @@ private fun KleinStufen(wert: String, minus: () -> Unit, plus: () -> Unit) {
     }
 }
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 private fun LyricsReiter(navi: Navi, song: Song) {
     val ctx = LocalContext.current
@@ -321,7 +316,6 @@ private fun LyricsReiter(navi: Navi, song: Song) {
     }
 }
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 private fun AnsageReiter(song: Song) {
     val ctx = LocalContext.current
@@ -405,7 +399,6 @@ private fun AnsageReiter(song: Song) {
 
 // ── Lyrics einmessen ─────────────────────────────────────────────────────────
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun EinmessenSeite(navi: Navi, songId: Long) {
     val b by App.ablage.stand.collectAsState()
@@ -485,7 +478,6 @@ fun EinmessenSeite(navi: Navi, songId: Long) {
 
 // ── Mixer ────────────────────────────────────────────────────────────────────
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun MixerSeite(navi: Navi, songId: Long) {
     val ctx = LocalContext.current

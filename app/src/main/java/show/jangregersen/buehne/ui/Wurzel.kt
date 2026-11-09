@@ -23,7 +23,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.media3.common.util.UnstableApi
 import show.jangregersen.buehne.App
 
 // ── Navigation ───────────────────────────────────────────────────────────────
@@ -75,7 +74,6 @@ fun Lautstaerketasten(handler: (vor: Boolean) -> Unit) {
 
 // ── Wurzel ───────────────────────────────────────────────────────────────────
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun Wurzel(navi: Navi, beenden: () -> Unit) {
     BackHandler { if (!navi.zurueck()) beenden() }
@@ -97,7 +95,6 @@ fun Wurzel(navi: Navi, beenden: () -> Unit) {
     }
 }
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 private fun Meldungen() {
     val z by App.buehne.zustand.collectAsState()
@@ -131,7 +128,6 @@ private fun Meldungen() {
  * Liegt ein Song bereit oder läuft, zeigt das schwarze Band oben immer ihn (Tipp = Bühne).
  * Sonst steht dort der Seitentitel.
  */
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun Rahmen(navi: Navi, ober: String, titel: String, rechts: (@Composable () -> Unit)? = null, inhalt: @Composable ColumnScope.() -> Unit) {
     val z by App.buehne.zustand.collectAsState()
@@ -163,7 +159,6 @@ fun Rahmen(navi: Navi, ober: String, titel: String, rechts: (@Composable () -> U
 @Composable
 private fun WeissUmrahmt(inhalt: @Composable () -> Unit) = Box(Modifier.clip(RoundedCornerShape(10.dp)).background(Weiss)) { inhalt() }
 
-@androidx.annotation.OptIn(UnstableApi::class)
 @Composable
 fun JetztBand(navi: Navi, titel: String) {
     val z by App.buehne.zustand.collectAsState()
