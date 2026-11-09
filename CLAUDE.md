@@ -57,6 +57,21 @@ ist im Repo, aber noch **nicht installiert**, weil Jan das Gerät gerade selbst 
 ob er gerade selbst tippt (am 9.11. kam ein Bildschirmwechsel von ihm, nicht von der App).
 
 **Als Nächstes, in dieser Reihenfolge:**
+0. **Fehler von Jan (9.11.): Schwarzer Titelbalken auf der Bühne springt in der Höhe.** Während
+   ein Song läuft, wird der schwarze Kopf mit Titel und Restzeit mal niedriger, mal höher.
+   Vermutete Ursache (ungeprüft): Die Ziffern der Restzeit sind unterschiedlich breit, dadurch
+   ändert sich die Breite für den Titel (`BuehnenKopf` in `ui/SeiteBuehne.kt`, Titel mit
+   `zeilen = 2`), und ein langer Titel bricht je nach Sekunde in eine zweite Zeile um.
+   Lösung: Ziffern gleich breit (Schriftmerkmal `tnum` oder feste Breite für die Zeit) und den
+   Kopf auf feste Höhe bringen; Titel einzeilig mit Verkleinerung statt Umbruch. Auf E-Ink ist
+   ein springender Balken besonders störend (jedes Mal neuer Bildaufbau).
+0b. **Neue Vorgabe von Jan (9.11.): Standard am Songende = nächster Song wird geladen.** Endet ein
+   Song, liegt der nächste Song bereit (geladen), startet aber nicht von selbst, außer es wird
+   pro Song umgestellt (Song-Karte „Am Songende“). Heute ist der Standard noch `Ende.WEITER`
+   (Automatik startet den nächsten): umstellen auf `Ende.ANHALTEN` in `daten/Modell.kt`
+   (`Eintrag.ende`) und in `daten/Ablage.kt` (`optInt("ende", …)`). Beschriftung auf der Karte
+   dazu verständlicher machen, z. B. „Nächsten bereitlegen“ (Standard) und „Automatisch weiter“.
+   Die Test-Einträge im „Testgig“ haben noch den alten Standard.
 1. **Sichtbarer Zurück-Knopf überall** (Jans Orientierungs-Frage, wichtigster offener Punkt):
    Setliste, Sets eines Gigs, Archiv und Mixer haben keinen „‹ Zurück“ auf dem Bildschirm, nur
    die Android-Zurück-Geste. Einheitlich oben links einbauen (z. B. im `Rahmen`-Unterkopf bzw.
