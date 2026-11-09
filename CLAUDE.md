@@ -69,8 +69,9 @@ ob er gerade selbst tippt (am 9.11. kam ein Bildschirmwechsel von ihm, nicht von
    Song, liegt der nächste Song bereit (geladen), startet aber nicht von selbst, außer es wird
    pro Song umgestellt (Song-Karte „Am Songende“). Heute ist der Standard noch `Ende.WEITER`
    (Automatik startet den nächsten): umstellen auf `Ende.ANHALTEN` in `daten/Modell.kt`
-   (`Eintrag.ende`) und in `daten/Ablage.kt` (`optInt("ende", …)`). Beschriftung auf der Karte
-   dazu verständlicher machen, z. B. „Nächsten bereitlegen“ (Standard) und „Automatisch weiter“.
+   (`Eintrag.ende`) und in `daten/Ablage.kt` (`optInt("ende", …)`). Jan hat bestätigt:
+   bereitlegen, nicht abspielen. Die Beschriftung auf der Karte („Weiter im Set“ / „Anhalten“)
+   bleibt so, wie sie ist (Jans ausdrücklicher Wunsch, nicht umbenennen).
    Die Test-Einträge im „Testgig“ haben noch den alten Standard.
 1. **Sichtbarer Zurück-Knopf überall** (Jans Orientierungs-Frage, wichtigster offener Punkt):
    Setliste, Sets eines Gigs, Archiv und Mixer haben keinen „‹ Zurück“ auf dem Bildschirm, nur
