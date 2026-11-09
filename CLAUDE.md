@@ -69,9 +69,12 @@ gesperrt (PIN, tippt Jan).
   PDF-Import, Wiedergabe mit Bildschirm aus (61 s, Echtzeit, 0 Aussetzer, Wakelock aktiv).
 - Fehler behoben: Einmessen zeigte nach Songende weiter "Jetzt beginnt" und speicherte 0:00.
 
-**Offene Frage an Jan:** Wo hat er das Prasseln gehört? Stereo-Dateien liefen schon vorher
-bitgenau aus der App. Im Audio-Protokoll stehen Bluetooth-Verbindungen um 17:47 und 18:11
-(REDMI Buds). Falls es bei Stereo-Dateien über Bluetooth war, dort weitersuchen.
+**Jans Fehlerbild (geklärt 9.11. ca. 20:00):** Stereo-Song aus der Setliste, über den Lautsprecher,
+"viel langsamer und ruckelig", mit der alten Media3-Engine. Neue Engine danach auf der Bühne bei
+eingeschaltetem Bildschirm geprüft: ganzer Song (Am I wrong, 2:26) in Echtzeit, 0 Aussetzer laut
+`track.underrunCount`, Mitschnitt (Careless Whisper) bitgenau. Die alte Engine ist nicht mehr
+nachmessbar; Ursache dort vermutlich Ruckeln der Abspiel-Fäden neben dem E-Ink-Neuzeichnen.
+Wenn Jan es mit der neuen Engine noch hört: `adb logcat -s Mischpult` zeigt "lief leer".
 
 **Als Nächstes:**
 1. Jan hört die neue Engine mit Einzelspuren und Stereo (Lautsprecher und Kabel/Bluetooth).
