@@ -45,43 +45,44 @@ installieren mit `adb install -r app/build/outputs/apk/debug/app-debug.apk`.
 Testdaten direkt ändern: `adb exec-out run-as show.jangregersen.buehne cat files/bestand.json`
 (Git-Bash: bei Gerätepfaden `MSYS_NO_PATHCONV=1` setzen).
 
-## Übergabe an die nächste Session (geschrieben 2026-11-09, ca. 16:30)
+## Übergabe an die nächste Session (geschrieben 2026-11-09, ca. 19:50)
 
-**Stand:** `main`, alles committet und gepusht. Der neueste Bau ist auf dem Kompakt installiert.
+**Stand:** `main`, alles committet und gepusht. Repo ist seit 9.11. öffentlich (Jans Wunsch).
+Neuester Bau ist auf dem Kompakt installiert. Der Kompakt ist nach dem Bildschirm-aus-Test
+gesperrt (PIN, tippt Jan).
 
-**Erledigt am 9.11. (zweite Session), am Gerät geprüft:**
-- Titelbalken der Bühne springt nicht mehr: feste Höhe, Zeit mit gleich breiten Ziffern (`tnum`)
-  in fester Breite, Titel einzeilig und verkleinert sich bis 22 sp (`EinzeilerPassend`).
-- Standard am Songende ist jetzt `Ende.ANHALTEN` (nächster Song liegt bereit, startet nicht).
-  Beschriftung der Karte unverändert. In der Setliste steht das Kästchen jetzt bei der
-  Ausnahme: „weiter“ statt „hält an“. Im Testgig sind alle Einträge auf den neuen Standard gesetzt.
-- Zurück-Knopf „‹“ oben links auf allen Seiten außer der Startseite (`ZurueckKnopf`, über
-  `Rahmen` bzw. `KopfBand(zurueck = …)`), auch Mixer und Editor (dort einheitlich gerahmt).
-- Blätterleiste zeigt „auch mit den Lautstärketasten“, sobald es mehr als eine Seite gibt.
-- Set-Ende bleibt als Kasten auf der Bühne stehen (`Zustand.setDurch`), im Jetzt-Band steht
-  „Set durch · bereit“. Weg erst, wenn gespielt, ein anderes Set gewählt oder ein Song von Hand
-  bereitgelegt wird. Probehören lässt ihn stehen.
-- Archiv-Raster A–Z passt mit Jetzt-Band (geprüft).
+**Erledigt am 9.11. abends (dritte Session):**
+- Ton-Fehler behoben (Jan: "prasselnd, zu langsam, grauenhaft"). Ursache: Einzelspuren liefen
+  über je einen ExoPlayer mit eigener AudioTrack und lagen bis 0,3 s auseinander. Neu:
+  `audio/Mischpult.kt` (ein Faden, eine AudioTrack float, alle Spuren blockweise gemeinsam
+  gemischt) und `audio/Quellen.kt` (WAV direkt 8/16/24/32 bit + float, sonst MediaCodec,
+  Umrechner bei abweichender Rate). Media3 ist raus. Stereo-Datei war schon vorher bitgenau,
+  jetzt in voller 24-Bit-Auflösung.
+- Prüfweg Mitschnitt: `touch files/mitschnitt.an` (run-as), dann schreibt jedes Mischpult 20 s
+  float32-Stereo nach `files/mitschnitt-song<ID>-<rate>.f32`. Vergleich am Laptop:
+  `RATE=44100 node werkzeug/mitschnitt-vergleich.js mit.f32 L:Drums.wav L:Trax.wav R:Click.wav R:Cues.wav`
+  bzw. `STEREO:datei.wav`. Ergebnis 9.11.: Stereo, Einzelspuren und Mixer (Click aus, Drums −2)
+  exakt. Danach Flag wieder löschen.
+- Bedienzonen (PLAN.md "Bedienzonen"): Setliste ohne Menü, unten ‹ + Song · Umstellen ›, oben
+  rechts "Sets". Archiv im Hinzufügen-Modus mit "Als Nächstes | Ans Ende". Hinweise unten.
+- Am Gerät geprüft: Play/Pause/Songende, Mixer, Editor-Probe, Einmessen inkl. "10 s zurück",
+  PDF-Import, Wiedergabe mit Bildschirm aus (61 s, Echtzeit, 0 Aussetzer, Wakelock aktiv).
+- Fehler behoben: Einmessen zeigte nach Songende weiter "Jetzt beginnt" und speicherte 0:00.
 
-**Neue Testdaten:** Gig „Kurztest“ (Set 1: Test Eins, Test Zwei; Set 2: Put your records drums new,
-Test Drei) zum schnellen Prüfen von Songende und Set-Ende. Löschen nur mit Jans OK.
-
-**Vor jedem Tipp am Kompakt:** Jan fragen oder per `dumpsys window | grep mCurrentFocus` prüfen,
-ob er gerade selbst tippt.
+**Offene Frage an Jan:** Wo hat er das Prasseln gehört? Stereo-Dateien liefen schon vorher
+bitgenau aus der App. Im Audio-Protokoll stehen Bluetooth-Verbindungen um 17:47 und 18:11
+(REDMI Buds). Falls es bei Stereo-Dateien über Bluetooth war, dort weitersuchen.
 
 **Als Nächstes:**
-1. Am Gerät testen, was noch fehlt:
-   - Ansage aufnehmen (Mikrofon-Erlaubnis muss Jan selbst bestätigen; Offline+-Schalter trennt
-     das Mikrofon), danach Ansage in der Automatik (läuft nur rechts).
-   - Einmessen-Bildschirm mit „Test Eins“ (8 s) oder einem echten Song.
-   - Mixer mit dem Einzelspuren-Song „Country Roads“ (Spuren Click, Cues → rechts, Drums, Trax →
-     links), Stummschalten, Stufen.
-   - Probe im Editor, PDF-Import.
-   - Wiedergabe mit ausgeschaltetem Bildschirm in der echten App (Ton-Test-App lief ohne Aussetzer).
-2. Danach: App-Name mit Jan festlegen (ganz am Ende, Jans Wunsch), Symbol, Aufräumen der Testdaten
-   (Gigs „Testgig“ und „Kurztest“, Ordner `Music/Backing Tracks/Kurztest` und `Einzelspuren` nur
-   mit Jans OK löschen).
+1. Jan hört die neue Engine mit Einzelspuren und Stereo (Lautsprecher und Kabel/Bluetooth).
+2. Ansage aufnehmen (Mikrofon-Erlaubnis tippt Jan), dann Ansage in der Automatik.
+3. App-Name mit Jan, Symbol, Aufräumen der Testdaten (Gigs "Testgig", "Kurztest", Ordner
+   `Music/Backing Tracks/Kurztest` und `Einzelspuren` nur mit Jans OK).
 
-**Bekannte Kleinigkeiten:** Platzhalter-Lyrics für Tests stehen in „Test Eins“ und „Country Roads“
-(selbst geschrieben, keine echten Songtexte). „Frei spielen“ aus der alten App ist nicht übernommen.
-Im Mixer gibt es jetzt „‹“ und „Fertig“, beide gehen zurück.
+**Vor jedem Tipp am Kompakt:** `dumpsys window | grep mCurrentFocus` prüfen. Beim Navigieren
+per adb Texte über `uiautomator dump` suchen statt feste Koordinaten: das schwarze Band
+verschiebt das Layout (so öffnete sich einmal versehentlich "Neuer Gig", abgebrochen).
+Testdaten direkt ändern nur bei gestoppter App (`am force-stop` ist bei dieser App erlaubt).
+
+**Bekannte Kleinigkeiten:** Platzhalter-Lyrics in "Test Eins" und "Country Roads" (selbst
+geschrieben). "Frei spielen" aus der alten App fehlt weiter.

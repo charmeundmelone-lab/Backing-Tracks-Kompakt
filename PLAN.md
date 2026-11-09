@@ -173,13 +173,14 @@ Werkzeug: `entwuerfe/werkzeug/render.sh` rendert alle Canvas-Dateien neu nach
 
 App-Code liegt in `app/` (Paket `show.jangregersen.buehne`, Name auf dem Gerät "Backing-Tracks",
 endgültiger Name kommt ganz am Ende). Gebaut mit Compose (nur foundation, kein Material),
-Media3 ExoPlayer, Daten als JSON-Datei (`files/bestand.json`) statt Room.
+eigene Ton-Engine (Mischpult, seit 9.11. abends statt Media3), Daten als JSON-Datei (`files/bestand.json`) statt Room.
 
 Aufbau:
 - `daten/`: Modell (Song, Gig, SetListe, Eintrag), Ablage (JSON, verzögertes Sichern),
   reine Änderungsfunktionen (verschieben, als Nächstes, nächster Song …).
-- `audio/`: Engine (ein ExoPlayer pro Spur), KanalMischer (eigener AudioProcessor: Band fest
-  links, Click/Cue/Ansage fest rechts, live regelbar), Spuren (Stereo-Datei oder Einzelspuren,
+- `audio/`: Engine (Schnittstelle für die Bühne), Mischpult (ein Faden, eine AudioTrack, alle Spuren
+  sample-genau gemischt, Band fest links, Click/Cue/Ansage fest rechts, live regelbar), Quellen
+  (WAV direkt, sonst MediaCodec), Spuren (Stereo-Datei oder Einzelspuren,
   Rolle aus dem Dateinamen), Import (Ordner-Regel der alten App, liest "KeyA K2" aus Namen),
   Aufnahme, Warnton, PDF-Lyrics.
 - `spiel/Buehne.kt`: zentraler Steuerteil in der Application (überlebt Bildschirmwechsel),
@@ -200,3 +201,6 @@ Einmessen-Bildschirm, Mixer mit Einzelspuren, Probe im Editor, PDF-Import,
 Wiedergabe mit ausgeschaltetem Bildschirm in der echten App, Kabel ins Pult.
 Nicht übernommen: "Frei spielen" während einer Pause (selten gebraucht, kann nachkommen).
 Testdaten auf dem Kompakt: Gig "Testgig", Ordner Music/Backing Tracks/Kurztest (3 Songs à 8 s).
+
+Nachtrag 9.11. abends: Mixer, Editor-Probe, Einmessen, PDF-Import und Wiedergabe mit
+ausgeschaltetem Bildschirm am Gerät geprüft. Offen bleibt nur die Ansage-Aufnahme (Mikrofon).
