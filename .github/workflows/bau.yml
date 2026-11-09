@@ -20,7 +20,10 @@ jobs:
         run: |
           chmod +x gradlew
           ./gradlew --no-daemon :app:testDebugUnitTest :app:assembleRelease -PversionCode=${{ github.run_number }}
+      # Der Artefakt-Speicher des Kontos ist knapp (gilt für alle Repos): Upload darf scheitern.
       - uses: actions/upload-artifact@v4
+        continue-on-error: true
         with:
+          retention-days: 3
           name: backing-tracks-kompakt-apk
           path: app/build/outputs/apk/release/app-release.apk
