@@ -127,6 +127,19 @@ Live-Wege:
 - **Song vorziehen:** Song antippen → „Als Nächstes“ (Karte), unterbricht nie.
 - **Set wechseln:** Setliste → „Sets“.
 
+## Schriftgröße (2026-11-09 abends)
+
+Jan ist kurzsichtig und fand Schriften teils zu klein ("mach das Beste"). Entscheidung: Stufe 3
+"Bühnenschrift" als Standard (`Schriftbild` in `ui/Bausteine.kt`): nichts unter 17 sp,
+Etiketten 16 sp statt 11 sp, Text bis 30 sp um 16 % größer; Titel, Restzeit und Countdown
+(ab 30 sp) unverändert. Damit alles passt, statt kleinerer Schrift weniger Text:
+- Song-Karte: Beschriftungen von Pause und Songende links in der Zeile, unten eine Zeile
+  Bearbeiten · Mixer · Entfernen, "Wieder offen" neben dem Hauptknopf.
+- Hinweis "auch mit den Lautstärketasten" entfernt, Setliste oben nur "4/8 · noch 16 min",
+  A–Z-Kästchen zeigen nur die Zahl, kurze Texte ("Keine Lyrics", "Tipp löschen").
+Alle 16 Bildschirme in Stufe 3 am Kompakt fotografiert und geprüft, nichts abgeschnitten.
+Zum Vergleichen bleibt `files/schrift.txt` (0–3) als Überschreibung.
+
 ## Weitere Bildschirme (2026-11-09, Richtung B)
 
 Alle 14 Entwürfe liegen im Canvas und als Bilder in der App "Entwürfe" (Reihenfolge:

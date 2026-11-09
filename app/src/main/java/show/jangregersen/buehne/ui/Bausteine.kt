@@ -75,7 +75,8 @@ val Halbschmal = FontFamily(
  * damit nichts aus dem Rahmen läuft; angehoben wird der kleine und mittlere Bereich.
  */
 object Schriftbild {
-    var stufe by mutableIntStateOf(0)
+    // Jan ist kurzsichtig und hat "das Beste" gewählt (9.11.): Bühnenschrift ist Standard.
+    var stufe by mutableIntStateOf(3)
     private val faktor = floatArrayOf(1f, 1f, 1.08f, 1.16f)
     private val minimum = floatArrayOf(0f, 14f, 16f, 17f)
     private val etikett = floatArrayOf(11f, 13f, 14.5f, 16f)
@@ -332,7 +333,6 @@ fun Blaetterleiste(seite: Int, seiten: Int, zurueck: () -> Unit, vor: () -> Unit
                         Box(if (i == seite) m.background(Schwarz) else m.border(1.5.dp, Schwarz, RoundedCornerShape(3.dp)))
                     }
                 }
-                T("auch mit den Lautstärketasten", textStil(11.sp, gewicht = FontWeight.Medium), Modifier.padding(top = 3.dp), zeilen = 1)
             }
         }
         SymbolKnopf(Sym.RECHTS, "Nächste Seite", Modifier.width(64.dp), art = Art.VOLL, aktiv = seite < seiten - 1, onClick = vor)
@@ -382,7 +382,6 @@ fun AktionsLeiste(seite: Int, seiten: Int, zurueck: () -> Unit, vor: () -> Unit,
         Row(Modifier.fillMaxWidth().height(22.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
             if (seiten > 1) {
                 T("Seite ${seite + 1} von $seiten", textStil(13.sp, gewicht = FontWeight.Bold), zeilen = 1)
-                T("  ·  auch mit den Lautstärketasten", textStil(12.sp, gewicht = FontWeight.Medium), zeilen = 1)
             }
         }
         Abstand(4.dp)

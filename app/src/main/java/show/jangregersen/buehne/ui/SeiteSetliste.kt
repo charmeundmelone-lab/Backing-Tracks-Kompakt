@@ -56,7 +56,8 @@ fun SetlisteSeite(navi: Navi) {
     val nr = gig.sets.indexOfFirst { it.id == set.id } + 1
     val gespielt = set.eintraege.count { it.gespielt }
     val rest = set.dauerMs(b, nurOffene = true)
-    val ober = "${gig.name} · Set $nr von ${gig.sets.size} · $gespielt/${set.eintraege.size} · noch ${minuten(rest)}"
+    // Kurz halten: der Gig steht eine Seite weiter oben, wichtig sind Fortschritt und Restzeit.
+    val ober = "$gespielt/${set.eintraege.size} · noch ${minuten(rest)}"
     val startZeige = remember { Zeige(set.eintraege.indexOfFirst { it.songId == z.songId }.coerceAtLeast(0)) }
 
     if (verschieben) {

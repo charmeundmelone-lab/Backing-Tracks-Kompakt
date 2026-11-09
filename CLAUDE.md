@@ -84,6 +84,7 @@ Wenn Jan es mit der neuen Engine noch hört: `adb logcat -s Mischpult` zeigt "li
    nach dem letzten Song eines Sets (spielt die App bewusst nur, wenn ein nächster Song folgt).
 3. App-Name: Jan hat am 9.11. ca. 20:25 "TrikTrak" gewählt (so geschrieben). Gesetzt in strings.xml,
    Gigs-Kopfband und Benachrichtigung. Paket bleibt show.jangregersen.buehne (sonst Datenverlust).
+   Schrift: Stufe 3 "Bühnenschrift" ist Standard (Jan kurzsichtig), siehe PLAN.md "Schriftgröße".
    Noch offen: Symbol, Aufräumen der Testdaten (Gigs "Testgig", "Kurztest", Ordner
    `Music/Backing Tracks/Kurztest` und `Einzelspuren` nur mit Jans OK).
 

@@ -93,77 +93,72 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
     Column(Modifier.fillMaxSize()) {
         val aktuellSong = b.song(z.songId)
         if (aktuellSong != null) JetztBand(navi, aktuellSong.titel)
-        Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 14.dp, top = 12.dp, bottom = 10.dp), verticalAlignment = Alignment.Top) {
+        Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 14.dp, top = 10.dp, bottom = 8.dp), verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f)) {
-                Etikett("Platz $platz in ${set.name}${if (e.gespielt) " · gespielt" else ""}")
-                T(song.titel, titelStil(32.sp), zeilen = 2)
+                Etikett("Platz $platz${if (e.gespielt) " · gespielt" else ""}")
+                EinzeilerPassend(song.titel, titelStil(30.sp), 22f)
                 T(listOf(songInfo(song), zeit(song.dauerMs)).filter { it.isNotBlank() }.joinToString(" · "), textStil(16.sp), zeilen = 1)
             }
-            SymbolKnopf(Sym.KREUZ, "Schließen", Modifier.width(48.dp), hoehe = 48.dp, groesse = 16.dp) { navi.zurueck() }
+            SymbolKnopf(Sym.KREUZ, "Schließen", Modifier.width(52.dp), hoehe = 52.dp, groesse = 16.dp) { navi.zurueck() }
         }
         Linie(Modifier.padding(horizontal = 14.dp), 2.5.dp)
+        // Kompakt gebaut, damit auch die große Bühnenschrift ohne Abschneiden passt:
+        // Beschriftungen von Pause und Songende stehen links in der Zeile statt darüber.
         Column(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            when {
-                istAktuell -> {}
-                !laeuftEtwas -> TextKnopf("Jetzt bereitlegen", Modifier.fillMaxWidth(), Art.VOLL, 52.dp, symbol = Sym.PLAY) {
-                    App.buehne.bereitlegen(setId, songId); navi.zurBuehne()
-                }
-                else -> TextKnopf("Als Nächstes spielen", Modifier.fillMaxWidth(), Art.VOLL, 52.dp, symbol = Sym.WEITER) {
+            val haupt: (@Composable (Modifier) -> Unit)? = when {
+                istAktuell -> null
+                !laeuftEtwas -> { m -> TextKnopf(if (e.gespielt) "Bereitlegen" else "Jetzt bereitlegen", m, Art.VOLL, 52.dp, symbol = Sym.PLAY) { App.buehne.bereitlegen(setId, songId); navi.zurBuehne() } }
+                else -> { m -> TextKnopf("Als Nächstes", m, Art.VOLL, 52.dp, symbol = Sym.WEITER) {
                     App.ablage.aendern { it.alsNaechstes(setId, songId, z.songId) }
                     App.buehne.hinweis("„${song.titel}“ kommt als Nächstes.")
                     navi.zurueck()
+                } }
+            }
+            if (haupt != null || e.gespielt) Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                haupt?.invoke(Modifier.weight(if (e.gespielt) 1f else 2f))
+                if (e.gespielt) TextKnopf("Wieder offen", Modifier.weight(1f), hoehe = 52.dp, groesse = 16.sp) {
+                    App.ablage.aendern { it.eintragAendern(setId, songId) { x -> x.copy(gespielt = false) } }
                 }
             }
             Column {
                 Etikett(if (song.ansageVorher.isNotBlank()) "Ansage vorher · ${zeit(song.ansageVorherMs)}" else "Keine Ansage vorher")
-                Abstand(6.dp)
+                Abstand(4.dp)
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    TextKnopf(if (hoert) "Stopp" else "Anhören", Modifier.weight(1f), hoehe = 48.dp, groesse = 16.sp, symbol = if (hoert) Sym.STOP else Sym.PLAY, aktiv = song.ansageVorher.isNotBlank()) {
+                    TextKnopf(if (hoert) "Stopp" else "Anhören", Modifier.weight(1f), hoehe = 50.dp, groesse = 16.sp, symbol = if (hoert) Sym.STOP else Sym.PLAY, aktiv = song.ansageVorher.isNotBlank()) {
                         if (hoert) { App.buehne.notizStoppen(); hoert = false } else { hoert = true; App.buehne.notizAnhoeren(song.ansageVorher) { hoert = false } }
                     }
-                    TextKnopf(if (song.ansageVorher.isBlank()) "Aufnehmen" else "Neu aufnehmen", Modifier.weight(1f), hoehe = 48.dp, groesse = 16.sp, symbol = Sym.AUFNAHME) {
+                    TextKnopf(if (song.ansageVorher.isBlank()) "Aufnehmen" else "Neu", Modifier.weight(1f), hoehe = 50.dp, groesse = 16.sp, symbol = Sym.AUFNAHME) {
                         navi.zu(Seite.Editor(songId, 2))
                     }
                 }
             }
-            Column {
-                Etikett("Pause danach")
-                Abstand(6.dp)
-                Stufen(pauseText(song.pauseSek), { songAendern(songId) { it.copy(pauseSek = pauseSchritt(it.pauseSek, -1)) } }, { songAendern(songId) { it.copy(pauseSek = pauseSchritt(it.pauseSek, 1)) } })
-            }
-            Column {
-                Etikett("Am Songende")
-                Abstand(6.dp)
-                Segmente(listOf("Weiter im Set", "Anhalten"), if (e.ende == Ende.ANHALTEN) 1 else 0) { i ->
+            Stufen(pauseText(song.pauseSek), { songAendern(songId) { it.copy(pauseSek = pauseSchritt(it.pauseSek, -1)) } }, { songAendern(songId) { it.copy(pauseSek = pauseSchritt(it.pauseSek, 1)) } }, beschriftung = "Pause\ndanach")
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                T("Am\nEnde", etikettStil(), Modifier.width(76.dp), zeilen = 2)
+                Segmente(listOf("Weiter", "Anhalten"), if (e.ende == Ende.ANHALTEN) 1 else 0, Modifier.weight(1f), hoehe = 50.dp) { i ->
                     App.ablage.aendern { it.eintragAendern(setId, songId) { x -> x.copy(ende = if (i == 1) Ende.ANHALTEN else Ende.WEITER) } }
                 }
             }
         }
-        Column(Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                TextKnopf("Bearbeiten", Modifier.weight(1f), Art.DUENN, 48.dp, 15.sp) { navi.zu(Seite.Editor(songId)) }
-                TextKnopf("Mixer", Modifier.weight(1f), Art.DUENN, 48.dp, 15.sp) { navi.zu(Seite.Mixer(songId)) }
-            }
-            Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                if (e.gespielt) TextKnopf("Noch nicht gespielt", Modifier.weight(1f), Art.DUENN, 48.dp, 15.sp) {
-                    App.ablage.aendern { it.eintragAendern(setId, songId) { x -> x.copy(gespielt = false) } }
-                }
-                TextKnopf("Aus dem Set nehmen", Modifier.weight(1f), Art.GESTRICHELT, 48.dp, 15.sp, aktiv = !istAktuell) {
-                    navi.zu(Seite.Frage("Aus dem Set nehmen?", "„${song.titel}“ verschwindet aus „${set.name}“. Im Archiv bleibt er.", "Herausnehmen") {
-                        App.ablage.aendern { it.ausSetNehmen(setId, songId) }; navi.zurueck(); navi.zurueck()
-                    })
-                }
+        Row(Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextKnopf("Bearbeiten", Modifier.weight(1.25f), Art.DUENN, 50.dp, 15.sp) { navi.zu(Seite.Editor(songId)) }
+            TextKnopf("Mixer", Modifier.weight(0.9f), Art.DUENN, 50.dp, 15.sp) { navi.zu(Seite.Mixer(songId)) }
+            TextKnopf("Entfernen", Modifier.weight(1.2f), Art.GESTRICHELT, 50.dp, 15.sp, aktiv = !istAktuell) {
+                navi.zu(Seite.Frage("Aus dem Set nehmen?", "„${song.titel}“ verschwindet aus „${set.name}“. Im Archiv bleibt er.", "Herausnehmen") {
+                    App.ablage.aendern { it.ausSetNehmen(setId, songId) }; navi.zurueck(); navi.zurueck()
+                })
             }
         }
     }
 }
 
 @Composable
-fun Stufen(wert: String, minus: () -> Unit, plus: () -> Unit) {
+fun Stufen(wert: String, minus: () -> Unit, plus: () -> Unit, beschriftung: String? = null) {
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        SymbolKnopf(Sym.MINUS, "weniger", Modifier.width(60.dp), hoehe = 48.dp, groesse = 18.dp, onClick = minus)
+        if (beschriftung != null) T(beschriftung, etikettStil(), Modifier.width(76.dp), zeilen = 2)
+        SymbolKnopf(Sym.MINUS, "weniger", Modifier.width(60.dp), hoehe = 50.dp, groesse = 18.dp, onClick = minus)
         T(wert, titelStil(30.sp), Modifier.weight(1f), zeilen = 1, mitte = true)
-        SymbolKnopf(Sym.PLUS, "mehr", Modifier.width(60.dp), hoehe = 48.dp, groesse = 18.dp, onClick = plus)
+        SymbolKnopf(Sym.PLUS, "mehr", Modifier.width(60.dp), hoehe = 50.dp, groesse = 18.dp, onClick = plus)
     }
 }
 
@@ -468,7 +463,7 @@ fun EinmessenSeite(navi: Navi, songId: Long) {
             }
         }
         Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            TextKnopf("Letzten Tipp löschen", Modifier.weight(1f), hoehe = 50.dp, groesse = 15.sp, aktiv = marken.isNotEmpty()) {
+            TextKnopf("Tipp löschen", Modifier.weight(1f), hoehe = 50.dp, groesse = 15.sp, aktiv = marken.isNotEmpty()) {
                 val letzter = marken.maxByOrNull { it.value }?.key
                 if (letzter != null) markenSetzen(marken - letzter)
             }
@@ -492,7 +487,7 @@ fun MixerSeite(navi: Navi, songId: Long) {
         App.buehne.mixGeaendert(songId)
     }
     Column(Modifier.fillMaxSize()) {
-        KopfBand("Mixer · gilt nur für diesen Song", song.titel, rechts = { WeisserKnopfImBand("Fertig") { navi.zurueck() } }, zurueck = { navi.zurueck() })
+        KopfBand("Mixer · nur dieser Song", song.titel, rechts = { WeisserKnopfImBand("Fertig") { navi.zurueck() } }, zurueck = { navi.zurueck() })
         val k = kanaele
         Column(Modifier.weight(1f).padding(top = 4.dp)) {
             if (k == null) T("…", textStil(18.sp), Modifier.padding(18.dp))

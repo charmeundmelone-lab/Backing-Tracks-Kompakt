@@ -153,7 +153,7 @@ private fun SongDaten(song: Song) {
                 if (reihe.size == 1) Box(Modifier.weight(1f))
             }
         }
-        Etikett("Keine Lyrics · unter Bearbeiten › Lyrics einfügen")
+        Etikett("Keine Lyrics")
     }
 }
 

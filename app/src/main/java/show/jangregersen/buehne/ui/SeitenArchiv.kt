@@ -181,13 +181,13 @@ private fun Sprung(songs: List<Song>, wahl: (Int) -> Unit) {
                 reihe.forEach { c ->
                     val n = zahl[c] ?: 0
                     val form = RoundedCornerShape(12.dp)
-                    val m = Modifier.weight(1f).height(50.dp).clip(form)
+                    val m = Modifier.weight(1f).height(54.dp).clip(form)
                     if (n > 0) Column(
                         m.border(2.5.dp, Schwarz, form).tipp { wahl(songs.indexOfFirst { buchstabe(it.titel) == c }) },
                         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center
                     ) {
                         T(c.toString(), titelStil(24.sp))
-                        T(if (n == 1) "1 Song" else "$n Songs", textStil(12.sp), zeilen = 1)
+                        T("$n", textStil(12.sp), zeilen = 1)
                     }
                     else Box(m.gestrichelt(12.dp), contentAlignment = Alignment.Center) { T(c.toString(), titelStil(24.sp, gewicht = FontWeight.SemiBold)) }
                 }
