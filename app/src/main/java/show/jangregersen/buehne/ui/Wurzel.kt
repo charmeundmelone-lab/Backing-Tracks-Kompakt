@@ -113,9 +113,13 @@ private fun Meldungen() {
                 Symbol(Sym.KREUZ, Schwarz, 18.dp)
             }
         }
-        val h = z.hinweis
-        if (h != null) {
-            Box(Modifier.fillMaxWidth().padding(10.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz).padding(14.dp)) {
+    }
+    // Hinweise unten über der Bedienleiste: sie verdecken so nie Kopfband, Zurück oder "Fertig".
+    // Kein Klick-Empfänger, Tipps gehen durch.
+    val h = z.hinweis
+    if (h != null) {
+        Column(Modifier.fillMaxSize().padding(bottom = 104.dp), verticalArrangement = Arrangement.Bottom) {
+            Box(Modifier.fillMaxWidth().padding(horizontal = 10.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz).padding(14.dp)) {
                 T(h, textStil(16.sp, Weiss, FontWeight.Bold))
             }
         }

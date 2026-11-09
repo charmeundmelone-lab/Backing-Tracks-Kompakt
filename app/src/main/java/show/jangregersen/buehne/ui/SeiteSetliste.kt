@@ -40,7 +40,6 @@ fun SetlisteSeite(navi: Navi) {
     val z by App.buehne.zustand.collectAsState()
     val set = b.set(z.setId)
     val gig = b.gigVonSet(z.setId)
-    var menue by remember { mutableStateOf(false) }
     var verschieben by remember { mutableStateOf(false) }
     var inHand by remember { mutableStateOf<Long?>(null) }
 
@@ -65,20 +64,20 @@ fun SetlisteSeite(navi: Navi) {
         return
     }
 
+    // Alles, was man im Set live braucht, liegt sichtbar auf dieser Seite, ohne Menü:
+    // oben rechts "Sets" (anderes Set), unten Blättern · Song dazu · Umstellen.
     Rahmen(navi, ober, set.name, rechts = {
-        SymbolKnopf(Sym.PUNKTE, "Mehr", Modifier.width(52.dp), Art.OHNE, hoehe = 44.dp) { menue = true }
+        TextKnopf("Sets", Modifier.width(86.dp), hoehe = 44.dp, groesse = 16.sp) { navi.zu(Seite.GigSets(gig.id)) }
     }) {
-        if (menue) {
-            Menue(listOf(
-                "Songs hinzufügen" to { menue = false; navi.zu(Seite.Archiv(set.id)) },
-                "Reihenfolge ändern" to { menue = false; verschieben = true },
-                "Anderes Set wählen" to { menue = false; navi.zu(Seite.GigSets(gig.id)) },
-                "Alle wieder auf „nicht gespielt“" to { menue = false; App.ablage.aendern { it.gespieltZuruecksetzen(set.id) } }
-            )) { menue = false }
-            return@Rahmen
-        }
         SeitenListe(
             eintraege = set.eintraege, zeilenHoehe = 66.dp, modifier = Modifier.weight(1f), schluessel = "set${set.id}", zeige = startZeige,
+            fussHoehe = AKTIONSLEISTE_HOEHE,
+            fuss = { s, n, _, zur, vor ->
+                AktionsLeiste(s, n, zur, vor, listOf(
+                    Aktion("Song", Sym.PLUS, voll = true) { navi.zu(Seite.Archiv(set.id)) },
+                    Aktion("Umstellen") { verschieben = true }
+                ))
+            },
             leer = {
                 Column(Modifier.padding(18.dp)) {
                     T("Dieses Set ist noch leer.", titelStil(26.sp))

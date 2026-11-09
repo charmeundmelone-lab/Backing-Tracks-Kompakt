@@ -103,6 +103,30 @@ Festgelegte Bausteine:
 - **Ansage/Pause** bekommt einen eigenen ruhigen Bildschirm: riesiger Countdown, nächster
   Song, Knöpfe Liste · Stopp · Starten.
 
+## Bedienzonen (2026-11-09 abends, Claude, von Jan freigegeben: "voll auf deine Expertise")
+
+Ziel: Profi auf der Bühne, kein Suchen in Menüs. Jede Live-Aktion höchstens zwei Tipps weit,
+jede Bedienung hat auf jeder Seite denselben Platz.
+
+1. **Oben, schwarzes Band = was läuft.** Immer der bereite oder laufende Song, Tipp = Bühne.
+2. **Darunter die Seitenzeile:** links „‹“ zurück, Mitte Titel, rechts genau EIN Knopf für den
+   wichtigsten Seitenwechsel (Setliste: „Sets“, Archiv: „Fertig“ bzw. „Songs holen“).
+3. **Mitte = Inhalt als Seiten**, nie scrollen. Blättern auch mit den Lautstärketasten.
+4. **Unten die feste Bedienleiste, daumennah:** außen immer die Blätterpfeile ‹ ›, dazwischen
+   die Aktionen der Seite. Bühne: Liste · Stopp · Play · Weiter. Setliste: + Song · Umstellen.
+5. **Hinweise erscheinen unten über der Leiste**, nie über Kopfband oder Knöpfen, und lassen
+   Tipps durch. Fehler bleiben oben, bis man sie wegtippt.
+6. Menüs („…“) nur noch für Seltenes, das live nie gebraucht wird (Set umbenennen, löschen).
+
+Live-Wege:
+- **Song dazuholen:** Setliste → „+ Song“ → Song antippen. Fertig. Oben steht ein Umschalter
+  „Als Nächstes | Ans Ende“. Liegt ein Song aus dem Set bereit oder läuft, ist „Als Nächstes“
+  vorgewählt; mehrere nacheinander behalten ihre Reihenfolge (2, 3, 4 …). Ein Haken-Tipp nimmt
+  den Song wieder heraus, außer dem gerade bereiten.
+- **Umstellen:** Setliste → „Umstellen“ → Song aufnehmen → vor Zielsong ablegen.
+- **Song vorziehen:** Song antippen → „Als Nächstes“ (Karte), unterbricht nie.
+- **Set wechseln:** Setliste → „Sets“.
+
 ## Weitere Bildschirme (2026-11-09, Richtung B)
 
 Alle 14 Entwürfe liegen im Canvas und als Bilder in der App "Entwürfe" (Reihenfolge:

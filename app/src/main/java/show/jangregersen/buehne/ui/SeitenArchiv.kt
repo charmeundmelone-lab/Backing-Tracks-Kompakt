@@ -39,6 +39,7 @@ import show.jangregersen.buehne.audio.Import
 import show.jangregersen.buehne.daten.Song
 import show.jangregersen.buehne.daten.Tempo
 import show.jangregersen.buehne.daten.ausSetNehmen
+import show.jangregersen.buehne.daten.einfuegenNach
 import show.jangregersen.buehne.daten.songsHinzufuegen
 import java.text.Normalizer
 
@@ -67,6 +68,11 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?) {
     val songs = alle.filter { tempo == 0 || it.tempo == tempo }
     val zielSet = b.set(zielSetId)
     val imSet = zielSet?.eintraege?.map { it.songId }?.toSet() ?: emptySet()
+    val z by App.buehne.zustand.collectAsState()
+    // Live (ein Song aus diesem Set liegt bereit oder läuft) ist "Als Nächstes" der Normalfall.
+    var alsNaechstes by rememberSaveable(zielSetId) { mutableStateOf(z.songId != null && z.songId in imSet) }
+    // Mehrere "Als Nächstes" hintereinander behalten ihre Reihenfolge.
+    var zuletzt by remember(zielSetId) { mutableStateOf<Long?>(null) }
 
     val waehler = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
         if (uri != null) {
@@ -101,6 +107,7 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?) {
             return@Rahmen
         }
         if (zielSet == null) Segmente(listOf("Gigs", "Archiv"), 1, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp)) { if (it == 0) navi.ersetzen(Seite.Gigs) }
+        else Segmente(listOf("Als Nächstes", "Ans Ende"), if (alsNaechstes) 0 else 1, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp)) { alsNaechstes = it == 0; zuletzt = null }
         Segmente(listOf("Alle", "Langsam", "Mittel", "Schnell"), tempo, Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp), hoehe = 40.dp, groesse = 15.sp) { tempo = it }
         SeitenListe(
             eintraege = songs, zeilenHoehe = 62.dp, modifier = Modifier.weight(1f), schluessel = "archiv$tempo$zielSetId", zeige = zeige, oben = 6.dp,
@@ -122,8 +129,18 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?) {
         ) { _, s ->
             ArchivZeile(s, zielSet != null, s.id in imSet) {
                 if (zielSet == null) navi.zu(Seite.Editor(s.id))
-                else if (s.id in imSet) App.ablage.aendern { it.ausSetNehmen(zielSet.id, s.id) }
-                else App.ablage.aendern { it.songsHinzufuegen(zielSet.id, listOf(s.id)) }
+                else if (s.id in imSet) {
+                    if (s.id == z.songId) App.buehne.hinweis("„${s.titel}“ liegt gerade bereit und bleibt im Set.")
+                    else { App.ablage.aendern { it.ausSetNehmen(zielSet.id, s.id) }; if (zuletzt == s.id) zuletzt = null; App.buehne.hinweis("„${s.titel}“ aus dem Set genommen.") }
+                } else if (alsNaechstes) {
+                    val nach = zuletzt?.takeIf { it in imSet } ?: z.songId
+                    App.ablage.aendern { it.einfuegenNach(zielSet.id, s.id, nach) }
+                    zuletzt = s.id
+                    App.buehne.hinweis("„${s.titel}“ kommt als Nächstes.")
+                } else {
+                    App.ablage.aendern { it.songsHinzufuegen(zielSet.id, listOf(s.id)) }
+                    App.buehne.hinweis("„${s.titel}“ steht jetzt am Ende vom Set.")
+                }
             }
         }
     }

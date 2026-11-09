@@ -97,7 +97,7 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
             Column(Modifier.weight(1f)) {
                 Etikett("Platz $platz in ${set.name}${if (e.gespielt) " · gespielt" else ""}")
                 T(song.titel, titelStil(32.sp), zeilen = 2)
-                T(listOf(songInfo(song), zeit(song.dauerMs)).joinToString(" · "), textStil(16.sp), zeilen = 1)
+                T(listOf(songInfo(song), zeit(song.dauerMs)).filter { it.isNotBlank() }.joinToString(" · "), textStil(16.sp), zeilen = 1)
             }
             SymbolKnopf(Sym.KREUZ, "Schließen", Modifier.width(48.dp), hoehe = 48.dp, groesse = 16.dp) { navi.zurueck() }
         }

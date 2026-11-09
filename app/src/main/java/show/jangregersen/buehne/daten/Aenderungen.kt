@@ -95,3 +95,16 @@ fun SetListe.ersterOffener(): Eintrag? = eintraege.firstOrNull { !it.gespielt }
 
 fun SetListe.dauerMs(b: Bestand, nurOffene: Boolean = false): Long =
     eintraege.filter { !nurOffene || !it.gespielt }.sumOf { b.song(it.songId)?.dauerMs ?: 0L }
+
+/**
+ * Nimmt [songId] neu ins Set auf, direkt hinter [nachId] (z. B. den laufenden Song).
+ * Ohne Anker landet er vor dem ersten ungespielten Song. Ist er schon drin, bleibt alles, wie es ist.
+ */
+fun Bestand.einfuegenNach(setId: Long, songId: Long, nachId: Long?): Bestand = setAendern(setId) { s ->
+    if (s.eintraege.any { it.songId == songId }) return@setAendern s
+    val l = s.eintraege.toMutableList()
+    val anker = l.indexOfFirst { it.songId == nachId }
+    val idx = if (anker >= 0) anker + 1 else l.indexOfFirst { !it.gespielt }.let { if (it < 0) l.size else it }
+    l.add(idx, Eintrag(songId))
+    s.copy(eintraege = l)
+}

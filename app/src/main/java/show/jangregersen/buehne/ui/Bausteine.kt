@@ -339,3 +339,33 @@ fun minuten(ms: Long): String {
     val min = ((ms + 30_000) / 60_000).toInt()
     return if (min >= 60) "%d:%02d h".format(min / 60, min % 60) else "$min min"
 }
+
+/** Ein Knopf in der [AktionsLeiste]. */
+class Aktion(val text: String, val symbol: Sym? = null, val voll: Boolean = false, val onClick: () -> Unit)
+
+/** Höhe der [AktionsLeiste] inklusive Seitenzeile, für SeitenListe(fussHoehe = …). */
+val AKTIONSLEISTE_HOEHE = 100.dp
+
+/**
+ * Feste Bedienzone unten: außen immer die Blätterpfeile (gleicher Platz auf jeder Seite),
+ * dazwischen die wichtigsten Aktionen der Seite. Darüber eine schmale Seitenanzeige.
+ */
+@Composable
+fun AktionsLeiste(seite: Int, seiten: Int, zurueck: () -> Unit, vor: () -> Unit, aktionen: List<Aktion>) {
+    Column(Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, bottom = 12.dp)) {
+        Row(Modifier.fillMaxWidth().height(22.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.Center) {
+            if (seiten > 1) {
+                T("Seite ${seite + 1} von $seiten", textStil(13.sp, gewicht = FontWeight.Bold), zeilen = 1)
+                T("  ·  auch mit den Lautstärketasten", textStil(12.sp, gewicht = FontWeight.Medium), zeilen = 1)
+            }
+        }
+        Abstand(4.dp)
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            SymbolKnopf(Sym.LINKS, "Vorige Seite", Modifier.width(54.dp), aktiv = seite > 0, onClick = zurueck)
+            aktionen.forEach { a ->
+                TextKnopf(a.text, Modifier.weight(1f), if (a.voll) Art.VOLL else Art.UMRISS, hoehe = 56.dp, groesse = 17.sp, symbol = a.symbol, onClick = a.onClick)
+            }
+            SymbolKnopf(Sym.RECHTS, "Nächste Seite", Modifier.width(54.dp), aktiv = seite < seiten - 1, onClick = vor)
+        }
+    }
+}
