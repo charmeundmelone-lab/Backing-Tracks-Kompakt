@@ -407,7 +407,8 @@ fun EinmessenSeite(navi: Navi, songId: Long) {
     val song = b.song(songId) ?: run { WegHier(navi); return }
     val abschnitte = remember(song.lyrics) { Abschnitte.zerlegen(song.lyrics) }
     val marken = Abschnitte.markenLesen(song.marken)
-    val laeuft = z.probe && z.songId == songId
+    // Nur solange der Song wirklich spielt: nach dem Ende wieder "Song von vorn starten" zeigen.
+    val laeuft = z.probe && z.songId == songId && z.spielt
     val naechster = (0 until abschnitte.size).firstOrNull { it !in marken }
     DisposableEffect(Unit) { onDispose { App.buehne.probeEnde() } }
     Lautstaerketasten { }
