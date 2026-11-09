@@ -37,6 +37,10 @@
 **2026-11-09:** Repo angelegt. Planung (GrillMe Welle 1), Ton-Test, Design B und Bedienkonzept
 ohne Scrollen sind fertig und in `PLAN.md`. Entwürfe online:
 https://claude.ai/artifact/7BXLnocEYEibvLqdEqzeHo, auf dem Kompakt als App "Entwürfe".
-Später am selben Tag: alle 14 Bildschirme gezeichnet und am Kompakt geprüft, USB-Audio-Weg
-ohne Kabel geprüft (alles vorhanden). Noch kein App-Code. Nächster Schritt laut `PLAN.md`:
-Kern aus der alten App übernehmen und durchsehen, dann Bildschirm für Bildschirm bauen.
+Später am selben Tag: alle 14 Bildschirme gezeichnet, dann die App gebaut (`app/`), am Kompakt
+installiert und die Kernabläufe getestet, Details in `PLAN.md` unter "Stand der App".
+Lokal bauen: `JAVA_HOME="/c/Program Files/Android/Android Studio/jbr" ./gradlew --no-daemon
+:app:assembleDebug` (local.properties mit `sdk.dir=C:/Users/HUAWEI/AppData/Local/Android/Sdk`),
+installieren mit `adb install -r app/build/outputs/apk/debug/app-debug.apk`.
+Testdaten direkt ändern: `adb exec-out run-as show.jangregersen.buehne cat files/bestand.json`
+(Git-Bash: bei Gerätepfaden `MSYS_NO_PATHCONV=1` setzen).

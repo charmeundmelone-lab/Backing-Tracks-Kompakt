@@ -144,3 +144,35 @@ Werkzeug: `entwuerfe/werkzeug/render.sh` rendert alle Canvas-Dateien neu nach
 - App-Name.
 - Nächster Schritt: Kern aus der alten App übernehmen und dabei durchsehen, dann Bildschirm für
   Bildschirm bauen.
+
+## Stand der App (2026-11-09 abends)
+
+App-Code liegt in `app/` (Paket `show.jangregersen.buehne`, Name auf dem Gerät "Backing-Tracks",
+endgültiger Name kommt ganz am Ende). Gebaut mit Compose (nur foundation, kein Material),
+Media3 ExoPlayer, Daten als JSON-Datei (`files/bestand.json`) statt Room.
+
+Aufbau:
+- `daten/`: Modell (Song, Gig, SetListe, Eintrag), Ablage (JSON, verzögertes Sichern),
+  reine Änderungsfunktionen (verschieben, als Nächstes, nächster Song …).
+- `audio/`: Engine (ein ExoPlayer pro Spur), KanalMischer (eigener AudioProcessor: Band fest
+  links, Click/Cue/Ansage fest rechts, live regelbar), Spuren (Stereo-Datei oder Einzelspuren,
+  Rolle aus dem Dateinamen), Import (Ordner-Regel der alten App, liest "KeyA K2" aus Namen),
+  Aufnahme, Warnton, PDF-Lyrics.
+- `spiel/Buehne.kt`: zentraler Steuerteil in der Application (überlebt Bildschirmwechsel),
+  Show-Automatik (Ansage nach, Ansage vor, sonst stille Pause mit Warnton im letzten Drittel),
+  Songende per STATE_ENDED, Vorladen des nächsten Songs, Set-Ende mit automatischem Wechsel.
+  `WiedergabeDienst` hält den Prozess als Vordergrund-Dienst am Leben.
+- `lyrics/`: Abschnitte (Labels wie [Chorus] werden deutsch), Einmess-Punkte, Seitenlauf.
+- `ui/`: alle 14 Bildschirme aus den Entwürfen, Seitenlisten ohne Scrollen,
+  Lautstärketasten blättern.
+
+Am Kompakt getestet (9.11.): Import von 42 Stereo-Songs aus "Nothingphone" (in Sekunden),
+Einzelspuren-Ordner, A–Z-Sprung, Gig anlegen mit Datum, Songs ins Set, Reihenfolge per
+Aufnehmen/Ablegen über zwei Seiten, Song-Karte, Pause einstellen, Show-Automatik
+(Song → 10 s Pause mit Countdown → nächster Song startet → "hält an" → nächster liegt bereit),
+Lyrics abschnittsweise nach Einmess-Punkten und von Hand.
+Noch nicht am Gerät getestet: Ansage aufnehmen (braucht Mikrofon-Erlaubnis von Jan),
+Einmessen-Bildschirm, Mixer mit Einzelspuren, Probe im Editor, PDF-Import,
+Wiedergabe mit ausgeschaltetem Bildschirm in der echten App, Kabel ins Pult.
+Nicht übernommen: "Frei spielen" während einer Pause (selten gebraucht, kann nachkommen).
+Testdaten auf dem Kompakt: Gig "Testgig", Ordner Music/Backing Tracks/Kurztest (3 Songs à 8 s).
