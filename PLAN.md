@@ -165,14 +165,14 @@ Werkzeug: `entwuerfe/werkzeug/render.sh` rendert alle Canvas-Dateien neu nach
   (2026-11-09): Kompakt meldet USB-Host-Betrieb (`android.hardware.usb.host`), USB-Audio-Treiber
   fest im Kernel (`CONFIG_SND_USB_AUDIO=y`), USB-Audio-HAL (`audio.usb.default.so`) und
   USB-Ausgang in der Audio-Policy. Der erste echte Gig-Probelauf ersetzt den Kabeltest.
-- App-Name.
+- App-Name: erledigt, "TrikTrak" (Jan, 9.11.).
 - Nächster Schritt: Kern aus der alten App übernehmen und dabei durchsehen, dann Bildschirm für
   Bildschirm bauen.
 
 ## Stand der App (2026-11-09 abends)
 
-App-Code liegt in `app/` (Paket `show.jangregersen.buehne`, Name auf dem Gerät "Backing-Tracks",
-endgültiger Name kommt ganz am Ende). Gebaut mit Compose (nur foundation, kein Material),
+App-Code liegt in `app/` (Paket `show.jangregersen.buehne`, Name auf dem Gerät "TrikTrak"
+(von Jan am 9.11. gewählt)). Gebaut mit Compose (nur foundation, kein Material),
 eigene Ton-Engine (Mischpult, seit 9.11. abends statt Media3), Daten als JSON-Datei (`files/bestand.json`) statt Room.
 
 Aufbau:

@@ -75,7 +75,7 @@ fun GigsSeite(navi: Navi) {
     val heute = LocalDate.now().toEpochDay()
     val gigs = b.gigs.sortedWith(compareBy({ if (it.datum <= 0) Long.MAX_VALUE else it.datum }, { it.name.lowercase() }))
     val naechster = gigs.firstOrNull { it.datum >= heute }?.id
-    Rahmen(navi, "Backing-Tracks", "Gigs") {
+    Rahmen(navi, "TrikTrak", "Gigs") {
         Segmente(listOf("Gigs", "Archiv"), 0, Modifier.padding(start = 14.dp, end = 14.dp, top = 12.dp)) { if (it == 1) navi.ersetzen(Seite.Archiv()) }
         SeitenListe(
             eintraege = gigs, zeilenHoehe = 88.dp, modifier = Modifier.weight(1f), schluessel = "gigs", oben = 10.dp,

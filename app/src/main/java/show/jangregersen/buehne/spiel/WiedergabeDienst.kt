@@ -32,7 +32,7 @@ class WiedergabeDienst : Service() {
         )
         val n: Notification = Notification.Builder(this, KANAL)
             .setSmallIcon(R.drawable.ic_mitteilung)
-            .setContentTitle("Backing-Tracks spielt")
+            .setContentTitle("TrikTrak spielt")
             .setContentIntent(oeffnen)
             .setOngoing(true)
             .build()

@@ -82,7 +82,9 @@ Wenn Jan es mit der neuen Engine noch hört: `adb logcat -s Mischpult` zeigt "li
    vor Test Zwei läuft (AudioFlinger: L -inf, R 0 dB, also nur rechts) → Test Zwei startet selbst.
    Im Kurztest stehen jetzt beide Einträge von Set 1 auf "Weiter im Set". Nicht geprüft: Ansage
    nach dem letzten Song eines Sets (spielt die App bewusst nur, wenn ein nächster Song folgt).
-3. App-Name mit Jan, Symbol, Aufräumen der Testdaten (Gigs "Testgig", "Kurztest", Ordner
+3. App-Name: Jan hat am 9.11. ca. 20:25 "TrikTrak" gewählt (so geschrieben). Gesetzt in strings.xml,
+   Gigs-Kopfband und Benachrichtigung. Paket bleibt show.jangregersen.buehne (sonst Datenverlust).
+   Noch offen: Symbol, Aufräumen der Testdaten (Gigs "Testgig", "Kurztest", Ordner
    `Music/Backing Tracks/Kurztest` und `Einzelspuren` nur mit Jans OK).
 
 **Vor jedem Tipp am Kompakt:** `dumpsys window | grep mCurrentFocus` prüfen. Beim Navigieren
