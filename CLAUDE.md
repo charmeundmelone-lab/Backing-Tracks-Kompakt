@@ -77,7 +77,7 @@ nachmessbar; Ursache dort vermutlich Ruckeln der Abspiel-Fäden neben dem E-Ink-
 Wenn Jan es mit der neuen Engine noch hört: `adb logcat -s Mischpult` zeigt "lief leer".
 
 **Als Nächstes:**
-1. Jan hört die neue Engine mit Einzelspuren und Stereo (Lautsprecher und Kabel/Bluetooth).
+1. Erledigt 9.11. ca. 20:15: Jan hat die neue Engine am Kompakt gehört, "klingt sauber".
 2. Ansage aufnehmen (Mikrofon-Erlaubnis tippt Jan), dann Ansage in der Automatik.
 3. App-Name mit Jan, Symbol, Aufräumen der Testdaten (Gigs "Testgig", "Kurztest", Ordner
    `Music/Backing Tracks/Kurztest` und `Einzelspuren` nur mit Jans OK).
