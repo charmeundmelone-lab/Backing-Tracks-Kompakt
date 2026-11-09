@@ -55,7 +55,9 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         /** Song läuft außerhalb eines Sets (Probehören zu Hause). */
         val probe: Boolean = false,
         val fehler: String? = null,
-        val hinweis: String? = null
+        val hinweis: String? = null,
+        /** Bleibender Hinweis auf der Bühne nach dem letzten Song eines Sets, bis wieder gespielt wird. */
+        val setDurch: String? = null
     )
 
     private val engine = Engine(app)
@@ -126,7 +128,7 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         ablage.aendern { it.eintragAendern(setId, songId) { e -> e.copy(gespielt = true) } }
         val b = ablage.jetzt
         val set = b.set(setId) ?: return
-        val ende = set.eintraege.firstOrNull { it.songId == songId }?.ende ?: Ende.WEITER
+        val ende = set.eintraege.firstOrNull { it.songId == songId }?.ende ?: Ende.ANHALTEN
         val naechster = set.naechsterNach(songId)
         if (naechster == null) {
             setFertig(setId)
@@ -151,12 +153,13 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         _zustand.update { it.copy(spielt = false) }
         dienstAus()
         val name = b.set(setId)?.name ?: "Set"
-        if (gig != null && gig.autoWeiter && folgeSet != null && folgeSet.ersterOffener() != null) {
+        val text = if (gig != null && gig.autoWeiter && folgeSet != null && folgeSet.ersterOffener() != null) {
             setWaehlen(folgeSet.id)
-            hinweis("„$name“ ist durch. „${folgeSet.name}“ liegt bereit.")
+            "„$name“ ist durch. „${folgeSet.name}“ liegt bereit."
         } else {
-            hinweis("„$name“ ist durch.")
+            "„$name“ ist durch."
         }
+        _zustand.update { it.copy(setDurch = text) }
     }
 
     // ── Show-Automatik ───────────────────────────────────────────────────────
@@ -264,6 +267,7 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
 
     /** Set aktiv machen. Läuft gerade ein Song, wird er nicht unterbrochen. */
     fun setWaehlen(setId: Long) {
+        _zustand.update { if (it.setId != setId) it.copy(setDurch = null) else it }
         val z = _zustand.value
         if (z.spielt || z.pause != null) { _zustand.update { it.copy(setId = setId, probe = false) }; return }
         val erster = ablage.jetzt.set(setId)?.ersterOffener()
@@ -279,6 +283,7 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
     fun bereitlegen(setId: Long, songId: Long): Boolean {
         val z = _zustand.value
         if (z.spielt || z.pause != null) return false
+        _zustand.update { it.copy(setDurch = null) }
         ablage.jetzt.song(songId)?.let { laden(it, setId) }
         return true
     }
@@ -347,7 +352,8 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         if (!engine.hatSpuren) return
         endeBehandelt = false
         engine.play()
-        _zustand.update { it.copy(spielt = true) }
+        // Probehören zählt nicht als Weiterspielen: der Set-Ende-Hinweis bleibt dann stehen.
+        _zustand.update { it.copy(spielt = true, setDurch = if (it.probe) it.setDurch else null) }
         dienstAn()
     }
 

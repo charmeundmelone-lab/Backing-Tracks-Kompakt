@@ -135,7 +135,7 @@ class Ablage(context: Context) {
                         id = s.getLong("id"), name = s.optString("name"),
                         eintraege = if (e == null) emptyList() else (0 until e.length()).map { j ->
                             val x = e.getJSONObject(j)
-                            Eintrag(x.getLong("songId"), x.optBoolean("gespielt"), x.optInt("ende", Ende.WEITER))
+                            Eintrag(x.getLong("songId"), x.optBoolean("gespielt"), x.optInt("ende", Ende.ANHALTEN))
                         }
                     )
                 }

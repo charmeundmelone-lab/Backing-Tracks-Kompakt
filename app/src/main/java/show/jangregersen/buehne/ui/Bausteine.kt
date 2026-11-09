@@ -8,6 +8,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -86,6 +88,21 @@ fun T(text: String, stil: TextStyle, modifier: Modifier = Modifier, zeilen: Int 
         maxLines = zeilen,
         overflow = if (zeilen == Int.MAX_VALUE) TextOverflow.Clip else TextOverflow.Ellipsis
     )
+}
+
+/** Eine Zeile, die sich verkleinert statt umzubrechen (bis [kleinste] sp, danach „…“). */
+@Composable
+fun EinzeilerPassend(text: String, stil: TextStyle, kleinste: Float, modifier: Modifier = Modifier) {
+    val messer = rememberTextMeasurer()
+    BoxWithConstraints(modifier, contentAlignment = Alignment.BottomStart) {
+        val breite = constraints.maxWidth
+        val groesse = remember(text, breite, stil) {
+            var sp = stil.fontSize.value
+            while (sp > kleinste && messer.measure(text, stil.copy(fontSize = sp.sp), maxLines = 1).size.width > breite) sp -= 1f
+            sp
+        }
+        T(text, stil.copy(fontSize = groesse.sp, lineHeight = (groesse * 1.05f).sp), zeilen = 1)
+    }
 }
 
 @Composable
@@ -226,19 +243,36 @@ fun Kaestchen(anzahl: Int, voll: Int, farbe: Color, modifier: Modifier = Modifie
 // ── Kopfband und Blätterleiste ───────────────────────────────────────────────
 
 @Composable
-fun KopfBand(ober: String, titel: String, rechts: (@Composable () -> Unit)? = null, onClick: (() -> Unit)? = null) {
+fun KopfBand(ober: String, titel: String, rechts: (@Composable () -> Unit)? = null, zurueck: (() -> Unit)? = null, onClick: (() -> Unit)? = null) {
     Row(
         Modifier.fillMaxWidth().background(Schwarz)
             .then(if (onClick != null) Modifier.tipp(onClick = onClick) else Modifier)
-            .padding(start = 18.dp, end = 10.dp, top = 9.dp, bottom = 9.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .padding(start = if (zurueck != null) 10.dp else 18.dp, end = 10.dp, top = 9.dp, bottom = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
+        if (zurueck != null) ZurueckKnopf(aufSchwarz = true, onClick = zurueck)
         Column(Modifier.weight(1f)) {
             Etikett(ober, farbe = Weiss)
             T(titel, titelStil(26.sp, Weiss), zeilen = 1)
         }
         if (rechts != null) rechts()
     }
+}
+
+/** Immer oben links, immer gleich: „‹“ im Rahmen. Gedrückt = invertiert. */
+@Composable
+fun ZurueckKnopf(aufSchwarz: Boolean, onClick: () -> Unit) {
+    val quelle = remember { MutableInteractionSource() }
+    val gedrueckt by quelle.collectIsPressedAsState()
+    val hell = if (aufSchwarz) Weiss else Schwarz
+    val dunkel = if (aufSchwarz) Schwarz else Weiss
+    val form = RoundedCornerShape(10.dp)
+    Box(
+        Modifier.width(52.dp).height(44.dp).clip(form).background(if (gedrueckt) hell else dunkel).border(2.5.dp, hell, form)
+            .clickable(interactionSource = quelle, indication = null, onClickLabel = "Zurück", onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) { Symbol(Sym.LINKS, if (gedrueckt) dunkel else hell, 20.dp) }
 }
 
 @Composable
@@ -265,11 +299,14 @@ fun Blaetterleiste(seite: Int, seiten: Int, zurueck: () -> Unit, vor: () -> Unit
         ) {
             T(mitteText ?: "Seite ${seite + 1} von ${maxOf(1, seiten)}", textStil(17.sp, gewicht = FontWeight.Bold), zeilen = 1)
             if (mitteKlein != null) T(mitteKlein, textStil(12.sp), zeilen = 1)
-            else if (seiten in 2..8) Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                repeat(seiten) { i ->
-                    val m = Modifier.width(18.dp).height(5.dp).clip(RoundedCornerShape(3.dp))
-                    Box(if (i == seite) m.background(Schwarz) else m.border(1.5.dp, Schwarz, RoundedCornerShape(3.dp)))
+            else if (seiten > 1) {
+                if (seiten <= 8) Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    repeat(seiten) { i ->
+                        val m = Modifier.width(18.dp).height(5.dp).clip(RoundedCornerShape(3.dp))
+                        Box(if (i == seite) m.background(Schwarz) else m.border(1.5.dp, Schwarz, RoundedCornerShape(3.dp)))
+                    }
                 }
+                T("auch mit den Lautstärketasten", textStil(11.sp, gewicht = FontWeight.Medium), Modifier.padding(top = 3.dp), zeilen = 1)
             }
         }
         SymbolKnopf(Sym.RECHTS, "Nächste Seite", Modifier.width(64.dp), art = Art.VOLL, aktiv = seite < seiten - 1, onClick = vor)

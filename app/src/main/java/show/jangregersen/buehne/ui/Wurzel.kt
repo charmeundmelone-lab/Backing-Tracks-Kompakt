@@ -137,10 +137,16 @@ fun Rahmen(navi: Navi, ober: String, titel: String, rechts: (@Composable () -> U
     val z by App.buehne.zustand.collectAsState()
     val b by App.ablage.stand.collectAsState()
     val song = b.song(z.songId)
+    // Sichtbarer Zurück-Knopf auf jeder Seite außer der ersten (Gigs).
+    val zurueck: (() -> Unit)? = if (navi.stapel.size > 1) ({ navi.zurueck() }) else null
     Column(Modifier.fillMaxSize()) {
         if (song != null) {
             JetztBand(navi, song.titel)
-            Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 10.dp, top = 8.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.fillMaxWidth().padding(start = if (zurueck != null) 10.dp else 18.dp, end = 10.dp, top = 8.dp, bottom = 2.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                if (zurueck != null) ZurueckKnopf(aufSchwarz = false, onClick = zurueck)
                 Column(Modifier.weight(1f)) {
                     Etikett(ober)
                     T(titel, titelStil(24.sp), zeilen = 1)
@@ -148,7 +154,7 @@ fun Rahmen(navi: Navi, ober: String, titel: String, rechts: (@Composable () -> U
                 if (rechts != null) rechts()
             }
         } else {
-            KopfBand(ober, titel, rechts = rechts?.let { r -> { WeissUmrahmt(r) } })
+            KopfBand(ober, titel, rechts = rechts?.let { r -> { WeissUmrahmt(r) } }, zurueck = zurueck)
         }
         inhalt()
     }
@@ -165,6 +171,7 @@ fun JetztBand(navi: Navi, titel: String) {
     val ober = when {
         z.pause != null -> "${z.pause!!.art} · noch ${zeit(z.pause!!.restSek * 1000L)}"
         z.spielt -> "Jetzt · noch ${zeit(z.dauerMs - pos)}"
+        z.setDurch != null -> "Set durch · bereit · ${zeit(z.dauerMs)}"
         else -> "Bereit · ${zeit(z.dauerMs)}"
     }
     KopfBand(ober, titel, rechts = { WeisserKnopfImBand("Bühne", Sym.ZEILEN) { navi.zurBuehne() } }, onClick = { navi.zurBuehne() })

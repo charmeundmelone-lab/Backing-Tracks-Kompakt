@@ -45,42 +45,32 @@ installieren mit `adb install -r app/build/outputs/apk/debug/app-debug.apk`.
 Testdaten direkt ändern: `adb exec-out run-as show.jangregersen.buehne cat files/bestand.json`
 (Git-Bash: bei Gerätepfaden `MSYS_NO_PATHCONV=1` setzen).
 
-## Übergabe an die nächste Session (geschrieben 2026-11-09, ca. 16:15)
+## Übergabe an die nächste Session (geschrieben 2026-11-09, ca. 16:30)
 
-**Stand:** `main`, alles committet und gepusht. GitHub-Bau: Tests und Release-APK bauen grün,
-nur der Artefakt-Upload scheiterte am vollen Artefakt-Speicher des Kontos (Upload ist seitdem
-`continue-on-error`). Auf dem Kompakt ist ein etwas älterer Bau installiert. Der neueste Bau
-(eingerückte Folgezeilen in den Lyrics, breitere Markierungen „0:10“/„hält an“ in der Setliste)
-ist im Repo, aber noch **nicht installiert**, weil Jan das Gerät gerade selbst benutzt hat.
+**Stand:** `main`, alles committet und gepusht. Der neueste Bau ist auf dem Kompakt installiert.
+
+**Erledigt am 9.11. (zweite Session), am Gerät geprüft:**
+- Titelbalken der Bühne springt nicht mehr: feste Höhe, Zeit mit gleich breiten Ziffern (`tnum`)
+  in fester Breite, Titel einzeilig und verkleinert sich bis 22 sp (`EinzeilerPassend`).
+- Standard am Songende ist jetzt `Ende.ANHALTEN` (nächster Song liegt bereit, startet nicht).
+  Beschriftung der Karte unverändert. In der Setliste steht das Kästchen jetzt bei der
+  Ausnahme: „weiter“ statt „hält an“. Im Testgig sind alle Einträge auf den neuen Standard gesetzt.
+- Zurück-Knopf „‹“ oben links auf allen Seiten außer der Startseite (`ZurueckKnopf`, über
+  `Rahmen` bzw. `KopfBand(zurueck = …)`), auch Mixer und Editor (dort einheitlich gerahmt).
+- Blätterleiste zeigt „auch mit den Lautstärketasten“, sobald es mehr als eine Seite gibt.
+- Set-Ende bleibt als Kasten auf der Bühne stehen (`Zustand.setDurch`), im Jetzt-Band steht
+  „Set durch · bereit“. Weg erst, wenn gespielt, ein anderes Set gewählt oder ein Song von Hand
+  bereitgelegt wird. Probehören lässt ihn stehen.
+- Archiv-Raster A–Z passt mit Jetzt-Band (geprüft).
+
+**Neue Testdaten:** Gig „Kurztest“ (Set 1: Test Eins, Test Zwei; Set 2: Put your records drums new,
+Test Drei) zum schnellen Prüfen von Songende und Set-Ende. Löschen nur mit Jans OK.
 
 **Vor jedem Tipp am Kompakt:** Jan fragen oder per `dumpsys window | grep mCurrentFocus` prüfen,
-ob er gerade selbst tippt (am 9.11. kam ein Bildschirmwechsel von ihm, nicht von der App).
+ob er gerade selbst tippt.
 
-**Als Nächstes, in dieser Reihenfolge:**
-0. **Fehler von Jan (9.11.): Schwarzer Titelbalken auf der Bühne springt in der Höhe.** Während
-   ein Song läuft, wird der schwarze Kopf mit Titel und Restzeit mal niedriger, mal höher.
-   Vermutete Ursache (ungeprüft): Die Ziffern der Restzeit sind unterschiedlich breit, dadurch
-   ändert sich die Breite für den Titel (`BuehnenKopf` in `ui/SeiteBuehne.kt`, Titel mit
-   `zeilen = 2`), und ein langer Titel bricht je nach Sekunde in eine zweite Zeile um.
-   Lösung: Ziffern gleich breit (Schriftmerkmal `tnum` oder feste Breite für die Zeit) und den
-   Kopf auf feste Höhe bringen; Titel einzeilig mit Verkleinerung statt Umbruch. Auf E-Ink ist
-   ein springender Balken besonders störend (jedes Mal neuer Bildaufbau).
-0b. **Neue Vorgabe von Jan (9.11.): Standard am Songende = nächster Song wird geladen.** Endet ein
-   Song, liegt der nächste Song bereit (geladen), startet aber nicht von selbst, außer es wird
-   pro Song umgestellt (Song-Karte „Am Songende“). Heute ist der Standard noch `Ende.WEITER`
-   (Automatik startet den nächsten): umstellen auf `Ende.ANHALTEN` in `daten/Modell.kt`
-   (`Eintrag.ende`) und in `daten/Ablage.kt` (`optInt("ende", …)`). Jan hat bestätigt:
-   bereitlegen, nicht abspielen. Die Beschriftung auf der Karte („Weiter im Set“ / „Anhalten“)
-   bleibt so, wie sie ist (Jans ausdrücklicher Wunsch, nicht umbenennen).
-   Die Test-Einträge im „Testgig“ haben noch den alten Standard.
-1. **Sichtbarer Zurück-Knopf überall** (Jans Orientierungs-Frage, wichtigster offener Punkt):
-   Setliste, Sets eines Gigs, Archiv und Mixer haben keinen „‹ Zurück“ auf dem Bildschirm, nur
-   die Android-Zurück-Geste. Einheitlich oben links einbauen (z. B. im `Rahmen`-Unterkopf bzw.
-   im schwarzen Band), ohne das „Jetzt“-Band zu verdrängen.
-2. **Lautstärketasten-Hinweis** auch in Listen sichtbar machen (z. B. klein in der Blätterleiste).
-3. **Set-Ende-Hinweis** nicht nur 5 s als Meldung, sondern bleibend auf der Bühne zeigen
-   („Set 1 ist durch, Set 2 liegt bereit“), bis gespielt wird.
-4. Neuen Bau installieren und am Gerät testen, was noch fehlt:
+**Als Nächstes:**
+1. Am Gerät testen, was noch fehlt:
    - Ansage aufnehmen (Mikrofon-Erlaubnis muss Jan selbst bestätigen; Offline+-Schalter trennt
      das Mikrofon), danach Ansage in der Automatik (läuft nur rechts).
    - Einmessen-Bildschirm mit „Test Eins“ (8 s) oder einem echten Song.
@@ -88,10 +78,10 @@ ob er gerade selbst tippt (am 9.11. kam ein Bildschirmwechsel von ihm, nicht von
      links), Stummschalten, Stufen.
    - Probe im Editor, PDF-Import.
    - Wiedergabe mit ausgeschaltetem Bildschirm in der echten App (Ton-Test-App lief ohne Aussetzer).
-5. Danach: App-Name mit Jan festlegen (ganz am Ende, Jans Wunsch), Symbol, Aufräumen der Testdaten
-   (Gig „Testgig“, Ordner `Music/Backing Tracks/Kurztest` und `Einzelspuren` nur mit Jans OK löschen).
+2. Danach: App-Name mit Jan festlegen (ganz am Ende, Jans Wunsch), Symbol, Aufräumen der Testdaten
+   (Gigs „Testgig“ und „Kurztest“, Ordner `Music/Backing Tracks/Kurztest` und `Einzelspuren` nur
+   mit Jans OK löschen).
 
-**Bekannte Kleinigkeiten:** Archiv-Raster A–Z ist mit Jetzt-Band knapp (Zellen schon auf 50 dp
-verkleinert, am Gerät noch nicht geprüft). Platzhalter-Lyrics für Tests stehen in „Test Eins“ und
-„Country Roads“ (selbst geschrieben, keine echten Songtexte). „Frei spielen“ aus der alten App ist
-nicht übernommen.
+**Bekannte Kleinigkeiten:** Platzhalter-Lyrics für Tests stehen in „Test Eins“ und „Country Roads“
+(selbst geschrieben, keine echten Songtexte). „Frei spielen“ aus der alten App ist nicht übernommen.
+Im Mixer gibt es jetzt „‹“ und „Fertig“, beide gehen zurück.

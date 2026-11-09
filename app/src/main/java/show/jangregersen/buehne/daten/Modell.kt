@@ -49,7 +49,7 @@ data class Song(
 data class Eintrag(
     val songId: Long,
     val gespielt: Boolean = false,
-    val ende: Int = Ende.WEITER
+    val ende: Int = Ende.ANHALTEN
 )
 
 data class SetListe(

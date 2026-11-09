@@ -55,6 +55,7 @@ fun BuehneSeite(navi: Navi) {
     if (song == null) {
         Column(Modifier.fillMaxSize()) {
             KopfBand("Bühne", "Nichts bereit")
+            z.setDurch?.let { SetEndeHinweis(it) }
             Column(Modifier.padding(18.dp).weight(1f)) {
                 T("Wähle ein Set, dann liegt hier der erste Song bereit.", textStil(18.sp))
             }
@@ -69,10 +70,11 @@ fun BuehneSeite(navi: Navi) {
     val platz = set?.eintraege?.indexOfFirst { it.songId == song.id }?.let { if (it >= 0) "${it + 1} / ${set.eintraege.size}" else null }
     val naechsterEintrag = set?.naechsterNach(song.id)
     val naechster = b.song(naechsterEintrag?.songId)
-    val endeHier = set?.eintraege?.firstOrNull { it.songId == song.id }?.ende ?: Ende.WEITER
+    val endeHier = set?.eintraege?.firstOrNull { it.songId == song.id }?.ende ?: Ende.ANHALTEN
 
     Column(Modifier.fillMaxSize()) {
         BuehnenKopf(song, if (z.probe) "Probe" else if (z.spielt) "Jetzt${platz?.let { " · $it" } ?: ""}" else "Bereit${platz?.let { " · $it" } ?: ""}", z.dauerMs, z.spielt)
+        z.setDurch?.let { SetEndeHinweis(it) }
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (song.lyrics.isNotBlank()) LyricsBereich(song, z.dauerMs)
             else SongDaten(song)
@@ -99,16 +101,42 @@ private fun BuehnenKopf(song: Song, ober: String, dauerMs: Long, spielt: Boolean
     val dauer = if (dauerMs > 0) dauerMs else song.dauerMs
     val rest = (dauer - pos).coerceAtLeast(0)
     val voll = if (dauer > 0) ((pos * 20) / dauer).toInt().coerceIn(0, 20) else 0
+    // Feste Höhe und feste Breite für die Zeit: Der Kopf darf sich beim Herunterzählen nie
+    // verändern, sonst baut das E-Ink jede Sekunde den ganzen Balken neu auf.
+    val zeitStil = titelStil(46.sp, Weiss).copy(lineHeight = 46.sp, fontFeatureSettings = "tnum")
+    val messer = rememberTextMeasurer()
+    val zeitBreite = with(LocalDensity.current) {
+        val muster = zeit(maxOf(dauer, song.dauerMs)).replace(Regex("[0-9]"), "0")
+        messer.measure(muster, zeitStil).size.width.toDp()
+    }
     Column(Modifier.fillMaxWidth().background(Schwarz).padding(start = 18.dp, end = 18.dp, top = 12.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row {
             Etikett(ober, Modifier.weight(1f), Weiss)
             Etikett(if (spielt) "noch" else "Länge", farbe = Weiss)
         }
-        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            T(song.titel, titelStil(38.sp, Weiss).copy(lineHeight = 38.sp), Modifier.weight(1f), zeilen = 2)
-            T(zeit(if (spielt || pos > 0) rest else dauer), titelStil(46.sp, Weiss).copy(lineHeight = 44.sp), zeilen = 1)
+        Row(Modifier.height(50.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            EinzeilerPassend(song.titel, titelStil(40.sp, Weiss), kleinste = 22f, modifier = Modifier.weight(1f))
+            Box(Modifier.width(zeitBreite), contentAlignment = Alignment.BottomEnd) {
+                T(zeit(if (spielt || pos > 0) rest else dauer), zeitStil, zeilen = 1)
+            }
         }
         Kaestchen(20, voll, Weiss, hoehe = 6.dp)
+    }
+}
+
+/** Bleibt stehen, bis wieder gespielt oder ein anderes Set gewählt wird. */
+@Composable
+private fun SetEndeHinweis(text: String) {
+    Row(
+        Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp).fillMaxWidth()
+            .border(3.dp, Schwarz, RoundedCornerShape(14.dp)).padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        Symbol(Sym.HAKEN, Schwarz, 24.dp)
+        Column(Modifier.weight(1f)) {
+            Etikett("Set-Ende")
+            T(text, textStil(18.sp, gewicht = FontWeight.Bold), zeilen = 2)
+        }
     }
 }
 

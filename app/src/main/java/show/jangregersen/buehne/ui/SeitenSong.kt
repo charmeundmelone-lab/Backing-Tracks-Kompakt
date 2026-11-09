@@ -178,8 +178,8 @@ fun EditorSeite(navi: Navi, songId: Long, startReiter: Int) {
     val song = b.song(songId) ?: run { WegHier(navi); return }
     var reiter by remember { mutableStateOf(startReiter) }
     Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().padding(start = 4.dp, end = 10.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            SymbolKnopf(Sym.LINKS, "Zurück", Modifier.width(48.dp), Art.OHNE, hoehe = 44.dp, groesse = 18.dp) { navi.zurueck() }
+        Row(Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            ZurueckKnopf(aufSchwarz = false) { navi.zurueck() }
             T(song.titel, titelStil(26.sp), Modifier.weight(1f), zeilen = 1)
             TextKnopf("Fertig", art = Art.VOLL, hoehe = 44.dp) { navi.zurueck() }
         }
@@ -499,7 +499,7 @@ fun MixerSeite(navi: Navi, songId: Long) {
         App.buehne.mixGeaendert(songId)
     }
     Column(Modifier.fillMaxSize()) {
-        KopfBand("Mixer · gilt nur für diesen Song", song.titel, rechts = { WeisserKnopfImBand("Fertig") { navi.zurueck() } })
+        KopfBand("Mixer · gilt nur für diesen Song", song.titel, rechts = { WeisserKnopfImBand("Fertig") { navi.zurueck() } }, zurueck = { navi.zurueck() })
         val k = kanaele
         Column(Modifier.weight(1f).padding(top = 4.dp)) {
             if (k == null) T("…", textStil(18.sp), Modifier.padding(18.dp))

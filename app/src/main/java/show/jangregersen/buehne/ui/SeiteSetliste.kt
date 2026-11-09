@@ -127,7 +127,7 @@ private fun SetZeile(nr: Int, s: Song, e: Eintrag, aktuell: Boolean, spielt: Boo
         }
         if (s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank()) Symbol(Sym.MIKRO, Schwarz, 18.dp)
         if (s.pauseSek > 0) Box(Modifier.border(2.dp, Schwarz, RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) { T(pauseText(s.pauseSek), textStil(13.sp, gewicht = FontWeight.Bold)) }
-        if (e.ende == Ende.ANHALTEN) Box(Modifier.border(2.dp, Schwarz, RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) { T("hält an", textStil(12.sp, gewicht = FontWeight.Bold)) }
+        if (e.ende == Ende.WEITER) Box(Modifier.border(2.dp, Schwarz, RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) { T("weiter", textStil(12.sp, gewicht = FontWeight.Bold)) }
         T(zeit(s.dauerMs), titelStil(20.sp, gewicht = FontWeight.SemiBold), Modifier.width(42.dp), zeilen = 1)
     }
     Linie(Modifier.padding(horizontal = 10.dp))
