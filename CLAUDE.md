@@ -48,8 +48,7 @@ Testdaten direkt ändern: `adb exec-out run-as show.jangregersen.buehne cat file
 ## Übergabe an die nächste Session (geschrieben 2026-11-09, ca. 19:50)
 
 **Stand:** `main`, alles committet und gepusht. Repo ist seit 9.11. öffentlich (Jans Wunsch).
-Neuester Bau ist auf dem Kompakt installiert. Der Kompakt ist nach dem Bildschirm-aus-Test
-gesperrt (PIN, tippt Jan).
+Neuester Bau ist auf dem Kompakt installiert.
 
 **Erledigt am 9.11. abends (dritte Session):**
 - Ton-Fehler behoben (Jan: "prasselnd, zu langsam, grauenhaft"). Ursache: Einzelspuren liefen
@@ -78,7 +77,11 @@ Wenn Jan es mit der neuen Engine noch hört: `adb logcat -s Mischpult` zeigt "li
 
 **Als Nächstes:**
 1. Erledigt 9.11. ca. 20:15: Jan hat die neue Engine am Kompakt gehört, "klingt sauber".
-2. Ansage aufnehmen (Mikrofon-Erlaubnis tippt Jan), dann Ansage in der Automatik.
+2. Erledigt 9.11. ca. 20:20: Jan hat die Mikrofon-Erlaubnis erteilt und für "Test Zwei" (Kurztest)
+   Ansage vorher und nachher aufgenommen (je ~7 s). Automatik geprüft: Test Eins endet → Ansage
+   vor Test Zwei läuft (AudioFlinger: L -inf, R 0 dB, also nur rechts) → Test Zwei startet selbst.
+   Im Kurztest stehen jetzt beide Einträge von Set 1 auf "Weiter im Set". Nicht geprüft: Ansage
+   nach dem letzten Song eines Sets (spielt die App bewusst nur, wenn ein nächster Song folgt).
 3. App-Name mit Jan, Symbol, Aufräumen der Testdaten (Gigs "Testgig", "Kurztest", Ordner
    `Music/Backing Tracks/Kurztest` und `Einzelspuren` nur mit Jans OK).
 

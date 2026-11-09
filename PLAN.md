@@ -203,4 +203,5 @@ Nicht übernommen: "Frei spielen" während einer Pause (selten gebraucht, kann n
 Testdaten auf dem Kompakt: Gig "Testgig", Ordner Music/Backing Tracks/Kurztest (3 Songs à 8 s).
 
 Nachtrag 9.11. abends: Mixer, Editor-Probe, Einmessen, PDF-Import und Wiedergabe mit
-ausgeschaltetem Bildschirm am Gerät geprüft. Offen bleibt nur die Ansage-Aufnahme (Mikrofon).
+ausgeschaltetem Bildschirm am Gerät geprüft. Ansage-Aufnahme und Ansage in der Automatik
+(nur rechts) ebenfalls geprüft. Alle Gerätetests aus Welle 1 sind damit durch.
