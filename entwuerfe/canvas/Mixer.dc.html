@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Mixer</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#000}a:hover{color:#000}
+</style>
+</helmet>
+<div style="width: 360px; height: 600px; box-sizing: border-box; background: #fff; color: #000; font-family: 'Barlow Semi Condensed', 'Arial Narrow', sans-serif; display: flex; flex-direction: column">
+  <div style="background: #000; color: #fff; padding: 8px 10px 8px 18px; display: flex; justify-content: space-between; align-items: center">
+    <div>
+      <div style="font-size: 11px; font-weight: 700; letter-spacing: 0.16em">MIXER · GILT NUR FÜR DIESEN SONG</div>
+      <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700; line-height: 1.05">Country Roads</div>
+    </div>
+    <button style="height: 40px; padding: 0 16px; border: none; border-radius: 10px; background: #fff; color: #000; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 17px; font-weight: 700">Fertig</button>
+  </div>
+  <div style="flex-grow: 1; display: flex; flex-direction: column; padding: 4px 0 0">
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+      <div style="display: flex; align-items: center; gap: 8px; padding: 10px 18px 2px; font-size: 12px; font-weight: 700; letter-spacing: 0.16em">
+        <span>{{g.label}}</span>
+        <span style="flex-grow: 1; border-top: 1.5px solid #000"></span>
+      </div>
+      <sc-for list="{{g.rows}}" as="r" hint-placeholder-count="3">
+        <div style="height: 60px; box-sizing: border-box; margin: 0 12px; padding: 0 2px 0 6px; display: flex; align-items: center; gap: 8px">
+          <div style="width: 64px; font-family: 'Barlow Condensed', sans-serif; font-size: 21px; font-weight: 700; line-height: 1; text-decoration: {{r.deco}}">{{r.name}}</div>
+          <button aria-label="leiser" style="width: 40px; height: 44px; border: 2px solid #000; border-radius: 10px; background: #fff; font-size: 22px; font-weight: 700; color: #000; padding: 0">−</button>
+          <div style="flex-grow: 1; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 2px; align-items: end; height: 26px" aria-label="Lautstärke">
+            <sc-for list="{{r.bars}}" as="b" hint-placeholder-count="10">
+              <div style="height: {{b.h}}; box-sizing: border-box; border: 1.5px solid #000; background: {{b.fill}}"></div>
+            </sc-for>
+          </div>
+          <button aria-label="lauter" style="width: 40px; height: 44px; border: 2px solid #000; border-radius: 10px; background: #fff; font-size: 22px; font-weight: 700; color: #000; padding: 0">+</button>
+          <button aria-label="stumm schalten" style="width: 44px; height: 44px; border: 2px solid #000; border-radius: 10px; background: {{r.mbg}}; color: {{r.mfg}}; font-family: 'Barlow Condensed', sans-serif; font-size: 15px; font-weight: 700; padding: 0">AUS</button>
+        </div>
+      </sc-for>
+    </sc-for>
+  </div>
+  <div style="padding: 8px 14px 14px">
+    <button style="width: 100%; height: 50px; border: 2.5px solid #000; border-radius: 14px; background: #fff; color: #000; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 16px; font-weight: 700">Alles auf Standard</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":600}}'>
+class Component extends DCLogic {
+renderVals() {
+const row = (name, level, muted) => ({
+  name, deco: muted ? 'line-through' : 'none', mbg: muted ? '#000' : '#fff', mfg: muted ? '#fff' : '#000',
+  bars: Array.from({ length: 10 }, (_, i) => ({ h: (8 + i * 2) + 'px', fill: !muted && i < level ? '#000' : '#fff' }))
+});
+const groups = [
+  { label: 'FÜRS PUBLIKUM · LINKS', rows: [row('Drums', 8), row('Bass', 7), row('Keys', 6), row('Vocals', 0, true)] },
+  { label: 'NUR IM OHR · RECHTS', rows: [row('Click', 7), row('Ansage', 9)] }
+];
+return { groups };
+}
+}
+</script>
+</body>
+</html>

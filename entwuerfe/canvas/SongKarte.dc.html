@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Song-Karte im Set</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#000}a:hover{color:#000}
+</style>
+</helmet>
+<div style="width: 360px; height: 600px; box-sizing: border-box; background: #fff; color: #000; font-family: 'Barlow Semi Condensed', 'Arial Narrow', sans-serif; display: flex; flex-direction: column">
+  <div style="background: #000; color: #fff; padding: 9px 18px; font-size: 11px; font-weight: 700; letter-spacing: 0.16em; display: flex; justify-content: space-between">
+    <span>JETZT · COUNTRY ROADS</span>
+    <span>NOCH 2:41</span>
+  </div>
+  <div style="display: flex; align-items: flex-start; gap: 10px; padding: 14px 14px 10px 18px; border-bottom: 2.5px solid #000">
+    <div style="flex-grow: 1">
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.16em">PLATZ 4 IM TANZSET</div>
+      <div style="font-family: 'Barlow Condensed', sans-serif; font-size: 34px; font-weight: 700; line-height: 1">Dancing Queen</div>
+      <div style="font-size: 16px; font-weight: 600; margin-top: 2px">G · 101 BPM · 3:51</div>
+    </div>
+    <button aria-label="Schließen" style="width: 48px; height: 48px; border: 2.5px solid #000; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 0">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M3 3 L15 15 M15 3 L3 15" stroke="#000" stroke-width="3" stroke-linecap="round"></path></svg>
+    </button>
+  </div>
+  <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 12px; padding: 12px 14px 0">
+    <button style="height: 54px; border: 2.5px solid #000; border-radius: 14px; background: #000; color: #fff; display: flex; align-items: center; justify-content: center; gap: 10px; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 18px; font-weight: 700">
+      <svg width="20" height="16" viewBox="0 0 26 20" aria-hidden="true"><path d="M2 2 L15 10 L2 18 Z" fill="#fff"></path><rect x="18" y="2" width="5" height="16" rx="1" fill="#fff"></rect></svg>
+      <span>Als Nächstes spielen</span>
+    </button>
+    <div>
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.16em; margin-bottom: 6px">ANSAGE VORHER · 0:20</div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+        <button style="height: 48px; border: 2.5px solid #000; border-radius: 12px; background: #fff; color: #000; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 16px; font-weight: 700">
+          <svg width="14" height="16" viewBox="0 0 14 16" aria-hidden="true"><path d="M2 2 L12 8 L2 14 Z" fill="#000"></path></svg>
+          <span>Anhören</span>
+        </button>
+        <button style="height: 48px; border: 2.5px solid #000; border-radius: 12px; background: #fff; color: #000; display: flex; align-items: center; justify-content: center; gap: 8px; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 16px; font-weight: 700">
+          <svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#000"></circle></svg>
+          <span>Neu aufnehmen</span>
+        </button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.16em; margin-bottom: 6px">PAUSE DANACH</div>
+      <div style="display: flex; align-items: center; gap: 10px">
+        <button aria-label="Pause kürzer" style="width: 56px; height: 48px; border: 2.5px solid #000; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 0">
+          <svg width="18" height="4" viewBox="0 0 18 4" aria-hidden="true"><path d="M2 2 h14" stroke="#000" stroke-width="3" stroke-linecap="round"></path></svg>
+        </button>
+        <div style="flex-grow: 1; text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 30px; font-weight: 700">keine</div>
+        <button aria-label="Pause länger" style="width: 56px; height: 48px; border: 2.5px solid #000; border-radius: 12px; background: #fff; display: flex; align-items: center; justify-content: center; padding: 0">
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M9 2 v14 M2 9 h14" stroke="#000" stroke-width="3" stroke-linecap="round"></path></svg>
+        </button>
+      </div>
+    </div>
+    <div>
+      <div style="font-size: 12px; font-weight: 700; letter-spacing: 0.16em; margin-bottom: 6px">AM SONGENDE</div>
+      <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 2.5px solid #000; border-radius: 12px; overflow: hidden">
+        <button style="height: 44px; border: none; background: #000; color: #fff; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 16px; font-weight: 700">Weiter im Set</button>
+        <button style="height: 44px; border: none; border-left: 2px solid #000; background: #fff; color: #000; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 16px; font-weight: 700">Anhalten</button>
+      </div>
+    </div>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; padding: 10px 14px 14px">
+    <button style="height: 48px; border: 1.5px solid #000; border-radius: 12px; background: #fff; color: #000; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 15px; font-weight: 700">Song bearbeiten</button>
+    <button style="height: 48px; border: 1.5px dashed #000; border-radius: 12px; background: #fff; color: #000; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 15px; font-weight: 700">Aus dem Set nehmen</button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":600}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

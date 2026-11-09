@@ -13,4 +13,5 @@ Stand: Planung und Entwürfe fertig, App-Code folgt. Details in [PLAN.md](PLAN.m
 - `entwuerfe/canvas/` – Entwurfs-Bildschirme (Quellen des Design-Canvas)
 - `entwuerfe/betrachter/` – Mini-App "Entwürfe", zeigt die Entwürfe pixelgenau auf dem Kompakt
 - `entwuerfe/tontest/` – Mini-App für den Stereo-Ton-Test (links Band, rechts Click)
-- `entwuerfe/werkzeug/` – `bau.sh` (Bau ohne Gradle), `expand.py` (Vorschau-Bilder)
+- `entwuerfe/werkzeug/` – `bau.sh` (Bau ohne Gradle), `render.sh` mit `daten.js` und
+  `expand.py` (Entwürfe als 480×800-Bilder für den Betrachter)

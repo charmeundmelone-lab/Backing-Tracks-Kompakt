@@ -27,14 +27,16 @@
   (Vordergrund-Dienst). Für die echte App beim Live-Test erneut prüfen.
 - Laptop-Platte C: ist fast voll (ca. 7 GB frei). Nach jedem Bau `df -h /c` prüfen, kein Emulator.
 - Mini-Apps ohne Gradle bauen: `sh entwuerfe/werkzeug/bau.sh betrachter` bzw. `tontest`.
-- Vorschau-Bilder der Entwürfe: Canvas-Datei mit `werkzeug/expand.py` füllen, mit
-  Headless-Chromium (`~/AppData/Local/ms-playwright/chromium_headless_shell-*`) bei
-  `--window-size=360,600 --force-device-scale-factor=1.3333333` rendern → 480×800.
+- Vorschau-Bilder der Entwürfe: `sh entwuerfe/werkzeug/render.sh` (node + Headless-Chromium
+  aus `~/AppData/Local/ms-playwright`), dann `bau.sh betrachter` und `adb install -r`.
+- Canvas online: https://claude.ai/artifact/7BXLnocEYEibvLqdEqzeHo. Die Dateien in
+  `entwuerfe/canvas/` sind die Quelle; nach Änderungen im Canvas dort nachziehen.
 
 ## Letzter Stand
 
 **2026-11-09:** Repo angelegt. Planung (GrillMe Welle 1), Ton-Test, Design B und Bedienkonzept
 ohne Scrollen sind fertig und in `PLAN.md`. Entwürfe online:
 https://claude.ai/artifact/7BXLnocEYEibvLqdEqzeHo, auf dem Kompakt als App "Entwürfe".
-Noch kein App-Code. Nächster Schritt laut `PLAN.md`: restliche Bildschirme zeichnen, dann Kern
-aus der alten App übernehmen und durchsehen.
+Später am selben Tag: alle 14 Bildschirme gezeichnet und am Kompakt geprüft, USB-Audio-Weg
+ohne Kabel geprüft (alles vorhanden). Noch kein App-Code. Nächster Schritt laut `PLAN.md`:
+Kern aus der alten App übernehmen und durchsehen, dann Bildschirm für Bildschirm bauen.

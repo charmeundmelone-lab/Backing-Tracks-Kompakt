@@ -103,9 +103,44 @@ Festgelegte Bausteine:
 - **Ansage/Pause** bekommt einen eigenen ruhigen Bildschirm: riesiger Countdown, nächster
   Song, Knöpfe Liste · Stopp · Starten.
 
+## Weitere Bildschirme (2026-11-09, Richtung B)
+
+Alle 14 Entwürfe liegen im Canvas und als Bilder in der App "Entwürfe" (Reihenfolge:
+Bühne, Setliste, Ansage, Set wechseln, Song-Karte, Verschieben, Gigs, Archiv, A–Z, Editor,
+Einmessen, Mixer, dann die verworfenen Richtungen A und C).
+
+- **Kopfband-Regel:** Das schwarze Band oben zeigt immer den laufenden Song, sobald etwas
+  läuft (Tipp darauf = zur Bühne). Läuft nichts, steht dort der Titel der Seite.
+- **Gigs:** Karten mit Datumsblock, der nächste Gig hat einen schwarzen Datumsblock.
+  Umschalter Gigs | Archiv oben. "Neuer Gig" unten.
+- **Set wechseln:** ein Gig mit seinen Sets als große Karten (12 Fortschrittskästchen,
+  laufendes Set schwarz). Schalter "Nach dem Set automatisch ins nächste", Sets sortieren,
+  neues Set.
+- **Song-Karte im Set** (Tipp auf einen Song, unterbricht nie): Als Nächstes spielen,
+  Ansage anhören/neu aufnehmen, Pause danach (− keine +), Am Songende Weiter/Anhalten,
+  Song bearbeiten, aus dem Set nehmen. Für gespielte Songs zusätzlich "Wieder auf
+  nicht gespielt" (alter offener Wunsch aus der Backing-Tracks-App; im Entwurf nicht gezeichnet,
+  weil dort ein offener Song gezeigt wird).
+- **Archiv:** Seiten mit Anfangsbuchstabe groß oben links. Im Modus "Hinzufügen zu Set"
+  hat jeder Song ein Plus, schon enthaltene einen schwarzen Haken. Mitte unten "A–Z · Seite"
+  öffnet den Sprung.
+- **Song-Editor:** drei Reiter (Daten, Lyrics, Ansage). Daten: Titel, Interpret, Tonart,
+  Kapo (− +), Tempo (− + und Mittippen), unten die gefundenen Audiodateien mit Haken.
+- **Lyrics einmessen:** Song läuft, Liste der Abschnitte, riesiger Knopf
+  "JETZT BEGINNT Strophe 2". Letzten Tipp löschen, 10 s zurück.
+- **Mixer:** pro Song, getrennt nach "Fürs Publikum · links" (Drums, Bass, Keys, Vocals) und
+  "Nur im Ohr · rechts" (Click, Ansage). Stufen statt Schieberegler: − / 10 Balken / + / AUS.
+- Arbeitstitel im Entwurf: "Bühnenblatt" (der App-Name ist noch nicht entschieden).
+
+Werkzeug: `entwuerfe/werkzeug/render.sh` rendert alle Canvas-Dateien neu nach
+`betrachter/assets`, danach `bau.sh betrachter` und per adb installieren.
+
 ## Offen (Welle 2)
 
-- Kabeltest ins Pult mit Jans echtem Kabel (siehe Ton-Test).
-- Restliche Bildschirme zeichnen: Gig-Übersicht, Set wechseln, Song-Karte, Song-Editor,
-  Lyrics-Kalibrierung, Mixer.
-- Danach: Kern aus der alten App übernehmen und dabei durchsehen, Bildschirm für Bildschirm bauen.
+- Kabeltest ins Pult: Jan verzichtet darauf, sein Kabel lief bisher immer. Ohne Kabel geprüft
+  (2026-11-09): Kompakt meldet USB-Host-Betrieb (`android.hardware.usb.host`), USB-Audio-Treiber
+  fest im Kernel (`CONFIG_SND_USB_AUDIO=y`), USB-Audio-HAL (`audio.usb.default.so`) und
+  USB-Ausgang in der Audio-Policy. Der erste echte Gig-Probelauf ersetzt den Kabeltest.
+- App-Name.
+- Nächster Schritt: Kern aus der alten App übernehmen und dabei durchsehen, dann Bildschirm für
+  Bildschirm bauen.

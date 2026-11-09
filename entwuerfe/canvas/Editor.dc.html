@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Song-Editor</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&amp;family=Barlow+Semi+Condensed:wght@500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#000}a:hover{color:#000}
+input{font-family:'Barlow Semi Condensed',sans-serif}
+</style>
+</helmet>
+<div style="width: 360px; height: 600px; box-sizing: border-box; background: #fff; color: #000; font-family: 'Barlow Semi Condensed', 'Arial Narrow', sans-serif; display: flex; flex-direction: column">
+  <div style="display: flex; align-items: center; gap: 6px; padding: 8px 10px 8px 6px; border-bottom: 2.5px solid #000">
+    <button aria-label="Zurück ohne Speichern" style="width: 44px; height: 44px; border: none; background: #fff; display: flex; align-items: center; justify-content: center; padding: 0">
+      <svg width="14" height="22" viewBox="0 0 14 22" aria-hidden="true"><path d="M11 3 L3 11 L11 19" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+    </button>
+    <div style="flex-grow: 1; font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700">Song bearbeiten</div>
+    <button style="height: 44px; padding: 0 16px; border: none; border-radius: 10px; background: #000; color: #fff; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 17px; font-weight: 700">Speichern</button>
+  </div>
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 12px 14px 0; border: 2.5px solid #000; border-radius: 12px; overflow: hidden">
+    <button style="height: 42px; border: none; background: #000; color: #fff; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 16px; font-weight: 700">Daten</button>
+    <button style="height: 42px; border: none; border-left: 2px solid #000; background: #fff; color: #000; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 16px; font-weight: 700">Lyrics</button>
+    <button style="height: 42px; border: none; border-left: 2px solid #000; background: #fff; color: #000; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 16px; font-weight: 700">Ansage</button>
+  </div>
+  <div style="flex-grow: 1; display: flex; flex-direction: column; gap: 12px; padding: 14px 14px 0">
+    <label style="display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.16em">TITEL</span>
+      <input value="Dancing Queen" style="height: 46px; box-sizing: border-box; border: 2.5px solid #000; border-radius: 12px; padding: 0 12px; font-size: 21px; font-weight: 600; color: #000; background: #fff">
+    </label>
+    <label style="display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.16em">INTERPRET</span>
+      <input value="ABBA" style="height: 46px; box-sizing: border-box; border: 2.5px solid #000; border-radius: 12px; padding: 0 12px; font-size: 21px; font-weight: 600; color: #000; background: #fff">
+    </label>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.16em">TONART</span>
+        <button style="height: 50px; border: 2.5px solid #000; border-radius: 12px; background: #fff; color: #000; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700">
+          <span>G-Dur</span>
+          <svg width="16" height="10" viewBox="0 0 16 10" aria-hidden="true"><path d="M2 2 L8 8 L14 2" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+        </button>
+      </div>
+      <div style="display: flex; flex-direction: column; gap: 4px">
+        <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.16em">KAPO</span>
+        <div style="height: 50px; box-sizing: border-box; border: 2.5px solid #000; border-radius: 12px; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center">
+          <button aria-label="Kapo runter" style="height: 100%; border: none; border-right: 2px solid #000; background: #fff; font-size: 22px; font-weight: 700; color: #000">−</button>
+          <span style="text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700">0</span>
+          <button aria-label="Kapo hoch" style="height: 100%; border: none; border-left: 2px solid #000; background: #fff; font-size: 22px; font-weight: 700; color: #000">+</button>
+        </div>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 12px; font-weight: 700; letter-spacing: 0.16em">TEMPO</span>
+      <div style="display: grid; grid-template-columns: 1fr 120px; gap: 10px">
+        <div style="height: 50px; box-sizing: border-box; border: 2.5px solid #000; border-radius: 12px; display: grid; grid-template-columns: 44px 1fr 44px; align-items: center">
+          <button aria-label="Tempo runter" style="height: 100%; border: none; border-right: 2px solid #000; background: #fff; font-size: 22px; font-weight: 700; color: #000">−</button>
+          <span style="text-align: center; font-family: 'Barlow Condensed', sans-serif; font-size: 26px; font-weight: 700">101 BPM</span>
+          <button aria-label="Tempo hoch" style="height: 100%; border: none; border-left: 2px solid #000; background: #fff; font-size: 22px; font-weight: 700; color: #000">+</button>
+        </div>
+        <button style="height: 50px; border: 2.5px solid #000; border-radius: 12px; background: #fff; color: #000; font-family: 'Barlow Semi Condensed', sans-serif; font-size: 16px; font-weight: 700">Mittippen</button>
+      </div>
+    </div>
+  </div>
+  <div style="margin: 12px 14px 14px; border-top: 1.5px solid #000; padding-top: 10px; display: flex; align-items: center; gap: 10px">
+    <svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M3 6 a2 2 0 0 1 2 -2 h4 l2 2 h6 a2 2 0 0 1 2 2 v8 a2 2 0 0 1 -2 2 h-12 a2 2 0 0 1 -2 -2 z" fill="none" stroke="#000" stroke-width="2.2" stroke-linejoin="round"></path></svg>
+    <div style="flex-grow: 1; font-size: 14px; font-weight: 600; line-height: 1.25">Dancing Queen KeyG K0<br>6 Spuren · WAV 44,1 kHz · 3:51</div>
+    <svg width="22" height="22" viewBox="0 0 22 22" aria-label="Dateien gefunden"><circle cx="11" cy="11" r="10" fill="#000"></circle><path d="M6 11.5 l3.5 3.5 l6.5 -7" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":360,"height":600}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
