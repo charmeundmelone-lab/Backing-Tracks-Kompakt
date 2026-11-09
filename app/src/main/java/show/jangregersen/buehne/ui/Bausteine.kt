@@ -22,6 +22,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,14 +69,38 @@ val Halbschmal = FontFamily(
     Font(R.font.barlow_semi_bold, FontWeight.Bold)
 )
 
-fun titelStil(groesse: TextUnit, farbe: Color = Schwarz, gewicht: FontWeight = FontWeight.Bold) =
-    TextStyle(fontFamily = Schmal, fontWeight = gewicht, fontSize = groesse, color = farbe, lineHeight = groesse * 1.05f)
+/**
+ * Schriftstufe für die ganze App. 0 = Ausgangslage (Etiketten 11 sp), 1 = Feinschliff,
+ * 2 = Kräftig, 3 = Bühnenschrift. Große Schrift ab 30 sp (Titel, Countdown) bleibt immer gleich,
+ * damit nichts aus dem Rahmen läuft; angehoben wird der kleine und mittlere Bereich.
+ */
+object Schriftbild {
+    var stufe by mutableIntStateOf(0)
+    private val faktor = floatArrayOf(1f, 1f, 1.08f, 1.16f)
+    private val minimum = floatArrayOf(0f, 14f, 16f, 17f)
+    private val etikett = floatArrayOf(11f, 13f, 14.5f, 16f)
+    private val sperrung = floatArrayOf(0.16f, 0.12f, 0.10f, 0.08f)
+    fun groesse(g: TextUnit): TextUnit {
+        val v = g.value
+        if (v >= 30f) return g
+        return maxOf(v * faktor[stufe], minimum[stufe]).coerceAtMost(maxOf(v, 30f)).sp
+    }
+    val etikettGroesse get() = etikett[stufe].sp
+    val etikettSperrung get() = sperrung[stufe].em
+}
 
-fun textStil(groesse: TextUnit, farbe: Color = Schwarz, gewicht: FontWeight = FontWeight.SemiBold) =
-    TextStyle(fontFamily = Halbschmal, fontWeight = gewicht, fontSize = groesse, color = farbe, lineHeight = groesse * 1.22f)
+fun titelStil(groesse: TextUnit, farbe: Color = Schwarz, gewicht: FontWeight = FontWeight.Bold): TextStyle {
+    val g = Schriftbild.groesse(groesse)
+    return TextStyle(fontFamily = Schmal, fontWeight = gewicht, fontSize = g, color = farbe, lineHeight = g * 1.05f)
+}
 
-fun etikettStil(farbe: Color = Schwarz, groesse: TextUnit = 11.sp) =
-    TextStyle(fontFamily = Halbschmal, fontWeight = FontWeight.Bold, fontSize = groesse, color = farbe, letterSpacing = 0.16.em)
+fun textStil(groesse: TextUnit, farbe: Color = Schwarz, gewicht: FontWeight = FontWeight.SemiBold): TextStyle {
+    val g = Schriftbild.groesse(groesse)
+    return TextStyle(fontFamily = Halbschmal, fontWeight = gewicht, fontSize = g, color = farbe, lineHeight = g * 1.22f)
+}
+
+fun etikettStil(farbe: Color = Schwarz, groesse: TextUnit? = null) =
+    TextStyle(fontFamily = Halbschmal, fontWeight = FontWeight.Bold, fontSize = groesse?.let { Schriftbild.groesse(it) } ?: Schriftbild.etikettGroesse, color = farbe, letterSpacing = Schriftbild.etikettSperrung)
 
 @Composable
 fun T(text: String, stil: TextStyle, modifier: Modifier = Modifier, zeilen: Int = Int.MAX_VALUE, mitte: Boolean = false, durchgestrichen: Boolean = false) {

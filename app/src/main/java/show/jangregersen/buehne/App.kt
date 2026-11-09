@@ -8,6 +8,8 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         show.jangregersen.buehne.audio.Mitschnitt.ordner = filesDir
+        // Schriftstufe: vorerst über files/schrift.txt (0–3) zum Vergleichen der Varianten.
+        runCatching { show.jangregersen.buehne.ui.Schriftbild.stufe = java.io.File(filesDir, "schrift.txt").readText().trim().toInt().coerceIn(0, 3) }
         ablage = Ablage(this)
         buehne = Buehne(this, ablage)
     }
