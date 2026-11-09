@@ -123,9 +123,18 @@ class Mischpult(context: Context, private val quellen: List<Quelle>, val pegel: 
         var offenAb = 0
         var stillSeit = 0L
         var letzterKopf = -1L
+        var letzteMeldung = SystemClock.elapsedRealtime()
+        var aussetzerGemeldet = 0
         val mitschnitt = Mitschnitt.starten(name, rate)
         try {
             while (!beendet) {
+                // Selbstkontrolle: läuft die Tonausgabe leer, steht es im Protokoll (Tag Mischpult).
+                if (SystemClock.elapsedRealtime() - letzteMeldung > 5000) {
+                    letzteMeldung = SystemClock.elapsedRealtime()
+                    val u = runCatching { track.underrunCount }.getOrDefault(0)
+                    if (u != aussetzerGemeldet) { Log.w(TAG, "$name: Tonausgabe lief leer, insgesamt $u Mal"); aussetzerGemeldet = u }
+                    else if (laeuft) Log.i(TAG, "$name: läuft sauber, Position ${positionFrames / rate} s")
+                }
                 // Sprünge erledigen
                 synchronized(lock) {
                     if (sprungZiel >= 0) {
