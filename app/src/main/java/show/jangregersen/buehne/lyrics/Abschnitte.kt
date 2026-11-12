@@ -60,6 +60,50 @@ object Abschnitte {
         }
     }
 
+    // ── Abschnitte ändern (Seite "Abschnitte prüfen") ─────────────────────────────
+
+    /** Baut den Text wieder zusammen: "[Name]", Zeilen, Leerzeile. Strophen werden neu durchgezählt. */
+    fun zusammensetzen(liste: List<Abschnitt>): String {
+        var strophe = 0
+        return liste.joinToString("\n\n") { a ->
+            val name = if (art(a.name) == Art.STROPHE) "Strophe ${++strophe}" else a.name
+            (listOf("[$name]") + a.zeilen).joinToString("\n")
+        }
+    }
+
+    fun umbenennen(text: String, index: Int, name: String): String {
+        val l = zerlegen(text).toMutableList()
+        if (index !in l.indices) return text
+        l[index] = l[index].copy(name = name)
+        return zusammensetzen(l)
+    }
+
+    /** Hängt Abschnitt [index] an den vorigen an. */
+    fun mitVorigem(text: String, index: Int): String {
+        val l = zerlegen(text).toMutableList()
+        if (index !in 1 until l.size) return text
+        l[index - 1] = l[index - 1].copy(zeilen = l[index - 1].zeilen + l[index].zeilen)
+        l.removeAt(index)
+        return zusammensetzen(l)
+    }
+
+    /** Einmess-Punkte nach [mitVorigem]: Punkt des angehängten Abschnitts fällt weg, spätere rücken auf. */
+    fun markenNachZusammenlegen(marken: Map<Int, Long>, index: Int): Map<Int, Long> =
+        marken.filterKeys { it != index }.mapKeys { (k, _) -> if (k > index) k - 1 else k }
+
+    enum class Art { STROPHE, VORREFRAIN, REFRAIN, BRIDGE, ANDERS }
+
+    fun art(name: String): Art {
+        val n = name.trim().lowercase()
+        return when {
+            n.startsWith("vorrefrain") || n.startsWith("pre") -> Art.VORREFRAIN
+            n.startsWith("refrain") || n.startsWith("chorus") -> Art.REFRAIN
+            n.startsWith("bridge") -> Art.BRIDGE
+            n.startsWith("strophe") || n.startsWith("verse") || n.startsWith("teil") -> Art.STROPHE
+            else -> Art.ANDERS
+        }
+    }
+
     // ── Einmess-Punkte ─────────────────────────────────────────────────────────
 
     fun markenLesen(s: String): Map<Int, Long> =
@@ -82,8 +126,14 @@ data class LyricsSeite(
     val zeilen: List<String>,
     val schriftSp: Float,
     /** Anteil der Zeilen vor dieser Seite innerhalb des Abschnitts (0..1). */
-    val anteilStart: Float
-)
+    val anteilStart: Float,
+    /** Index der ersten Textzeile dieser Seite innerhalb des Abschnitts (Leerzeilen zählen nicht). */
+    val ersteZeile: Int = 0,
+    /** Gemessene Höhe des Textes in Pixeln (für die Vorschau unten). */
+    val hoehePx: Int = 0
+) {
+    val textZeilen: Int get() = zeilen.count { it.isNotBlank() }
+}
 
 object Seitenlauf {
     /**

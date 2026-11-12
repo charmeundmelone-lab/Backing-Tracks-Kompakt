@@ -107,6 +107,20 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?) {
             return@Rahmen
         }
         if (zielSet == null) Segmente(listOf("Gigs", "Archiv"), 1, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp)) { if (it == 0) navi.ersetzen(Seite.Gigs) }
+        val ohneText = if (zielSet == null) alle.filter { it.lyrics.isBlank() } else emptyList()
+        if (ohneText.isNotEmpty()) {
+            Row(
+                Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp).fillMaxWidth().height(58.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz)
+                    .tipp { navi.zu(Seite.TexteHolen(ohneText.map { it.id })) }.padding(start = 14.dp, end = 12.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                Column(Modifier.weight(1f)) {
+                    T("Texte holen", titelStil(24.sp, Weiss), zeilen = 1)
+                    T(if (ohneText.size == 1) "1 Song hat noch keinen Text" else "${ohneText.size} Songs haben noch keinen Text", textStil(15.sp, Weiss, FontWeight.Medium), zeilen = 1)
+                }
+                Symbol(Sym.RECHTS, Weiss, 18.dp)
+            }
+        }
         else Segmente(listOf("Als Nächstes", "Ans Ende"), if (alsNaechstes) 0 else 1, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp)) { alsNaechstes = it == 0; zuletzt = null }
         Segmente(listOf("Alle", "Langsam", "Mittel", "Schnell"), tempo, Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp), hoehe = 40.dp, groesse = 15.sp) { tempo = it }
         SeitenListe(
@@ -154,7 +168,8 @@ private fun ArchivZeile(s: Song, waehlen: Boolean, drin: Boolean, onClick: () ->
     ) {
         Column(Modifier.weight(1f)) {
             T(s.titel, textStil(21.sp), zeilen = 1)
-            songInfo(s).takeIf { it.isNotBlank() }?.let { T(it, textStil(14.sp, gewicht = FontWeight.Medium), zeilen = 1) }
+            listOf(songInfo(s), if (s.lyrics.isBlank()) "ohne Text" else "").filter { it.isNotBlank() }.joinToString(" · ")
+                .takeIf { it.isNotBlank() }?.let { T(it, textStil(14.sp, gewicht = FontWeight.Medium), zeilen = 1) }
         }
         T(if (s.dauerMs > 0) zeit(s.dauerMs) else "", titelStil(19.sp, gewicht = FontWeight.SemiBold))
         if (waehlen) {

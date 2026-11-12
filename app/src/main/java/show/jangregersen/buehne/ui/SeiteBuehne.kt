@@ -1,6 +1,13 @@
 package show.jangregersen.buehne.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import show.jangregersen.buehne.lyrics.Zeitplan
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -174,9 +181,9 @@ private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boo
     // Eine Zeile, immer an derselben Stelle: so bleibt den Lyrics mehr Platz und nichts springt.
     Column(Modifier.padding(horizontal = 18.dp)) {
         Linie(dicke = 2.5.dp)
-        Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(Modifier.fillMaxWidth().height(50.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Etikett("Danach")
-            T(naechster?.titel ?: if (setEnde) "Set zu Ende" else "–", titelStil(23.sp), Modifier.weight(1f), zeilen = 1)
+            T(naechster?.titel ?: if (setEnde) "Set zu Ende" else "–", titelStil(27.sp), Modifier.weight(1f), zeilen = 1)
             if (naechster != null) {
                 val (sym, text) = when {
                     ende == Ende.ANHALTEN -> Sym.STOP to "hält an"
@@ -190,7 +197,7 @@ private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boo
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     if (sym != null) Symbol(sym, Schwarz, 16.dp)
-                    T(text, textStil(15.sp, gewicht = FontWeight.Bold), zeilen = 1)
+                    T(text, textStil(16.sp, gewicht = FontWeight.Bold), zeilen = 1)
                 }
             }
         }
@@ -199,37 +206,108 @@ private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boo
 
 // ── Lyrics: abschnittsweise Seiten ───────────────────────────────────────────
 
+/** Breite der Spalte links neben dem Text: Strich (Refrain/Bridge) und Zeilen-Keil. */
+private val RINNE = 24.dp
+
+/**
+ * Eine Seite = ein Abschnitt (zu lange werden geteilt). Mit Einmess-Punkten blättert die Seite
+ * 1,5 s vor dem Abschnitt um, und ein schwarzer Keil links springt Zeile für Zeile im Songtempo
+ * mit (E-Ink-tauglich: kein Laufen, nur der Keil ändert sich). Ohne Punkte blättert Jan von Hand
+ * (Tipp links/rechts oder Lautstärketasten).
+ */
 @Composable
 private fun LyricsBereich(song: Song, dauerMs: Long) {
     val messer = rememberTextMeasurer()
     val dichte = LocalDensity.current
-    BoxWithConstraints(Modifier.fillMaxSize().padding(start = 18.dp, end = 18.dp, top = 12.dp, bottom = 6.dp)) {
-        val breitePx = with(dichte) { maxWidth.roundToPx() }
-        val hoehePx = with(dichte) { (maxHeight - 26.dp).roundToPx() }
-        val seiten = remember(song.lyrics, breitePx, hoehePx) {
-            seitenBauen(song.lyrics, breitePx, hoehePx,
-                messen = { zeilen, sp -> messer.measure(zeilen.joinToString("\n") { it.ifBlank { " " } }, lyricsStil(sp), constraints = Constraints(maxWidth = breitePx)).size.height },
-                breiteVon = { zeile, sp -> messer.measure(zeile, lyricsStil(sp)).size.width })
+    BoxWithConstraints(Modifier.fillMaxSize().padding(start = 12.dp, end = 16.dp, top = 10.dp, bottom = 4.dp)) {
+        val textBreitePx = with(dichte) { (maxWidth - RINNE).roundToPx() }
+        val hoehePx = with(dichte) { (maxHeight - 44.dp).roundToPx() }
+        val seiten = remember(song.lyrics, textBreitePx, hoehePx) {
+            seitenBauen(song.lyrics, textBreitePx, hoehePx,
+                messen = { zeilen, sp -> messer.measure(zeilen.joinToString("\n") { it.ifBlank { " " } }, lyricsStil(sp, true), constraints = Constraints(maxWidth = textBreitePx)).size.height },
+                breiteVon = { zeile, sp -> messer.measure(zeile, lyricsStil(sp, true)).size.width })
         }
+        if (seiten.isEmpty()) return@BoxWithConstraints
+        val abschnitte = remember(song.lyrics) { Abschnitte.zerlegen(song.lyrics) }
         val marken = remember(song.marken) { Abschnitte.markenLesen(song.marken) }
-        val pos by App.buehne.position.collectAsState()
-        val auto = Seitenlauf.seiteFuer(seiten, marken, pos, if (dauerMs > 0) dauerMs else song.dauerMs)
+        val dauer = if (dauerMs > 0) dauerMs else song.dauerMs
+        val starts = remember(song.lyrics, song.marken, song.zeilenZeiten, dauer) {
+            Zeitplan.zeilenStarts(abschnitte, marken, Zeitplan.zeitenLesen(song.zeilenZeiten), dauer)
+        }
+        val position = App.buehne.position
+        // Nur neu zeichnen, wenn Seite oder Zeile wechseln (nicht bei jedem 200-ms-Takt).
+        val auto by remember(seiten, starts) { derivedStateOf { autoSeite(seiten, marken, starts, position.value + Zeitplan.SEITE_VORLAUF_MS) } }
+        val zeile by remember(starts) { derivedStateOf { Zeitplan.aktiveZeile(starts, position.value + Zeitplan.ZEILE_VORLAUF_MS) } }
         var hand by remember(song.id) { mutableStateOf<Pair<Int, Int>?>(null) } // (Hand-Seite, Auto-Seite beim Blättern)
-        val gezeigt = hand?.let { (h, a) -> if (a == auto) h else null } ?: auto
+        val vonHand = hand?.let { (h, a) -> if (a == auto && h != auto) h else null }
+        val gezeigt = (vonHand ?: auto).coerceIn(0, seiten.size - 1)
         val blaettern = { d: Int -> hand = (gezeigt + d).coerceIn(0, seiten.size - 1) to auto }
         Lautstaerketasten { v -> blaettern(if (v) 1 else -1) }
-        val seite = seiten.getOrNull(gezeigt) ?: return@BoxWithConstraints
+        val seite = seiten[gezeigt]
+        val naechste = seiten.getOrNull(gezeigt + 1)
+        val art = Abschnitte.art(seite.name)
+
+        // Keil: voll = diese Zeile läuft, hohl = kommt gleich (Seite schon umgeblättert).
+        val z = zeile
+        val keil: Pair<Int, Boolean> = when {
+            marken.isEmpty() || vonHand != null -> -1 to false
+            z != null && z.first == seite.abschnitt && z.second in seite.ersteZeile until seite.ersteZeile + seite.textZeilen -> (z.second - seite.ersteZeile) to true
+            (starts.getOrNull(seite.abschnitt)?.size ?: 0) > seite.ersteZeile -> 0 to false
+            else -> -1 to false
+        }
+
         Column(Modifier.fillMaxSize()) {
-            Row(Modifier.fillMaxWidth().height(26.dp), verticalAlignment = Alignment.CenterVertically) {
-                Etikett(seite.name + if (seite.teile > 1) " · ${seite.teil}/${seite.teile}" else "", Modifier.weight(1f))
-                if (marken.isEmpty()) Etikett("von Hand blättern  ")
-                SeitenPunkte(gezeigt, seiten.size)
+            Row(Modifier.fillMaxWidth().height(40.dp).padding(start = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                AbschnittPille(seite.name + if (seite.teile > 1) " ${seite.teil}/${seite.teile}" else "")
+                Spacer(Modifier.weight(1f))
+                when {
+                    naechste == null -> T("Schluss", textStil(17.sp, gewicht = FontWeight.Bold), zeilen = 1)
+                    naechste.abschnitt == seite.abschnitt -> T("weiter ›", textStil(17.sp, gewicht = FontWeight.Bold), zeilen = 1)
+                    else -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        T("dann", textStil(16.sp, gewicht = FontWeight.Medium), zeilen = 1)
+                        T(naechste.name.uppercase(), etikettStil(), zeilen = 1)
+                    }
+                }
             }
+            Abstand(4.dp)
             Box(Modifier.fillMaxSize()) {
-                Column {
-                    seite.zeilen.forEach { z ->
-                        if (z.isBlank()) Spacer(Modifier.height(10.dp))
-                        else T(z, lyricsStil(seite.schriftSp))
+                Column(Modifier.fillMaxSize()) {
+                    Row(Modifier.height(IntrinsicSize.Min)) {
+                        // Strich links: Refrain dick, Bridge gestrichelt.
+                        Box(Modifier.width(6.dp).fillMaxHeight()) {
+                            when (art) {
+                                Abschnitte.Art.REFRAIN -> Box(Modifier.width(6.dp).fillMaxHeight().background(Schwarz))
+                                Abschnitte.Art.BRIDGE -> Box(Modifier.width(6.dp).fillMaxHeight().strichelLinie())
+                                else -> {}
+                            }
+                        }
+                        Column(Modifier.weight(1f)) {
+                            var nr = 0
+                            seite.zeilen.forEach { zl ->
+                                if (zl.isBlank()) Spacer(Modifier.height(10.dp))
+                                else {
+                                    val i = nr++
+                                    Row {
+                                        Box(Modifier.width(RINNE - 6.dp).height(with(dichte) { (seite.schriftSp * 1.26f).sp.toDp() }), contentAlignment = Alignment.Center) {
+                                            if (i == keil.first) Keil(keil.second)
+                                        }
+                                        T(zl, lyricsStil(seite.schriftSp, art == Abschnitte.Art.REFRAIN))
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    Spacer(Modifier.weight(1f))
+                    // Vorschau: auf der letzten Zeile der Seite kommt unten die erste Zeile der nächsten.
+                    val letzte = keil.second && keil.first == seite.textZeilen - 1
+                    val vorschau = naechste?.zeilen?.firstOrNull { it.isNotBlank() }
+                    val platz = hoehePx - seite.hoehePx
+                    if (letzte && naechste != null && vorschau != null && platz > with(dichte) { 52.dp.roundToPx() }) {
+                        Row(Modifier.fillMaxWidth().padding(start = 6.dp, bottom = 4.dp).border(2.dp, Schwarz, RoundedCornerShape(10.dp)).padding(horizontal = 10.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            T(if (naechste.abschnitt == seite.abschnitt) "weiter" else naechste.name.uppercase(), etikettStil(), zeilen = 1)
+                            T(vorschau, textStil(19.sp, gewicht = FontWeight.SemiBold), zeilen = 1)
+                        }
                     }
                 }
                 Row(Modifier.fillMaxSize()) {
@@ -241,18 +319,35 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
     }
 }
 
+/** Seite für die Position: Abschnitt nach Einmess-Punkt, darin die Seite mit der laufenden Zeile. */
+private fun autoSeite(seiten: List<LyricsSeite>, marken: Map<Int, Long>, starts: List<List<Long>?>, posMs: Long): Int {
+    if (marken.isEmpty()) return 0
+    val abschnitt = marken.filter { it.value <= posMs }.maxByOrNull { it.value }?.key ?: return 0
+    val kandidaten = seiten.withIndex().filter { it.value.abschnitt == abschnitt }
+    if (kandidaten.isEmpty()) return seiten.indexOfLast { it.abschnitt <= abschnitt }.coerceAtLeast(0)
+    val s = starts.getOrNull(abschnitt)
+    val zeile = s?.indexOfLast { it <= posMs }?.coerceAtLeast(0) ?: 0
+    return kandidaten.lastOrNull { it.value.ersteZeile <= zeile }?.index ?: kandidaten.first().index
+}
+
 @Composable
-private fun SeitenPunkte(aktiv: Int, anzahl: Int) {
-    if (anzahl > 12) { Etikett("${aktiv + 1}/$anzahl"); return }
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        repeat(anzahl) { i ->
-            val m = Modifier.size(8.dp).clip(RoundedCornerShape(4.dp))
-            Box(if (i == aktiv) m.background(Schwarz) else m.border(1.5.dp, Schwarz, RoundedCornerShape(4.dp)))
-        }
+private fun Keil(voll: Boolean) {
+    Canvas(Modifier.size(width = 13.dp, height = 18.dp)) {
+        val p = Path().apply { moveTo(0f, 0f); lineTo(size.width, size.height / 2); lineTo(0f, size.height); close() }
+        if (voll) drawPath(p, Schwarz) else drawPath(p, Schwarz, style = Stroke(width = 2.5.dp.toPx()))
     }
 }
 
-private fun lyricsStil(sp: Float) = TextStyle(fontFamily = Halbschmal, fontWeight = FontWeight.SemiBold, fontSize = sp.sp, lineHeight = (sp * 1.26f).sp, color = Schwarz, textIndent = androidx.compose.ui.text.style.TextIndent(restLine = (sp * 0.8f).sp))
+private fun Modifier.strichelLinie(): Modifier = this.drawBehind {
+    val dicke = 3.dp.toPx(); val stueck = 8.dp.toPx(); val luecke = 6.dp.toPx()
+    var y = 0f
+    while (y < size.height) {
+        drawRect(Schwarz, topLeft = androidx.compose.ui.geometry.Offset(0f, y), size = androidx.compose.ui.geometry.Size(dicke, minOf(stueck, size.height - y)))
+        y += stueck + luecke
+    }
+}
+
+private fun lyricsStil(sp: Float, fett: Boolean = false) = TextStyle(fontFamily = Halbschmal, fontWeight = if (fett) FontWeight.Bold else FontWeight.SemiBold, fontSize = sp.sp, lineHeight = (sp * 1.26f).sp, color = Schwarz, textIndent = androidx.compose.ui.text.style.TextIndent(restLine = (sp * 0.8f).sp))
 
 /**
  * Baut die Bildschirmseiten: eine Schriftgröße für den ganzen Song. Gesucht wird die größte
@@ -289,7 +384,8 @@ private fun seitenBauen(text: String, breite: Int, hoehe: Int, messen: (List<Str
         val gesamt = teile.sumOf { t -> t.count { it.isNotBlank() } }.coerceAtLeast(1)
         var vorher = 0
         teile.forEachIndexed { ti, t ->
-            seiten.add(LyricsSeite(ai, a.name, ti + 1, teile.size, if (t.isEmpty()) listOf("— instrumental —") else t, schrift, vorher.toFloat() / gesamt))
+            val zeilen = if (t.isEmpty()) listOf("— instrumental —") else t
+            seiten.add(LyricsSeite(ai, a.name, ti + 1, teile.size, zeilen, schrift, vorher.toFloat() / gesamt, ersteZeile = vorher, hoehePx = messen(zeilen, schrift)))
             vorher += t.count { it.isNotBlank() }
         }
     }

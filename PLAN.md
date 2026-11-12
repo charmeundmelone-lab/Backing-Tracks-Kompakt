@@ -259,7 +259,7 @@ Arbeitsliste (abhaken mit [x], Datum dazu):
 - [ ] L5 Seite "Abschnitte prüfen" (Etikett ändern, mit vorigem zusammen)
 - [ ] L6 Bühne: Pillen, Refrain-/Bridge-Strich, "dann …", Zeilen-Keil, Vorschau, Vorlauf
 - [ ] L7 Einmessen: Etiketten, vorläufige Punkte, Zeilenzeiten neu strecken
-- [ ] L8 Gerätetest aller neuen Abläufe am Kompakt (echte Songs)
+- [ ] L8 Gerätetest aller neuen Abläufe am Kompakt (echte Songs). Pflicht: Bühne mit Offline+ an / ohne Netz prüfen (Jan 12.11.: App muss komplett offline gehen; Texte liegen nach "Ja" in bestand.json)
 - [ ] L9 Gesamttest der App auf Logikfehler (alle Seiten, Show-Automatik, Daten), Fehler beheben.
   Prüfmaßstab (Jan, 12.11.): testen, als wäre ich Jan beim Auftritt. Sänger mit umgehängter
   Gitarre, Kompakt am Mikroständer (ca. 60–80 cm Abstand), Hände meist an der Gitarre, nur

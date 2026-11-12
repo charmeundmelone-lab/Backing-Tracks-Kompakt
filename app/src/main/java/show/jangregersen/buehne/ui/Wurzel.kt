@@ -37,6 +37,8 @@ sealed class Seite {
     data class Editor(val songId: Long, val reiter: Int = 0) : Seite()
     data class Einmessen(val songId: Long) : Seite()
     data class Mixer(val songId: Long) : Seite()
+    data class TexteHolen(val ids: List<Long>, val einzeln: Boolean = false) : Seite()
+    data class Pruefen(val songId: Long) : Seite()
     class Eingabe(val titel: String, val start: String, val zahl: Boolean = false, val hinweis: String = "", val ok: (String) -> Unit) : Seite()
     class Frage(val titel: String, val text: String, val ja: String, val aktion: () -> Unit) : Seite()
 }
@@ -88,6 +90,8 @@ fun Wurzel(navi: Navi, beenden: () -> Unit) {
             is Seite.Editor -> EditorSeite(navi, s.songId, s.reiter)
             is Seite.Einmessen -> EinmessenSeite(navi, s.songId)
             is Seite.Mixer -> MixerSeite(navi, s.songId)
+            is Seite.TexteHolen -> TexteHolenSeite(navi, s.ids, s.einzeln)
+            is Seite.Pruefen -> PruefenSeite(navi, s.songId)
             is Seite.Eingabe -> EingabeSeite(navi, s)
             is Seite.Frage -> FrageSeite(navi, s)
         }
