@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Texte holen</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<!-- Entwurf "Texte holen" (2026-11-12). Ein Bildschirm pro #1 … #6, 360x600 wie der Kompakt (480x800 px).
+     Schrift wie Stufe 3 "Bühnenschrift": Etiketten 16 px, sonst nichts unter 17 px. -->
+<style>
+  body{margin:0;background:#fff;overflow:hidden}
+  *{box-sizing:border-box}
+  .s{display:none;width:360px;height:600px;background:#fff;color:#000;font-family:'Barlow Semi Condensed','Arial Narrow',sans-serif;flex-direction:column}
+  .s.an{display:flex}
+  .band{background:#000;color:#fff;padding:8px 10px 9px 16px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .et{font-size:16px;font-weight:700;letter-spacing:.08em}
+  .titel{font-family:'Barlow Condensed',sans-serif;font-weight:700;line-height:1.05}
+  .knopf{height:56px;border:2.5px solid #000;border-radius:14px;background:#fff;color:#000;font-family:'Barlow Semi Condensed',sans-serif;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:8px;padding:0 12px}
+  .voll{background:#000;color:#fff}
+  .klein{height:44px;font-size:17px;border-radius:10px}
+  .weiss{background:#fff;color:#000;border:none}
+  .zeile{height:62px;margin:0 10px;padding:0 6px 0 8px;border-bottom:1px solid #000;display:flex;align-items:center;gap:10px}
+  .t21{font-size:21px;font-weight:600;line-height:1.1}
+  .t17{font-size:17px;font-weight:500;line-height:1.2}
+  .mitte{flex-grow:1;min-width:0}
+  .karte{border:2.5px solid #000;border-radius:14px;padding:12px 14px}
+  .fuss{display:flex;gap:10px;padding:8px 14px 14px}
+  .zitat{font-size:18px;font-style:italic;font-weight:500;line-height:1.25}
+  .punkt{width:10px;height:10px;border-radius:50%;background:#000;flex:none}
+  .ring{width:10px;height:10px;border-radius:50%;border:2px solid #000;flex:none}
+</style>
+</head>
+<body>
+
+<!-- 1  Archiv mit Einstieg -->
+<div class="s" id="s1">
+  <div class="band">
+    <div><div class="et">TRIKTRAK</div><div class="titel" style="font-size:28px">Archiv</div></div>
+    <div style="display:flex;border:2px solid #fff;border-radius:10px;overflow:hidden">
+      <span style="padding:8px 12px;font-size:17px;font-weight:700">Gigs</span>
+      <span style="padding:8px 12px;font-size:17px;font-weight:700;background:#fff;color:#000">Archiv</span>
+    </div>
+  </div>
+  <div style="margin:12px 14px 4px;border:2.5px solid #000;border-radius:14px;display:flex;align-items:center;gap:12px;padding:10px 12px 10px 14px;background:#000;color:#fff">
+    <div class="mitte">
+      <div class="titel" style="font-size:26px">Texte holen</div>
+      <div class="t17">37 Songs haben noch keinen Text</div>
+    </div>
+    <svg width="14" height="22" viewBox="0 0 14 22"><path d="M3 3 L11 11 L3 19" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </div>
+  <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 18px 2px">
+    <span class="titel" style="font-size:34px;font-weight:800;line-height:1">C</span>
+    <span class="et">41 SONGS</span>
+  </div>
+  <div style="flex-grow:1">
+    <div class="zeile"><div class="mitte"><div class="t21">Can't judge a book</div><div class="t17">ohne Text</div></div><div class="titel" style="font-size:19px;font-weight:600">3:24</div></div>
+    <div class="zeile"><div class="mitte"><div class="t21">Careless Whisper</div><div class="t17">ohne Text</div></div><div class="titel" style="font-size:19px;font-weight:600">4:56</div></div>
+    <div class="zeile"><div class="mitte"><div class="t21">Circle of Life</div><div class="t17">ohne Text</div></div><div class="titel" style="font-size:19px;font-weight:600">3:19</div></div>
+    <div class="zeile"><div class="mitte"><div class="t21">Country Roads</div><div class="t17">Text · 7 Abschnitte</div></div><div class="titel" style="font-size:19px;font-weight:600">4:55</div></div>
+    <div class="zeile" style="border-bottom:none"><div class="mitte"><div class="t21">Crazy</div><div class="t17">ohne Text</div></div><div class="titel" style="font-size:19px;font-weight:600">4:04</div></div>
+  </div>
+  <div class="fuss">
+    <div class="knopf" style="width:64px"><svg width="16" height="24" viewBox="0 0 16 24"><path d="M13 3 L4 12 L13 21" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="knopf" style="flex-grow:1;border:1.5px dashed #000;font-size:19px">A–Z · Seite 2 / 9</div>
+    <div class="knopf voll" style="width:64px"><svg width="16" height="24" viewBox="0 0 16 24"><path d="M3 3 L12 12 L3 21" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  </div>
+</div>
+
+<!-- 2  Treffer bestätigen -->
+<div class="s" id="s2">
+  <div class="band">
+    <div><div class="et">TEXTE HOLEN · 5 / 37</div><div class="titel" style="font-size:28px">Careless Whisper</div></div>
+    <div class="knopf klein weiss" style="padding:0 14px">Ende</div>
+  </div>
+  <div style="display:flex;gap:3px;padding:8px 14px 0">
+    <span style="flex:4;height:6px;background:#000;border-radius:3px"></span><span style="flex:32;height:6px;border:1.5px solid #000;border-radius:3px"></span>
+  </div>
+  <div style="padding:14px 14px 0;flex-grow:1;display:flex;flex-direction:column;gap:12px">
+    <div class="et">IST ES DIESER?</div>
+    <div class="karte" style="display:flex;flex-direction:column;gap:8px">
+      <div class="titel" style="font-size:34px">George Michael</div>
+      <div class="t21">Careless Whisper</div>
+      <div style="height:2px;background:#000;margin:2px 0"></div>
+      <div class="zitat">(erste Textzeile steht hier, damit du den Song sofort erkennst)</div>
+      <div class="t17" style="display:flex;gap:14px;flex-wrap:wrap;margin-top:2px">
+        <span>11 Abschnitte</span><span>Refrain erkannt</span>
+      </div>
+    </div>
+    <div class="t17" style="display:flex;justify-content:space-between;padding:0 4px">
+      <span>Original 4:56</span><span>dein Track 4:56</span>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px;padding:8px 14px 14px">
+    <div class="knopf voll" style="height:64px;font-size:23px">Ja, übernehmen</div>
+    <div style="display:flex;gap:10px">
+      <div class="knopf" style="flex:1">Anderer</div>
+      <div class="knopf" style="flex:1">Überspringen</div>
+    </div>
+  </div>
+</div>
+
+<!-- 3  Anderer Treffer / Suchwort -->
+<div class="s" id="s3">
+  <div class="band">
+    <div><div class="et">TEXTE HOLEN · 8 / 37</div><div class="titel" style="font-size:28px">Crazy</div></div>
+    <div class="knopf klein weiss" style="padding:0 14px">Zurück</div>
+  </div>
+  <div style="padding:12px 14px 4px">
+    <div class="et" style="margin-bottom:6px">SUCHWORT DAZU, Z. B. DER INTERPRET</div>
+    <div style="display:flex;gap:8px">
+      <div style="flex-grow:1;height:50px;border:2.5px solid #000;border-radius:12px;padding:0 12px;display:flex;align-items:center;font-size:21px;font-weight:600"><span style="width:2px;height:26px;background:#000;margin-right:4px"></span><span style="opacity:.55;font-weight:500">z. B. Gnarls Barkley</span></div>
+      <div class="knopf voll" style="height:50px;width:82px;font-size:18px;border-radius:12px">Suchen</div>
+    </div>
+  </div>
+  <div class="et" style="padding:10px 18px 0">4 TREFFER</div>
+  <div style="flex-grow:1">
+    <div class="zeile"><div class="mitte"><div class="t21">Gnarls Barkley</div><div class="t17">Crazy · 2:58</div></div><div class="knopf klein" style="width:48px;height:48px;padding:0"><svg width="18" height="14" viewBox="0 0 18 14"><path d="M2 7 l5 5 l9 -10" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    <div class="zeile"><div class="mitte"><div class="t21">Seal</div><div class="t17">Crazy · 5:57</div></div><div class="knopf klein" style="width:48px;height:48px;padding:0"><svg width="18" height="14" viewBox="0 0 18 14"><path d="M2 7 l5 5 l9 -10" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    <div class="zeile"><div class="mitte"><div class="t21">Patsy Cline</div><div class="t17">Crazy · 2:43</div></div><div class="knopf klein" style="width:48px;height:48px;padding:0"><svg width="18" height="14" viewBox="0 0 18 14"><path d="M2 7 l5 5 l9 -10" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+    <div class="zeile" style="border-bottom:none"><div class="mitte"><div class="t21">Michael Franti</div><div class="t17">Crazy · 3:41</div></div><div class="knopf klein" style="width:48px;height:48px;padding:0"><svg width="18" height="14" viewBox="0 0 18 14"><path d="M2 7 l5 5 l9 -10" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div></div>
+  </div>
+  <div class="t17" style="padding:0 18px 14px">Dein Track: 4:04. Tipp auf den Haken, dann siehst du die erste Zeile.</div>
+</div>
+
+<!-- 4  Nicht gefunden -->
+<div class="s" id="s4">
+  <div class="band">
+    <div><div class="et">TEXTE HOLEN · 9 / 37</div><div class="titel" style="font-size:28px">Ein Hoch auf uns</div></div>
+    <div class="knopf klein weiss" style="padding:0 14px">Ende</div>
+  </div>
+  <div style="flex-grow:1;padding:28px 18px 0;display:flex;flex-direction:column;gap:14px">
+    <div class="titel" style="font-size:40px">Nicht gefunden</div>
+    <div class="t21" style="font-weight:500;line-height:1.3">Die freie Datenbank kennt diesen Song nicht. Mit einem Suchwort klappt es oft doch, zum Beispiel mit dem Interpreten.</div>
+    <div class="karte" style="display:flex;gap:12px;align-items:flex-start;margin-top:6px">
+      <svg width="26" height="30" viewBox="0 0 26 30" style="flex:none;margin-top:2px"><path d="M3 2 h13 l7 7 v19 h-20 z M16 2 v7 h7" fill="none" stroke="#000" stroke-width="2.5" stroke-linejoin="round"/></svg>
+      <div class="t17">Sonst später im Song unter Lyrics mit <b>Aus PDF holen</b>, z. B. ein PDF von Ultimate Guitar.</div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px;padding:8px 14px 14px">
+    <div class="knopf voll" style="height:64px;font-size:23px">Suchwort eingeben</div>
+    <div class="knopf">Überspringen</div>
+  </div>
+</div>
+
+<!-- 5  Fertig -->
+<div class="s" id="s5">
+  <div class="band">
+    <div><div class="et">TEXTE HOLEN</div><div class="titel" style="font-size:28px">Fertig</div></div>
+  </div>
+  <div style="padding:18px 18px 0;display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;align-items:baseline;gap:12px"><span class="titel" style="font-size:56px;font-weight:800">34</span><span class="t21">Texte übernommen</span></div>
+    <div style="display:flex;align-items:baseline;gap:12px"><span class="titel" style="font-size:34px">2</span><span class="t21" style="font-weight:500">übersprungen</span></div>
+    <div style="display:flex;align-items:baseline;gap:12px"><span class="titel" style="font-size:34px">1</span><span class="t21" style="font-weight:500">nicht gefunden</span></div>
+  </div>
+  <div class="et" style="padding:16px 18px 0">NOCH OHNE TEXT</div>
+  <div style="flex-grow:1">
+    <div class="zeile"><div class="mitte"><div class="t21">Ein Hoch auf uns</div><div class="t17">nicht gefunden</div></div><svg width="14" height="22" viewBox="0 0 14 22"><path d="M3 3 L11 11 L3 19" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="zeile"><div class="mitte"><div class="t21">Remember us</div><div class="t17">übersprungen</div></div><svg width="14" height="22" viewBox="0 0 14 22"><path d="M3 3 L11 11 L3 19" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="zeile" style="border-bottom:none"><div class="mitte"><div class="t21">Talking Revolution</div><div class="t17">übersprungen</div></div><svg width="14" height="22" viewBox="0 0 14 22"><path d="M3 3 L11 11 L3 19" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  </div>
+  <div class="t17" style="padding:0 18px 8px">Interpreten sind jetzt mit gespeichert. Deine Song-Namen bleiben, wie sie sind.</div>
+  <div class="fuss"><div class="knopf voll" style="flex:1;height:60px;font-size:22px">Zum Archiv</div></div>
+</div>
+
+<!-- 6  Einzelner Song: Lyrics-Reiter mit "Text suchen" -->
+<div class="s" id="s6">
+  <div style="display:flex;align-items:center;gap:6px;padding:8px 10px 8px 6px;border-bottom:2.5px solid #000">
+    <div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><svg width="14" height="22" viewBox="0 0 14 22"><path d="M11 3 L3 11 L11 19" fill="none" stroke="#000" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <div class="titel" style="flex-grow:1;font-size:26px">Careless Whisper</div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:12px 14px 0;border:2.5px solid #000;border-radius:12px;overflow:hidden">
+    <div style="height:42px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700">Daten</div>
+    <div style="height:42px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;background:#000;color:#fff;border-left:2px solid #000">Lyrics</div>
+    <div style="height:42px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;border-left:2px solid #000">Ansage</div>
+  </div>
+  <div style="padding:14px 14px 0;display:flex;flex-direction:column;gap:10px;flex-grow:1">
+    <div class="t17">Noch kein Text.</div>
+    <div class="knopf voll" style="height:64px;font-size:23px">
+      <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="9" cy="9" r="6.5" fill="none" stroke="#fff" stroke-width="2.8"/><path d="M14 14 L20 20" stroke="#fff" stroke-width="3" stroke-linecap="round"/></svg>
+      Text suchen
+    </div>
+    <div style="display:flex;gap:10px">
+      <div class="knopf" style="flex:1;font-size:18px">Aus PDF holen</div>
+      <div class="knopf" style="flex:1;font-size:18px;color:#000;border-style:dashed">Einmessen</div>
+    </div>
+    <div style="flex-grow:1;border:2.5px solid #000;border-radius:12px;padding:12px" class="t17">
+      <span style="opacity:.55">Text von Hand eintippen …</span>
+    </div>
+  </div>
+  <div style="height:14px"></div>
+</div>
+
+<script>
+  var n = (location.hash || '#1').slice(1);
+  var el = document.getElementById('s' + n) || document.getElementById('s1');
+  el.classList.add('an');
+</script>
+</body>
+</html>

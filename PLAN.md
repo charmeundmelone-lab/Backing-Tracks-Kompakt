@@ -218,3 +218,47 @@ Testdaten auf dem Kompakt: Gig "Testgig", Ordner Music/Backing Tracks/Kurztest (
 Nachtrag 9.11. abends: Mixer, Editor-Probe, Einmessen, PDF-Import und Wiedergabe mit
 ausgeschaltetem Bildschirm am Gerät geprüft. Ansage-Aufnahme und Ansage in der Automatik
 (nur rechts) ebenfalls geprüft. Alle Gerätetests aus Welle 1 sind damit durch.
+
+## Lyrics-Paket (Loop ab 12.11.)
+
+Auftrag von Jan (12.11. abends, "vertraue dir voll und ganz", in einer Loop fertig machen, danach
+die ganze App auf Herz und Nieren testen). Entwürfe: `entwuerfe/texte-holen/` (entwurf.html,
+buehne.html, Bilder im Betrachter vorne). Quelle der Texte: LRCLIB (frei, ohne Konto,
+User-Agent mit App-Namen Pflicht, Suche `/api/search?q=`, nacheinander mit Pause anfragen).
+Test 12.11. mit Jans Titeln: 37/41 sofort, mit Suchwort 40/41.
+
+Entscheidungen (Claude, Jan hat freie Hand gegeben):
+- **Titel im Kopfband:** überall eine feste Größe statt Verkleinern. Langer Titel bricht in eine
+  zweite Zeile um (gleiche Größe), die Kopfhöhe steht pro Song fest und ändert sich nie während
+  des Songs. Restzeit wandert in die obere Zeile rechts.
+- **Danach-Zeile:** immer sichtbar, aber kompakt in einer Zeile (kein Umbau gegen Songende, kein
+  Neuaufbau der Seiten). Gewinn: mehr Platz für Lyrics.
+- **Etiketten:** Pille oben links (Refrain schwarz, Strophe Rand, Bridge gestrichelt, Vorrefrain
+  Rand dünn), rechts "dann <nächster Abschnitt>". Refrain-Text fett mit Strich links, Bridge
+  gestrichelter Strich.
+- **Orientierung (Ersatz fürs Mitscrollen der alten App, E-Ink-tauglich):** kein Laufen des
+  Textes. Seite = Abschnitt, Blättern mit 1,5 s Vorlauf vor dem Einmess-Punkt. Innerhalb der
+  Seite zeigt ein schwarzer Keil links die aktuelle Zeile und springt Zeile für Zeile im
+  Songtempo (nur dieser kleine Bereich ändert sich). Zeilenzeiten: aus den Zeitmarken der
+  Datenbank, auf Jans Einmess-Punkte gestreckt; ohne Zeitmarken nach Textlänge verteilt.
+  Auf der letzten Zeile erscheint unten die erste Zeile des nächsten Abschnitts als Vorschau.
+- **Automatisch eingemessen:** Passt die Länge des Originals bis auf ±3 s zur Länge des Tracks,
+  setzt die App die Einmess-Punkte aus den Zeitmarken vor (als "vorläufig" gekennzeichnet,
+  im Einmessen korrigierbar).
+- **Abschnitte erkennen:** Wiederholter Block = Refrain, wiederholt direkt davor = Vorrefrain,
+  einmaliger Block nach dem 2. Refrain = Bridge, aufeinanderfolgende Strophen-Stücke werden
+  zusammengelegt. Danach immer die Seite "Abschnitte prüfen".
+- Lyrics bleiben Text mit `[Etikett]`-Zeilen (von Hand änderbar). Zeitmarken liegen getrennt
+  im Song (`zeilenZeiten`, `originalMs`) und gelten nur, solange die Zeilenzahl passt.
+
+Arbeitsliste (abhaken mit [x], Datum dazu):
+- [ ] L1 Titel im Kopfband einheitlich (Bühne + Song-Karte), Danach kompakt
+- [ ] L2 Logik: LRC lesen, Abschnitte erkennen, Zeitplan (Zeile + Seite), Vorschlag Einmess-Punkte; Unit-Tests
+- [ ] L3 Netz: LRCLIB-Suche (INTERNET-Recht, User-Agent, Pausen, Fehlertexte, Offline+-Hinweis)
+- [ ] L4 Ablauf "Texte holen" (Archiv-Feld, Ist es dieser?, Anderer/Suchwort, Nicht gefunden, Fertig) + "Text suchen" im Song
+- [ ] L5 Seite "Abschnitte prüfen" (Etikett ändern, mit vorigem zusammen)
+- [ ] L6 Bühne: Pillen, Refrain-/Bridge-Strich, "dann …", Zeilen-Keil, Vorschau, Vorlauf
+- [ ] L7 Einmessen: Etiketten, vorläufige Punkte, Zeilenzeiten neu strecken
+- [ ] L8 Gerätetest aller neuen Abläufe am Kompakt (echte Songs)
+- [ ] L9 Gesamttest der App auf Logikfehler (alle Seiten, Show-Automatik, Daten), Fehler beheben
+- [ ] L10 Übergabe in CLAUDE.md, Gedächtnis, Loop beenden

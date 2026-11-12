@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>Lyrics auf der Bühne</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<!-- Entwurf Lyrics-Anzeige (2026-11-12). #1 Strophe, #2 Refrain, #3 Bridge kurz vor Songende,
+     #4 Abschnitte prüfen. 360x600 wie der Kompakt. Liedtext frei erfunden (Platzhalter-Song). -->
+<style>
+  body{margin:0;background:#fff;overflow:hidden}
+  *{box-sizing:border-box}
+  .s{display:none;width:360px;height:600px;background:#fff;color:#000;font-family:'Barlow Semi Condensed','Arial Narrow',sans-serif;flex-direction:column}
+  .s.an{display:flex}
+  .et{font-size:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+  .titel{font-family:'Barlow Condensed',sans-serif;font-weight:700;line-height:1.05}
+  .kopf{background:#000;color:#fff;padding:12px 18px;display:flex;flex-direction:column;gap:8px}
+  .kaest{display:flex;gap:3px}.kaest span{flex:1;height:6px;border:1.5px solid #fff;border-radius:2px}.kaest span.v{background:#fff}
+  .ly{flex-grow:1;padding:10px 18px 6px;display:flex;flex-direction:column;min-height:0}
+  .kopfzeile{height:36px;display:flex;align-items:center;gap:10px;margin-bottom:8px}
+  .pille{height:34px;padding:0 14px;border-radius:17px;display:flex;align-items:center;font-size:19px;font-weight:700;letter-spacing:.07em;text-transform:uppercase}
+  .p-voll{background:#000;color:#fff}
+  .p-rand{border:2.5px solid #000}
+  .p-strich{border:2.5px dashed #000}
+  .dann{margin-left:auto;font-size:17px;font-weight:600;display:flex;align-items:center;gap:6px}
+  .dann b{font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+  .text{font-size:26px;line-height:1.26;font-weight:600}
+  .text p{margin:0;padding-left:.8em;text-indent:-.8em}
+  .refrain{border-left:7px solid #000;padding-left:11px;font-weight:700}
+  .bruecke{border-left:3px dashed #000;padding-left:12px}
+  .knoepfe{display:flex;gap:8px;padding:2px 14px 14px}
+  .kn{flex:1;height:56px;border:2.5px solid #000;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff}
+  .kn.voll{background:#000}
+  .danach{margin:0 18px;border-top:2.5px solid #000;padding:8px 0 10px;display:flex;align-items:center;gap:10px}
+  .zeile{min-height:62px;margin:0 10px;padding:6px 6px 6px 8px;border-bottom:1px solid #000;display:flex;align-items:center;gap:10px}
+  .lab{width:118px;height:44px;border-radius:10px;font-size:17px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;display:flex;align-items:center;justify-content:center;flex:none}
+  .t17{font-size:17px;font-weight:500;line-height:1.2}
+</style>
+</head>
+<body>
+
+<template id="kopf">
+  <div class="kopf">
+    <div style="display:flex"><span class="et" style="flex-grow:1">Jetzt · 4 / 12</span><span class="et">noch</span></div>
+    <div style="display:flex;align-items:flex-end;gap:10px;height:50px">
+      <span class="titel" style="font-size:40px;flex-grow:1;white-space:nowrap;overflow:hidden">Letzter Zug</span>
+      <span class="titel" style="font-size:46px;line-height:1">{{ZEIT}}</span>
+    </div>
+    <div class="kaest">{{KAEST}}</div>
+  </div>
+</template>
+<template id="fuss">
+  <div class="knoepfe">
+    <div class="kn"><svg width="20" height="16" viewBox="0 0 20 16"><path d="M2 2h16M2 8h16M2 14h16" stroke="#000" stroke-width="2.6" stroke-linecap="round"/></svg><span style="font-size:14px;font-weight:700">Liste</span></div>
+    <div class="kn"><svg width="18" height="18" viewBox="0 0 18 18"><rect x="2" y="2" width="14" height="14" rx="2" fill="#000"/></svg></div>
+    <div class="kn voll"><svg width="20" height="22" viewBox="0 0 20 22"><rect x="3" y="2" width="5" height="18" rx="1.5" fill="#fff"/><rect x="12" y="2" width="5" height="18" rx="1.5" fill="#fff"/></svg></div>
+    <div class="kn"><svg width="24" height="20" viewBox="0 0 24 20"><path d="M2 2 L12 10 L2 18 Z M12 2 L22 10 L12 18 Z" fill="#000"/></svg></div>
+  </div>
+</template>
+
+<!-- 1  Strophe -->
+<div class="s" id="s1">
+  <div data-kopf data-zeit="3:41" data-voll="3"></div>
+  <div class="ly">
+    <div class="kopfzeile">
+      <span class="pille p-rand">Strophe 1</span>
+      <span class="dann">dann <b>Refrain</b></span>
+    </div>
+    <div class="text">
+      <p>Coffee in a paper cup</p>
+      <p>the station clock is running slow</p>
+      <p>I counted every light in town</p>
+      <p>and every one said go</p>
+      <div style="height:10px"></div>
+      <p>Your letter's folded in my coat</p>
+      <p>I read it twice, I know it well</p>
+      <p>there's nothing left to say</p>
+    </div>
+  </div>
+  <div data-fuss></div>
+</div>
+
+<!-- 2  Refrain -->
+<div class="s" id="s2">
+  <div data-kopf data-zeit="2:58" data-voll="7"></div>
+  <div class="ly">
+    <div class="kopfzeile">
+      <span class="pille p-voll">Refrain</span>
+      <span class="dann">dann <b>Strophe 2</b></span>
+    </div>
+    <div class="text refrain">
+      <p>Oh, take the last train home</p>
+      <p>don't wait until the morning</p>
+      <p>oh, take the last train home</p>
+      <p>the night is all we own</p>
+      <div style="height:10px"></div>
+      <p>And if the tracks run out of line</p>
+      <p>I'll walk the rest alone</p>
+    </div>
+  </div>
+  <div data-fuss></div>
+</div>
+
+<!-- 3  Bridge, kurz vor Songende: jetzt erscheint "Danach" -->
+<div class="s" id="s3">
+  <div data-kopf data-zeit="0:38" data-voll="17"></div>
+  <div class="ly">
+    <div class="kopfzeile">
+      <span class="pille p-strich">Bridge</span>
+      <span class="dann">dann <b>Refrain</b></span>
+    </div>
+    <div class="text bruecke">
+      <p>Every station looks the same when you're leaving with nowhere to go</p>
+      <p>every whistle sounds like your name</p>
+      <p>calling slow</p>
+    </div>
+  </div>
+  <div class="danach">
+    <div style="flex-grow:1"><div class="et">Danach</div><div class="titel" style="font-size:27px">Riptide</div></div>
+    <div style="border:2px solid #000;border-radius:10px;padding:5px 9px;font-size:15px;font-weight:700">Pause 0:10</div>
+  </div>
+  <div data-fuss></div>
+</div>
+
+<!-- 4  Abschnitte prüfen (im Ablauf "Texte holen", nach "Ja, übernehmen") -->
+<div class="s" id="s4">
+  <div style="background:#000;color:#fff;padding:8px 10px 9px 16px;display:flex;justify-content:space-between;align-items:center">
+    <div><div class="et">Abschnitte prüfen</div><div class="titel" style="font-size:28px">Letzter Zug</div></div>
+    <div style="height:44px;padding:0 14px;border-radius:10px;background:#fff;color:#000;display:flex;align-items:center;font-size:17px;font-weight:700">Fertig</div>
+  </div>
+  <div class="t17" style="padding:10px 18px 4px">Tipp auf ein Etikett, um es zu ändern.</div>
+  <div style="flex-grow:1">
+    <div class="zeile"><span class="lab p-rand" style="border-radius:10px">Strophe 1</span><div class="t17" style="flex-grow:1">Coffee in a paper cup …<br><span style="font-size:15px">7 Zeilen</span></div></div>
+    <div class="zeile"><span class="lab p-voll">Refrain</span><div class="t17" style="flex-grow:1">Oh, take the last train …<br><span style="font-size:15px">6 Zeilen</span></div></div>
+    <div class="zeile"><span class="lab p-rand" style="border-radius:10px">Strophe 2</span><div class="t17" style="flex-grow:1">Platform four, the …<br><span style="font-size:15px">8 Zeilen</span></div></div>
+    <div class="zeile"><span class="lab p-voll">Refrain</span><div class="t17" style="flex-grow:1">Oh, take the last train …<br><span style="font-size:15px">6 Zeilen</span></div></div>
+    <div class="zeile" style="border-bottom:none"><span class="lab p-strich" style="border-radius:10px">Bridge</span><div class="t17" style="flex-grow:1">Every station looks …<br><span style="font-size:15px">3 Zeilen</span></div></div>
+  </div>
+  <div style="margin:0 14px 14px;border:2.5px solid #000;border-radius:14px;padding:8px 12px">
+    <div class="et" style="margin-bottom:6px">Etikett wählen</div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px">
+      <span class="lab p-voll" style="width:auto;padding:0 10px;height:36px;font-size:15px">Strophe</span>
+      <span class="lab p-rand" style="width:auto;padding:0 10px;height:36px;font-size:15px">Vorrefrain</span>
+      <span class="lab p-rand" style="width:auto;padding:0 10px;height:36px;font-size:15px">Refrain</span>
+      <span class="lab p-rand" style="width:auto;padding:0 10px;height:36px;font-size:15px">Bridge</span>
+      <span class="lab p-rand" style="width:auto;padding:0 10px;height:36px;font-size:15px">Solo</span>
+      <span class="lab p-rand" style="width:auto;padding:0 10px;height:36px;font-size:15px">Outro</span>
+      <span class="lab p-strich" style="width:auto;padding:0 10px;height:36px;font-size:15px">Mit vorigem</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  var k = document.getElementById('kopf').innerHTML, f = document.getElementById('fuss').innerHTML;
+  document.querySelectorAll('[data-kopf]').forEach(function (el) {
+    var v = +el.dataset.voll, b = '';
+    for (var i = 0; i < 20; i++) b += '<span' + (i < v ? ' class="v"' : '') + '></span>';
+    el.outerHTML = k.replace('{{ZEIT}}', el.dataset.zeit).replace('{{KAEST}}', b);
+  });
+  document.querySelectorAll('[data-fuss]').forEach(function (el) { el.outerHTML = f; });
+  var n = (location.hash || '#1').slice(1);
+  (document.getElementById('s' + n) || document.getElementById('s1')).classList.add('an');
+</script>
+</body>
+</html>

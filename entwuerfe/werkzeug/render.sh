@@ -15,6 +15,8 @@ n=1; for f in $REIHE; do num=$(printf "%02d" $n)
 sleep 2 2>/dev/null || ping -n 3 127.0.0.1 >/dev/null
 H=$(ls -d ~/AppData/Local/ms-playwright/chromium_headless_shell-*/*/ | tail -1); EXE=$(ls "$H"*.exe | head -1)
 rm -f "$A"/*.png; mkdir -p "$A"
+# Neuere Entwürfe als fertige Bilder (z. B. texte-holen) stehen im Betrachter vorne.
+for b in "$E"/texte-holen/bilder/*.png; do [ -f "$b" ] && cp "$b" "$A/00-$(basename "$b")"; done
 for f in "$T"/html/*.html; do b=$(basename "$f" .html)
   "$EXE" --headless --disable-gpu --hide-scrollbars --user-data-dir="$T/profil" --window-size=360,600 \
     --force-device-scale-factor=1.3333333 --virtual-time-budget=6000 --screenshot="$A/$b.png" "http://127.0.0.1:8098/$b.html" >/dev/null 2>&1
