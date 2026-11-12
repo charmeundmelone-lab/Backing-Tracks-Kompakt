@@ -45,53 +45,47 @@ installieren mit `adb install -r app/build/outputs/apk/debug/app-debug.apk`.
 Testdaten direkt ändern: `adb exec-out run-as show.jangregersen.buehne cat files/bestand.json`
 (Git-Bash: bei Gerätepfaden `MSYS_NO_PATHCONV=1` setzen).
 
-## Übergabe an die nächste Session (geschrieben 2026-11-09, ca. 19:50)
+## Übergabe an die nächste Session (geschrieben 2026-11-12, ca. 23:55)
 
-**Stand:** `main`, alles committet und gepusht. Repo ist seit 9.11. öffentlich (Jans Wunsch).
-Neuester Bau ist auf dem Kompakt installiert.
+**Stand:** `main`, alles committet und gepusht. Arbeitsliste und Entscheidungen: `PLAN.md`,
+Abschnitt "Lyrics-Paket (Loop ab 12.11.)" (L1–L7 erledigt, L8–L10 offen).
 
-**Erledigt am 9.11. abends (dritte Session):**
-- Ton-Fehler behoben (Jan: "prasselnd, zu langsam, grauenhaft"). Ursache: Einzelspuren liefen
-  über je einen ExoPlayer mit eigener AudioTrack und lagen bis 0,3 s auseinander. Neu:
-  `audio/Mischpult.kt` (ein Faden, eine AudioTrack float, alle Spuren blockweise gemeinsam
-  gemischt) und `audio/Quellen.kt` (WAV direkt 8/16/24/32 bit + float, sonst MediaCodec,
-  Umrechner bei abweichender Rate). Media3 ist raus. Stereo-Datei war schon vorher bitgenau,
-  jetzt in voller 24-Bit-Auflösung.
-- Prüfweg Mitschnitt: `touch files/mitschnitt.an` (run-as), dann schreibt jedes Mischpult 20 s
-  float32-Stereo nach `files/mitschnitt-song<ID>-<rate>.f32`. Vergleich am Laptop:
-  `RATE=44100 node werkzeug/mitschnitt-vergleich.js mit.f32 L:Drums.wav L:Trax.wav R:Click.wav R:Cues.wav`
-  bzw. `STEREO:datei.wav`. Ergebnis 9.11.: Stereo, Einzelspuren und Mixer (Click aus, Drums −2)
-  exakt. Danach Flag wieder löschen.
-- Bedienzonen (PLAN.md "Bedienzonen"): Setliste ohne Menü, unten ‹ + Song · Umstellen ›, oben
-  rechts "Sets". Archiv im Hinzufügen-Modus mit "Als Nächstes | Ans Ende". Hinweise unten.
-- Am Gerät geprüft: Play/Pause/Songende, Mixer, Editor-Probe, Einmessen inkl. "10 s zurück",
-  PDF-Import, Wiedergabe mit Bildschirm aus (61 s, Echtzeit, 0 Aussetzer, Wakelock aktiv).
-- Fehler behoben: Einmessen zeigte nach Songende weiter "Jetzt beginnt" und speicherte 0:00.
+**GERÄTE-REGEL: Am Kompakt nichts installieren oder antippen, bis Jan es freigibt.** Jan spielt
+am Fr 13.11. den Gig "Bar Eriksson" (Set 1, 8 Songs, keiner mit Lyrics). Installiert ist der
+Bau mit neuem Bühnenkopf und neuer Danach-Zeile (Commit 5eded7c). Neuere Commits (Setliste
+zweizeilig, Probe stellt bereiten Song wieder her, Überspringen in der Trefferliste,
+Pause-Ansicht zweizeilig) sind NICHT installiert. Daten-Sicherung vor den Tests:
+Scratchpad der Session vom 12.11. (`bestand-vorher.json`), danach nur "Two Princes" geändert.
 
-**Jans Fehlerbild (geklärt 9.11. ca. 20:00):** Stereo-Song aus der Setliste, über den Lautsprecher,
-"viel langsamer und ruckelig", mit der alten Media3-Engine. Neue Engine danach auf der Bühne bei
-eingeschaltetem Bildschirm geprüft: ganzer Song (Am I wrong, 2:26) in Echtzeit, 0 Aussetzer laut
-`track.underrunCount`, Mitschnitt (Careless Whisper) bitgenau. Die alte Engine ist nicht mehr
-nachmessbar; Ursache dort vermutlich Ruckeln der Abspiel-Fäden neben dem E-Ink-Neuzeichnen.
-Wenn Jan es mit der neuen Engine noch hört: `adb logcat -s Mischpult` zeigt "lief leer".
+**Neu seit 12.11. (Lyrics-Paket):**
+- Texte holen aus LRCLIB (`netz/Lrclib.kt`, User-Agent ohne persönliche Daten, Pausen,
+  verständliche Fehler). Archiv: Knopf "Texte holen" neben Gigs/Archiv (alle ohne Text),
+  Song-Editor › Lyrics: "Text suchen". Ablauf: Ist es dieser? › Anderer/Suchwort › Abschnitte
+  prüfen › nächster Song › Fertig-Liste. Texte liegen danach fest in `bestand.json` (offline).
+- Abschnitts-Erkennung `lyrics/Erkennung.kt` (Wiederholung = Refrain usw.), trifft nur teils,
+  deshalb Seite "Abschnitte prüfen" (`ui/SeitenTexte.kt`, Etikett wählen springt weiter).
+- Zeilen-Zeitplan `lyrics/Zeitplan.kt`: Zeitmarken des Originals auf Jans Einmess-Punkte
+  gestreckt. Bühne: Etikett-Pille (Refrain schwarz + Strich, Bridge gestrichelt), "dann …",
+  schwarzer Keil springt Zeile für Zeile, Seite blättert 1,5 s vorher. Am Gerät geprüft.
+- Song-Felder neu: `zeilenZeiten`, `originalMs`, `markenVorlaeufig`. Vorläufige Punkte nur bei
+  ±3 s gleicher Länge (bei Jans Tracks selten, die meisten sind gekürzt).
+- Einmessen zeigt den laufenden Abschnitt (gesungene Zeile fett) und den Anfang des nächsten;
+  "Weiter einmessen" (startet 5 s vor dem letzten Punkt) / "Neu einmessen".
+- "Auf der Bühne testen" (Editor › Lyrics) = `Seite.ProbeBuehne`, Song ohne Set.
+- Bühnenkopf: Titel immer 34 sp, bricht zweizeilig um statt zu schrumpfen; Restzeit oben rechts.
 
-**Als Nächstes:**
-1. Erledigt 9.11. ca. 20:15: Jan hat die neue Engine am Kompakt gehört, "klingt sauber".
-2. Erledigt 9.11. ca. 20:20: Jan hat die Mikrofon-Erlaubnis erteilt und für "Test Zwei" (Kurztest)
-   Ansage vorher und nachher aufgenommen (je ~7 s). Automatik geprüft: Test Eins endet → Ansage
-   vor Test Zwei läuft (AudioFlinger: L -inf, R 0 dB, also nur rechts) → Test Zwei startet selbst.
-   Im Kurztest stehen jetzt beide Einträge von Set 1 auf "Weiter im Set". Nicht geprüft: Ansage
-   nach dem letzten Song eines Sets (spielt die App bewusst nur, wenn ein nächster Song folgt).
-3. App-Name: Jan hat am 9.11. ca. 20:25 "TrikTrak" gewählt (so geschrieben). Gesetzt in strings.xml,
-   Gigs-Kopfband und Benachrichtigung. Paket bleibt show.jangregersen.buehne (sonst Datenverlust).
-   Schrift: Stufe 3 "Bühnenschrift" ist Standard (Jan kurzsichtig), siehe PLAN.md "Schriftgröße".
-   Noch offen: Symbol, Aufräumen der Testdaten (Gigs "Testgig", "Kurztest", Ordner
-   `Music/Backing Tracks/Kurztest` und `Einzelspuren` nur mit Jans OK).
+**Als Nächstes (nur mit Jans OK, frühestens nach dem Gig):**
+1. Neuesten Bau installieren, Setliste (zweizeilige Zeilen) und Danach-Zeile am Gerät ansehen.
+2. L8: Sammellauf "Texte holen" mit mehreren Songs, Bühne mit Offline+ an.
+3. L9: Gesamttest aus Jans Sicht (Gitarre um, Kompakt am Mikroständer, 60–80 cm, kurze Blicke).
+4. Two Princes hat Test-Einmesspunkte (aus dem Original umgerechnet) – Jan fragen oder neu
+   einmessen lassen.
 
-**Vor jedem Tipp am Kompakt:** `dumpsys window | grep mCurrentFocus` prüfen. Beim Navigieren
-per adb Texte über `uiautomator dump` suchen statt feste Koordinaten: das schwarze Band
-verschiebt das Layout (so öffnete sich einmal versehentlich "Neuer Gig", abgebrochen).
-Testdaten direkt ändern nur bei gestoppter App (`am force-stop` ist bei dieser App erlaubt).
+**Vor jedem Tipp am Kompakt:** `dumpsys window | grep mCurrentFocus` prüfen. Navigation per
+`uiautomator dump` + Text suchen (Hilfsskript war `k.sh` im Scratchpad: tap "Text", shot, texte).
+Lautstärketasten per adb: 25 = vor, 24 = zurück. Medienlautstärke für Tests leise stellen und
+danach zurück (Jan: 5/15). Testdaten direkt ändern nur bei gestoppter App.
 
-**Bekannte Kleinigkeiten:** Platzhalter-Lyrics in "Test Eins" und "Country Roads" (selbst
-geschrieben). "Frei spielen" aus der alten App fehlt weiter.
+**Bekannte Kleinigkeiten:** Platzhalter-Lyrics in "Test Eins" und "Country Roads". Testsongs
+"Test Eins/Zwei/Drei" liegen noch im Archiv. "Frei spielen" aus der alten App fehlt weiter.
+App-Symbol offen (inkOS zeigt nur Namen, daher unwichtig).
