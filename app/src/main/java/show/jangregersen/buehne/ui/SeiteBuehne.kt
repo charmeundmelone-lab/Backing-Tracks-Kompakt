@@ -433,7 +433,7 @@ private fun AnsageAnsicht(navi: Navi, pause: show.jangregersen.buehne.spiel.Bueh
             Linie(dicke = 2.5.dp)
             Abstand(10.dp)
             Etikett("Als Nächstes${if (platz.isNotEmpty()) " · $platz" else ""}")
-            T(kommt.titel, titelStil(34.sp), zeilen = 1)
+            T(kommt.titel, titelStil(34.sp).copy(lineHeight = 35.sp), zeilen = 2)
             T(listOf(songInfo(kommt), zeit(kommt.dauerMs)).joinToString(" · "), textStil(16.sp), zeilen = 1)
             Abstand(12.dp)
         }
