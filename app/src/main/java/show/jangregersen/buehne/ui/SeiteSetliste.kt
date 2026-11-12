@@ -119,13 +119,17 @@ private fun SetZeile(nr: Int, s: Song, e: Eintrag, aktuell: Boolean, spielt: Boo
             if (e.gespielt) Box(Modifier.size(22.dp).clip(RoundedCornerShape(11.dp)).background(Schwarz), contentAlignment = Alignment.Center) { Symbol(Sym.HAKEN, Weiss, 13.dp) }
             else T("$nr", titelStil(22.sp))
         }
-        Column(Modifier.weight(1f)) {
+        // Titel über die volle Breite (nichts daneben, was ihn abschneidet); Pause, Automatik
+        // und Ansage stehen klein in der zweiten Zeile.
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             T(s.titel, textStil(22.sp), zeilen = 1, durchgestrichen = e.gespielt)
-            songInfo(s).takeIf { it.isNotBlank() }?.let { T(it, textStil(14.sp, gewicht = FontWeight.Medium), zeilen = 1) }
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank()) Symbol(Sym.MIKRO, Schwarz, 15.dp)
+                if (s.pauseSek > 0) Box(Modifier.border(1.5.dp, Schwarz, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) { T("Pause ${pauseText(s.pauseSek)}", textStil(13.sp, gewicht = FontWeight.Bold), zeilen = 1) }
+                if (e.ende == Ende.WEITER) Box(Modifier.border(1.5.dp, Schwarz, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) { T("weiter", textStil(13.sp, gewicht = FontWeight.Bold), zeilen = 1) }
+                songInfo(s).takeIf { it.isNotBlank() }?.let { T(it, textStil(14.sp, gewicht = FontWeight.Medium), Modifier.weight(1f, fill = false), zeilen = 1) }
+            }
         }
-        if (s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank()) Symbol(Sym.MIKRO, Schwarz, 18.dp)
-        if (s.pauseSek > 0) Box(Modifier.border(2.dp, Schwarz, RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) { T(pauseText(s.pauseSek), textStil(13.sp, gewicht = FontWeight.Bold)) }
-        if (e.ende == Ende.WEITER) Box(Modifier.border(2.dp, Schwarz, RoundedCornerShape(6.dp)).padding(horizontal = 6.dp, vertical = 2.dp)) { T("weiter", textStil(12.sp, gewicht = FontWeight.Bold)) }
         T(zeit(s.dauerMs), titelStil(20.sp, gewicht = FontWeight.SemiBold), Modifier.width(42.dp), zeilen = 1)
     }
     Linie(Modifier.padding(horizontal = 10.dp))

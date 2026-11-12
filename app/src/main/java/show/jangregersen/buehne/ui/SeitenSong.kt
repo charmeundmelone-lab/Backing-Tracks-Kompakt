@@ -309,7 +309,8 @@ private fun LyricsReiter(navi: Navi, song: Song) {
             TextKnopf("Abschnitte", Modifier.weight(1f), hoehe = 48.dp, groesse = 16.sp, aktiv = abschnitte.isNotEmpty()) { navi.zu(Seite.Pruefen(song.id)) }
             TextKnopf("Einmessen", Modifier.weight(1f), if (song.lyrics.isBlank()) Art.UMRISS else Art.VOLL, 48.dp, 16.sp, aktiv = abschnitte.isNotEmpty()) { navi.zu(Seite.Einmessen(song.id)) }
         }
-        TextKnopf("Auf der Bühne testen", Modifier.fillMaxWidth(), Art.GESTRICHELT, 46.dp, 16.sp, symbol = Sym.PLAY, aktiv = abschnitte.isNotEmpty()) { navi.zu(Seite.ProbeBuehne(song.id)) }
+        val setLaeuft = App.buehne.zustand.collectAsState().value.let { (it.spielt || it.pause != null) && !it.probe }
+        TextKnopf("Auf der Bühne testen", Modifier.fillMaxWidth(), Art.GESTRICHELT, 46.dp, 16.sp, symbol = Sym.PLAY, aktiv = abschnitte.isNotEmpty() && !setLaeuft) { navi.zu(Seite.ProbeBuehne(song.id)) }
         BasicTextField(
             value = song.lyrics, onValueChange = { t -> songAendern(song.id) { it.copy(lyrics = t) } },
             textStyle = textStil(18.sp, gewicht = FontWeight.Medium),

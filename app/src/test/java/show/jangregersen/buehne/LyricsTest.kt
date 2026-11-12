@@ -100,3 +100,63 @@ class LyricsTest {
         assertEquals(listOf(5_000L), s[1])
     }
 }
+
+class AbschnitteAendernTest {
+    private val text = "[Strophe 1]\na\nb\n\n[Refrain]\nc\n\n[Strophe 2]\nd\n\n[Teil 4]\ne"
+
+    @Test fun umbenennenZaehltStrophenNeu() {
+        val t = Abschnitte.umbenennen(text, 2, "Bridge")
+        assertEquals(listOf("Strophe 1", "Refrain", "Bridge", "Strophe 2"), Abschnitte.zerlegen(t).map { it.name })
+    }
+
+    @Test fun mitVorigemHaengtAn() {
+        val t = Abschnitte.mitVorigem(text, 1)
+        val a = Abschnitte.zerlegen(t)
+        assertEquals(listOf("Strophe 1", "Strophe 2", "Strophe 3"), a.map { it.name })
+        assertEquals(listOf("a", "b", "c"), a[0].zeilen)
+        assertEquals(text, Abschnitte.mitVorigem(text, 0)) // erster hat keinen Vorgänger
+    }
+
+    @Test fun markenRueckenNachZusammenlegen() {
+        assertEquals(mapOf(0 to 1000L, 1 to 9000L, 2 to 12000L), Abschnitte.markenNachZusammenlegen(mapOf(0 to 1000L, 1 to 5000L, 2 to 9000L, 3 to 12000L), 1))
+    }
+
+    @Test fun artErkennen() {
+        assertEquals(Abschnitte.Art.REFRAIN, Abschnitte.art("Refrain"))
+        assertEquals(Abschnitte.Art.VORREFRAIN, Abschnitte.art("Vorrefrain"))
+        assertEquals(Abschnitte.Art.BRIDGE, Abschnitte.art("Bridge"))
+        assertEquals(Abschnitte.Art.STROPHE, Abschnitte.art("Strophe 2"))
+        assertEquals(Abschnitte.Art.ANDERS, Abschnitte.art("Outro"))
+    }
+
+    @Test fun zeitenBleibenGueltigNachUmbenennen() {
+        val zeiten = listOf(1L, 2L, 3L, 4L, 5L)
+        val t = Abschnitte.mitVorigem(Abschnitte.umbenennen(text, 1, "Vorrefrain"), 3)
+        assertTrue(Zeitplan.gueltig(Abschnitte.zerlegen(t), zeiten))
+    }
+}
+
+class LrclibTest {
+    @Test fun titelSauber() {
+        assertEquals("Teenage Dirtbag", show.jangregersen.buehne.netz.Lrclib.titelSauber("Teenage Dirtbag(2)"))
+        assertEquals("Song neu", show.jangregersen.buehne.netz.Lrclib.titelSauber("Song_neu"))
+    }
+
+    @Test fun anzeigeTitel() {
+        assertEquals("Crazy", show.jangregersen.buehne.netz.Lrclib.anzeigeTitel("Gnarls Barkley - Crazy (Official Video) [4K Remaster]", "Gnarls Barkley"))
+        assertEquals("Valerie (feat. Amy Winehouse)", show.jangregersen.buehne.netz.Lrclib.anzeigeTitel("Valerie (feat. Amy Winehouse)", "Mark Ronson"))
+    }
+
+    @Test fun ordnenBevorzugtOriginal() {
+        fun t(i: Long, a: String, ti: String, d: Long, sync: Boolean = true) = show.jangregersen.buehne.netz.Lrclib.Treffer(i, a, ti, d, "x", if (sync) "[00:01.00] x" else null)
+        val l = listOf(
+            t(1, "Michael Franti", "Crazy", 221_000),
+            t(2, "Gnarls Barkley", "Crazy", 178_000), t(3, "Gnarls Barkley", "Crazy", 178_500), t(4, "Gnarls Barkley", "Crazy (Live)", 190_000),
+            t(5, "Karaoke Stars", "Crazy (Karaoke)", 244_000)
+        )
+        val o = show.jangregersen.buehne.netz.Lrclib.ordnen(l, "Crazy", 244_000)
+        assertEquals("Gnarls Barkley", o.first().interpret)
+        assertEquals("Karaoke Stars", o.last().interpret)
+        assertEquals(1, o.count { it.interpret == "Gnarls Barkley" && it.titel == "Crazy" }) // doppelte zusammengefasst
+    }
+}

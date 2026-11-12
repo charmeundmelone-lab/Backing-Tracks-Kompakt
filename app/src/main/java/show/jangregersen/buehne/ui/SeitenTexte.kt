@@ -251,7 +251,9 @@ private fun ColumnScope.ListeAnsicht(song: Song, treffer: List<Lrclib.Treffer>, 
         Column(Modifier.weight(1f).padding(18.dp)) { T("Suchwort eintippen, dann „Suchen“.", textStil(18.sp, gewicht = FontWeight.Medium)) }
     } else {
         Etikett("${treffer.size} Treffer · dein Track ${zeit(song.dauerMs)}", Modifier.padding(start = 18.dp, top = 10.dp))
-        SeitenListe(treffer, 62.dp, Modifier.weight(1f), schluessel = "treffer${song.id}$suchwort", oben = 2.dp) { i, t ->
+        SeitenListe(treffer, 62.dp, Modifier.weight(1f), schluessel = "treffer${song.id}$suchwort", oben = 2.dp,
+            fuss = { sn, n, _, z, v -> Blaetterleiste(sn, n, z, v, mitteText = "Überspringen", mitteKlein = if (n > 1) "Seite ${sn + 1}/$n" else "keiner passt", onMitte = ueberspringen) }
+        ) { i, t ->
             Row(
                 Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(61.dp).tipp { waehlen(i) }.padding(start = 8.dp, end = 4.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)

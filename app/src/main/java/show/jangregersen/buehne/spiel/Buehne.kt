@@ -71,6 +71,8 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
     private var pauseJob: Job? = null
     private var hinweisJob: Job? = null
     private var endeBehandelt = false
+    /** Song, der vor dem Probehören bereitlag. */
+    private var vorProbe: Long? = null
 
     val engineZumAnhoeren: Engine get() = engine
 
@@ -291,6 +293,8 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         val z = _zustand.value
         if ((z.spielt || z.pause != null) && !z.probe) { hinweis("Erst den laufenden Song stoppen."); return false }
         val s = ablage.jetzt.song(songId) ?: return false
+        // Was vorher bereitlag, merken: nach der Probe liegt genau dieser Song wieder bereit.
+        if (!z.probe) vorProbe = z.songId
         laden(s, null, probe = true)
         if (abMs > 0) engine.seek(abMs)
         abspielen()
@@ -303,7 +307,11 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         engine.stop(); engine.entladen(); _position.value = 0
         _zustand.update { it.copy(songId = null, spielt = false, probe = false, dauerMs = 0) }
         dienstAus()
-        z.setId?.let { setWaehlen(it) }
+        val vorher = vorProbe; vorProbe = null
+        val setId = z.setId ?: return
+        val set = ablage.jetzt.set(setId)
+        val song = ablage.jetzt.song(vorher)
+        if (song != null && set != null && set.eintraege.any { it.songId == song.id }) laden(song, setId) else setWaehlen(setId)
     }
 
     fun springen(deltaMs: Long) { if (engine.hatSpuren) { engine.seek(engine.positionMs + deltaMs); _position.value = engine.positionMs } }
