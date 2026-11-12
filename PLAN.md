@@ -253,12 +253,12 @@ Entscheidungen (Claude, Jan hat freie Hand gegeben):
 
 Arbeitsliste (abhaken mit [x], Datum dazu):
 - [x] L1 Titel im Kopfband einheitlich (Bühne + Song-Karte), Danach kompakt (12.11., Gerätetest in L8)
-- [ ] L2 Logik: LRC lesen, Abschnitte erkennen, Zeitplan (Zeile + Seite), Vorschlag Einmess-Punkte; Unit-Tests
-- [ ] L3 Netz: LRCLIB-Suche (INTERNET-Recht, User-Agent, Pausen, Fehlertexte, Offline+-Hinweis)
-- [ ] L4 Ablauf "Texte holen" (Archiv-Feld, Ist es dieser?, Anderer/Suchwort, Nicht gefunden, Fertig) + "Text suchen" im Song
-- [ ] L5 Seite "Abschnitte prüfen" (Etikett ändern, mit vorigem zusammen)
-- [ ] L6 Bühne: Pillen, Refrain-/Bridge-Strich, "dann …", Zeilen-Keil, Vorschau, Vorlauf
-- [ ] L7 Einmessen: Etiketten, vorläufige Punkte, Zeilenzeiten neu strecken
+- [x] L2 Logik: LRC lesen, Abschnitte erkennen, Zeitplan (Zeile + Seite), Vorschlag Einmess-Punkte; Unit-Tests
+- [x] L3 Netz: LRCLIB-Suche (INTERNET-Recht, User-Agent, Pausen, Fehlertexte, Offline+-Hinweis)
+- [x] L4 Ablauf "Texte holen" (Archiv-Feld, Ist es dieser?, Anderer/Suchwort, Nicht gefunden, Fertig) + "Text suchen" im Song
+- [x] L5 Seite "Abschnitte prüfen" (Etikett ändern, mit vorigem zusammen)
+- [x] L6 Bühne: Pillen, Refrain-/Bridge-Strich, "dann …", Zeilen-Keil, Vorschau, Vorlauf
+- [x] L7 Einmessen: Etiketten, vorläufige Punkte, Zeilenzeiten neu strecken
 - [ ] L8 Gerätetest aller neuen Abläufe am Kompakt (echte Songs). Pflicht: Bühne mit Offline+ an / ohne Netz prüfen (Jan 12.11.: App muss komplett offline gehen; Texte liegen nach "Ja" in bestand.json)
 - [ ] L9 Gesamttest der App auf Logikfehler (alle Seiten, Show-Automatik, Daten), Fehler beheben.
   Prüfmaßstab (Jan, 12.11.): testen, als wäre ich Jan beim Auftritt. Sänger mit umgehängter
@@ -268,3 +268,15 @@ Arbeitsliste (abhaken mit [x], Datum dazu):
   Dazu (Jan 12.11.): alles verständlich und intuitiv, jeder Knopf sagt in einfachen Worten, was
   passiert, jede Seite erklärt sich ohne Anleitung.
 - [ ] L10 Übergabe in CLAUDE.md, Gedächtnis, Loop beenden
+
+Stand 12.11. ca. 23:35 (Jan geht schlafen, Loop läuft weiter bis zum Wochenlimit):
+- Am Gerät geprüft: Texte holen (einzeln, Two Princes), Abschnitte prüfen, Bühnentest mit
+  mitlaufendem Keil + Blättern + geteilter Strophe, Einmessen mit Text, Weiter/Neu einmessen.
+  Two Princes hat Text + Test-Einmesspunkte (aus dem Original umgerechnet, nicht von Jan).
+- Zuletzt installiert: neue Danach-Zeile (Titel volle Breite, 2 Zeilen) – am Gerät NICHT mehr
+  angesehen. Nach dem Neuinstallieren lag kein Song mehr bereit (Jan wählt das Set morgen neu).
+- **GERÄTE-REGEL bis Jan es freigibt: nichts mehr am Kompakt installieren oder antippen.**
+  Jan spielt am Fr 13.11. den Gig "Bar Eriksson" (8 Songs, keiner hat bisher Lyrics).
+- Offen für L8/L9: Sammellauf "Texte holen" (mehrere Songs) am Gerät, Offline+-Test,
+  Setliste: lange Titel werden neben den Kästchen (0:30, weiter) abgeschnitten → Kästchen in
+  zweite Zeile; Seite "Keine Lyrics" auf der Bühne nutzt den Platz nicht.

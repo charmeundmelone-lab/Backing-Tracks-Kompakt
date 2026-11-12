@@ -189,12 +189,12 @@ private fun GrossWert(etikett: String, wert: String, modifier: Modifier, klein: 
 
 @Composable
 private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boolean) {
-    // Eine Zeile, immer an derselben Stelle: so bleibt den Lyrics mehr Platz und nichts springt.
-    Column(Modifier.padding(horizontal = 18.dp)) {
+    // Immer sichtbar, immer an derselben Stelle. Der nächste Titel bekommt die volle Breite und
+    // bricht lieber um, als abgeschnitten zu werden (Jan: "wirklich gut lesbar").
+    Column(Modifier.padding(start = 18.dp, end = 18.dp, bottom = 6.dp)) {
         Linie(dicke = 2.5.dp)
-        Row(Modifier.fillMaxWidth().height(50.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Etikett("Danach")
-            T(naechster?.titel ?: if (setEnde) "Set zu Ende" else "–", titelStil(27.sp), Modifier.weight(1f), zeilen = 1)
+        Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Etikett("Danach", Modifier.weight(1f))
             if (naechster != null) {
                 val (sym, text) = when {
                     ende == Ende.ANHALTEN -> Sym.STOP to "hält an"
@@ -204,7 +204,7 @@ private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boo
                     else -> null to "ohne Pause"
                 }
                 Row(
-                    Modifier.border(2.dp, Schwarz, RoundedCornerShape(10.dp)).padding(horizontal = 9.dp, vertical = 4.dp),
+                    Modifier.border(2.dp, Schwarz, RoundedCornerShape(10.dp)).padding(horizontal = 9.dp, vertical = 3.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     if (sym != null) Symbol(sym, Schwarz, 16.dp)
@@ -212,6 +212,7 @@ private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boo
                 }
             }
         }
+        T(naechster?.titel ?: if (setEnde) "Set zu Ende" else "–", titelStil(28.sp).copy(lineHeight = 29.sp), Modifier.fillMaxWidth().padding(top = 2.dp), zeilen = 2)
     }
 }
 
