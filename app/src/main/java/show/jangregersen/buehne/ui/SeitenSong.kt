@@ -35,6 +35,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalContext
@@ -176,7 +177,11 @@ fun EditorSeite(navi: Navi, songId: Long, startReiter: Int) {
             TextKnopf("Fertig", art = Art.VOLL, hoehe = 44.dp) { navi.zurueck() }
         }
         Linie(dicke = 2.5.dp)
-        Segmente(listOf("Daten", "Lyrics", "Ansage"), reiter, Modifier.padding(start = 14.dp, end = 14.dp, top = 12.dp), hoehe = 42.dp) { reiter = it }
+        Segmente(listOf("Daten", "Lyrics", "Ansage"), reiter, Modifier.padding(start = 14.dp, end = 14.dp, top = 12.dp), hoehe = 42.dp) {
+            reiter = it
+            // Reiter im Stapel merken: nach Einmessen, Bühnentest usw. kommt man im selben Reiter zurück.
+            if (navi.oben is Seite.Editor) navi.ersetzen(Seite.Editor(songId, it))
+        }
         when (reiter) {
             0 -> DatenReiter(navi, song)
             1 -> LyricsReiter(navi, song)
@@ -304,6 +309,7 @@ private fun LyricsReiter(navi: Navi, song: Song) {
             TextKnopf("Abschnitte", Modifier.weight(1f), hoehe = 48.dp, groesse = 16.sp, aktiv = abschnitte.isNotEmpty()) { navi.zu(Seite.Pruefen(song.id)) }
             TextKnopf("Einmessen", Modifier.weight(1f), if (song.lyrics.isBlank()) Art.UMRISS else Art.VOLL, 48.dp, 16.sp, aktiv = abschnitte.isNotEmpty()) { navi.zu(Seite.Einmessen(song.id)) }
         }
+        TextKnopf("Auf der Bühne testen", Modifier.fillMaxWidth(), Art.GESTRICHELT, 46.dp, 16.sp, symbol = Sym.PLAY, aktiv = abschnitte.isNotEmpty()) { navi.zu(Seite.ProbeBuehne(song.id)) }
         BasicTextField(
             value = song.lyrics, onValueChange = { t -> songAendern(song.id) { it.copy(lyrics = t) } },
             textStyle = textStil(18.sp, gewicht = FontWeight.Medium),
@@ -411,7 +417,7 @@ fun EinmessenSeite(navi: Navi, songId: Long) {
     Lautstaerketasten { }
     // Jeder eigene Tipp macht die Punkte "echt" (vorläufige Punkte stammen aus dem Original).
     fun markenSetzen(m: Map<Int, Long>) = songAendern(songId) { it.copy(marken = Abschnitte.markenSchreiben(m), markenVorlaeufig = false) }
-    val vorlaeufig = song.markenVorlaeufig && marken.isNotEmpty() && !laeuft
+    val vorlaeufig = song.markenVorlaeufig && marken.isNotEmpty() && !laeuft && naechster == null
 
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().background(Schwarz).padding(start = 18.dp, end = 18.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -431,7 +437,15 @@ fun EinmessenSeite(navi: Navi, songId: Long) {
             val start = (mitte - 2).coerceAtLeast(0)
             start until minOf(abschnitte.size, start + 7)
         }
-        Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
+        if (laeuft) {
+            // Während der Song läuft: Text des laufenden Abschnitts, darunter der Anfang des nächsten.
+            val jetzt = marken.filter { it.value <= pos }.maxByOrNull { it.value }?.key
+            val starts = remember(song.lyrics, song.marken, song.zeilenZeiten, z.dauerMs) {
+                show.jangregersen.buehne.lyrics.Zeitplan.zeilenStarts(abschnitte, marken, show.jangregersen.buehne.lyrics.Zeitplan.zeitenLesen(song.zeilenZeiten), z.dauerMs)
+            }
+            val aktiv = show.jangregersen.buehne.lyrics.Zeitplan.aktiveZeile(starts, pos)?.takeIf { it.first == jetzt }?.second
+            EinmessText(abschnitte, jetzt, aktiv, naechster, Modifier.weight(1f))
+        } else Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
             for (i in fenster) {
                 val gesetzt = marken[i]
                 val istNaechster = i == naechster
@@ -453,16 +467,26 @@ fun EinmessenSeite(navi: Navi, songId: Long) {
             }
         }
         Column(Modifier.padding(horizontal = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            if (vorlaeufig) {
-                Knopf(Modifier.fillMaxWidth(), Art.VOLL, 70.dp, 16.dp, onClick = { songAendern(songId) { it.copy(markenVorlaeufig = false) }; navi.zurueck() }) { f ->
+            val neuStarten: () -> Unit = { markenSetzen(emptyMap()); App.buehne.probe(songId) }
+            if (!laeuft && naechster == null && marken.isNotEmpty()) {
+                // Alles eingemessen (oder vorläufig aus dem Original): prüfen oder neu.
+                if (vorlaeufig) Knopf(Modifier.fillMaxWidth(), Art.VOLL, 64.dp, 16.dp, onClick = { songAendern(songId) { it.copy(markenVorlaeufig = false) }; navi.zurueck() }) { f ->
                     Symbol(Sym.HAKEN, f, 22.dp); T("Passt so", titelStil(28.sp, f))
                 }
-                Knopf(Modifier.fillMaxWidth(), Art.UMRISS, 56.dp, 14.dp, onClick = { markenSetzen(emptyMap()); App.buehne.probe(songId) }) { f ->
-                    Symbol(Sym.PLAY, f, 20.dp); T("Neu einmessen", titelStil(22.sp, f))
+                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    TextKnopf("Auf der Bühne prüfen", Modifier.weight(1f), if (vorlaeufig) Art.UMRISS else Art.VOLL, if (vorlaeufig) 56.dp else 72.dp, 17.sp) { navi.zu(Seite.ProbeBuehne(songId)) }
+                    TextKnopf("Neu einmessen", Modifier.weight(1f), Art.UMRISS, if (vorlaeufig) 56.dp else 72.dp, 17.sp, onClick = neuStarten)
                 }
+            } else if (!laeuft && marken.isNotEmpty()) {
+                // Teilweise eingemessen: kurz vor dem letzten Punkt weitermachen, damit oben und unten zusammenpassen.
+                val ab = ((marken.values.maxOrNull() ?: 0L) - 5_000L).coerceAtLeast(0L)
+                Knopf(Modifier.fillMaxWidth(), Art.VOLL, 76.dp, 16.dp, onClick = { App.buehne.probe(songId, ab) }) { f ->
+                    Symbol(Sym.PLAY, f, 24.dp); T("Weiter einmessen", titelStil(28.sp, f))
+                }
+                TextKnopf("Neu einmessen (von vorn)", Modifier.fillMaxWidth(), Art.UMRISS, 50.dp, 17.sp, onClick = neuStarten)
             } else if (!laeuft) {
                 Knopf(Modifier.fillMaxWidth(), Art.VOLL, 92.dp, 16.dp, onClick = { App.buehne.probe(songId) }) { f ->
-                    Symbol(Sym.PLAY, f, 26.dp); T(if (marken.isEmpty()) "Song starten" else "Song von vorn starten", titelStil(30.sp, f))
+                    Symbol(Sym.PLAY, f, 26.dp); T("Song starten", titelStil(30.sp, f))
                 }
             } else if (naechster != null) {
                 Knopf(Modifier.fillMaxWidth(), Art.VOLL, 92.dp, 16.dp, onClick = { markenSetzen(marken + (naechster to App.buehne.position.value)) }) { f ->
@@ -484,6 +508,35 @@ fun EinmessenSeite(navi: Navi, songId: Long) {
             }
             TextKnopf("10 s zurück", Modifier.weight(1f), hoehe = 50.dp, groesse = 15.sp, aktiv = laeuft) { App.buehne.springen(-10_000) }
         }
+    }
+}
+
+@Composable
+private fun EinmessText(abschnitte: List<show.jangregersen.buehne.lyrics.Abschnitt>, jetzt: Int?, aktiv: Int?, naechster: Int?, modifier: Modifier) {
+    Column(modifier.fillMaxWidth().padding(start = 16.dp, end = 14.dp, top = 6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Etikett("Gerade")
+            if (jetzt != null) AbschnittPille(abschnitte[jetzt].name, hoehe = 30.dp, groesse = 15.sp) else T("Vorspiel", textStil(18.sp, gewicht = FontWeight.Bold))
+        }
+        // Abgeschnitten statt überlappend; die laufende Zeile (fett) bleibt immer oben sichtbar.
+        Column(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
+            val zeilen = jetzt?.let { abschnitte[it].zeilen.filter { z -> z.isNotBlank() } } ?: emptyList()
+            if (zeilen.isEmpty()) T(if (jetzt == null) "Noch kein Gesang. Tippe, sobald der erste Abschnitt beginnt." else "(instrumental)", textStil(18.sp, gewicht = FontWeight.Medium))
+            val ab = ((aktiv ?: 0) - 1).coerceAtLeast(0)
+            zeilen.drop(ab).forEachIndexed { i, z -> T(z, textStil(20.sp, gewicht = if (i + ab == aktiv) FontWeight.ExtraBold else FontWeight.Medium), zeilen = 1) }
+        }
+        if (naechster != null) {
+            val form = RoundedCornerShape(12.dp)
+            Column(Modifier.fillMaxWidth().clip(form).gestrichelt(12.dp, 2.5.dp).padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Etikett("Als Nächstes")
+                    AbschnittPille(abschnitte[naechster].name, hoehe = 28.dp, groesse = 14.sp)
+                }
+                abschnitte[naechster].zeilen.filter { it.isNotBlank() }.take(2).forEach { T(it, textStil(21.sp, gewicht = FontWeight.Bold), zeilen = 1) }
+                if (abschnitte[naechster].zeilen.none { it.isNotBlank() }) T("(instrumental)", textStil(18.sp, gewicht = FontWeight.Medium))
+            }
+        }
+        Abstand(4.dp)
     }
 }
 

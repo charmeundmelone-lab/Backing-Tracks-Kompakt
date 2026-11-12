@@ -265,4 +265,6 @@ Arbeitsliste (abhaken mit [x], Datum dazu):
   Gitarre, Kompakt am Mikroständer (ca. 60–80 cm Abstand), Hände meist an der Gitarre, nur
   kurze Blicke und einzelne Tipps zwischen zwei Akkorden. Alles Wichtige muss aus der Entfernung
   lesbar sein, kein Tipp darf etwas Unumkehrbares auslösen, nichts darf springen oder verwirren.
+  Dazu (Jan 12.11.): alles verständlich und intuitiv, jeder Knopf sagt in einfachen Worten, was
+  passiert, jede Seite erklärt sich ohne Anleitung.
 - [ ] L10 Übergabe in CLAUDE.md, Gedächtnis, Loop beenden

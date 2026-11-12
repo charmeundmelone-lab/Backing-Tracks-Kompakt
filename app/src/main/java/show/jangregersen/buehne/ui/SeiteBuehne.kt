@@ -4,6 +4,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -46,6 +48,15 @@ import show.jangregersen.buehne.daten.naechsterNach
 import show.jangregersen.buehne.lyrics.Abschnitte
 import show.jangregersen.buehne.lyrics.LyricsSeite
 import show.jangregersen.buehne.lyrics.Seitenlauf
+
+/** Ein Song auf der Bühne zum Ausprobieren (ohne Set): Lyrics, Blättern und Zeilen-Keil prüfen. */
+@Composable
+fun ProbeBuehneSeite(navi: Navi, songId: Long) {
+    // Erst starten, wenn die vorige Seite weg ist (die beendet beim Verlassen ihre eigene Probe).
+    LaunchedEffect(songId) { App.buehne.probe(songId) }
+    DisposableEffect(Unit) { onDispose { App.buehne.probeEnde() } }
+    BuehneSeite(navi)
+}
 
 @Composable
 fun BuehneSeite(navi: Navi) {
@@ -207,7 +218,7 @@ private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boo
 // ── Lyrics: abschnittsweise Seiten ───────────────────────────────────────────
 
 /** Breite der Spalte links neben dem Text: Strich (Refrain/Bridge) und Zeilen-Keil. */
-private val RINNE = 24.dp
+private val RINNE = 26.dp
 
 /**
  * Eine Seite = ein Abschnitt (zu lange werden geteilt). Mit Einmess-Punkten blättert die Seite
@@ -234,7 +245,8 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
         val starts = remember(song.lyrics, song.marken, song.zeilenZeiten, dauer) {
             Zeitplan.zeilenStarts(abschnitte, marken, Zeitplan.zeitenLesen(song.zeilenZeiten), dauer)
         }
-        val position = App.buehne.position
+        // collectAsState: nur so merkt derivedStateOf, dass sich die Position ändert.
+        val position = App.buehne.position.collectAsState()
         // Nur neu zeichnen, wenn Seite oder Zeile wechseln (nicht bei jedem 200-ms-Takt).
         val auto by remember(seiten, starts) { derivedStateOf { autoSeite(seiten, marken, starts, position.value + Zeitplan.SEITE_VORLAUF_MS) } }
         val zeile by remember(starts) { derivedStateOf { Zeitplan.aktiveZeile(starts, position.value + Zeitplan.ZEILE_VORLAUF_MS) } }
@@ -288,7 +300,7 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
                                 else {
                                     val i = nr++
                                     Row {
-                                        Box(Modifier.width(RINNE - 6.dp).height(with(dichte) { (seite.schriftSp * 1.26f).sp.toDp() }), contentAlignment = Alignment.Center) {
+                                        Box(Modifier.width(RINNE - 6.dp).padding(end = 4.dp).height(with(dichte) { (seite.schriftSp * 1.26f).sp.toDp() }), contentAlignment = Alignment.Center) {
                                             if (i == keil.first) Keil(keil.second)
                                         }
                                         T(zl, lyricsStil(seite.schriftSp, art == Abschnitte.Art.REFRAIN))

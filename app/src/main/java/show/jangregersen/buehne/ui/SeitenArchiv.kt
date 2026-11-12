@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -106,20 +107,11 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?) {
             Sprung(songs) { i -> if (i >= 0) zeige = Zeige(i); sprung = false }
             return@Rahmen
         }
-        if (zielSet == null) Segmente(listOf("Gigs", "Archiv"), 1, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp)) { if (it == 0) navi.ersetzen(Seite.Gigs) }
         val ohneText = if (zielSet == null) alle.filter { it.lyrics.isBlank() } else emptyList()
-        if (ohneText.isNotEmpty()) {
-            Row(
-                Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp).fillMaxWidth().height(58.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz)
-                    .tipp { navi.zu(Seite.TexteHolen(ohneText.map { it.id })) }.padding(start = 14.dp, end = 12.dp),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                Column(Modifier.weight(1f)) {
-                    T("Texte holen", titelStil(24.sp, Weiss), zeilen = 1)
-                    T(if (ohneText.size == 1) "1 Song hat noch keinen Text" else "${ohneText.size} Songs haben noch keinen Text", textStil(15.sp, Weiss, FontWeight.Medium), zeilen = 1)
-                }
-                Symbol(Sym.RECHTS, Weiss, 18.dp)
-            }
+        if (zielSet == null) Row(Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Segmente(listOf("Gigs", "Archiv"), 1, Modifier.weight(1f)) { if (it == 0) navi.ersetzen(Seite.Gigs) }
+            // Texte für alle Songs ohne Text holen (verschwindet, sobald alle einen haben).
+            if (ohneText.isNotEmpty()) TextKnopf("Texte holen", Modifier.width(132.dp), Art.VOLL, 44.dp, 16.sp) { navi.zu(Seite.TexteHolen(ohneText.map { it.id })) }
         }
         else Segmente(listOf("Als Nächstes", "Ans Ende"), if (alsNaechstes) 0 else 1, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp)) { alsNaechstes = it == 0; zuletzt = null }
         Segmente(listOf("Alle", "Langsam", "Mittel", "Schnell"), tempo, Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp), hoehe = 40.dp, groesse = 15.sp) { tempo = it }
