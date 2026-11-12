@@ -98,7 +98,7 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?) {
     }
 
     val ober = if (zielSet != null) "Hinzufügen zu" else "Archiv · ${b.songs.size} Songs"
-    val titel = if (zielSet != null) "${zielSet.name} · ${zielSet.eintraege.size} Songs" else "Archiv"
+    val titel = if (zielSet != null) "${zielSet.name} · ${zielSet.eintraege.size} ${if (zielSet.eintraege.size == 1) "Song" else "Songs"}" else "Archiv"
     Rahmen(navi, ober, titel, rechts = {
         if (zielSet != null) WeisserKnopfImBand("Fertig") { navi.zurueck() }
         else WeisserKnopfImBand("Songs holen", Sym.ORDNER) { waehler.launch(null) }
@@ -118,7 +118,7 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?) {
         SeitenListe(
             eintraege = songs, zeilenHoehe = 62.dp, modifier = Modifier.weight(1f), schluessel = "archiv$tempo$zielSetId", zeige = zeige, oben = 6.dp,
             fuss = { s, n, pro, z, v ->
-                val erster = songs.getOrNull(s * pro)
+                val erster = songs.getOrNull(SeitenGedaechtnis.seiten["archiv$tempo$zielSetId"] ?: (s * pro))
                 Blaetterleiste(s, n, z, v, mitteText = "${erster?.let { buchstabe(it.titel) } ?: "A"}–Z · Seite ${s + 1}/$n", mitteKlein = "tippen zum Springen", onMitte = { sprung = true })
             },
             leer = {

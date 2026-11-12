@@ -10,6 +10,9 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import show.jangregersen.buehne.lyrics.Zeitplan
+import show.jangregersen.buehne.lyrics.Ablauf
+import show.jangregersen.buehne.lyrics.Abschnitt
+import show.jangregersen.buehne.lyrics.Teil
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -234,23 +237,25 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
     BoxWithConstraints(Modifier.fillMaxSize().padding(start = 12.dp, end = 16.dp, top = 10.dp, bottom = 4.dp)) {
         val textBreitePx = with(dichte) { (maxWidth - RINNE).roundToPx() }
         val hoehePx = with(dichte) { (maxHeight - 44.dp).roundToPx() }
-        val seiten = remember(song.lyrics, textBreitePx, hoehePx) {
-            seitenBauen(song.lyrics, textBreitePx, hoehePx,
+        val abschnitte = remember(song.lyrics) { Abschnitte.zerlegen(song.lyrics) }
+        // Seiten in Jans Ablauf (Teile weg, wiederholt, umgestellt, Instrumental).
+        val ablauf = remember(song.marken, abschnitte) { Ablauf.von(song.marken, abschnitte) }
+        val seiten = remember(abschnitte, ablauf, textBreitePx, hoehePx) {
+            seitenBauen(ablauf.map { t -> Abschnitt(Ablauf.name(abschnitte, t), if (t.abschnitt == Ablauf.INSTRUMENTAL) emptyList() else abschnitte[t.abschnitt].zeilen) }, textBreitePx, hoehePx,
                 messen = { zeilen, sp -> messer.measure(zeilen.joinToString("\n") { it.ifBlank { " " } }, lyricsStil(sp, true), constraints = Constraints(maxWidth = textBreitePx)).size.height },
                 breiteVon = { zeile, sp -> messer.measure(zeile, lyricsStil(sp, true)).size.width })
         }
         if (seiten.isEmpty()) return@BoxWithConstraints
-        val abschnitte = remember(song.lyrics) { Abschnitte.zerlegen(song.lyrics) }
-        val marken = remember(song.marken) { Abschnitte.markenLesen(song.marken) }
+        val mitZeiten = Ablauf.hatZeiten(ablauf)
         val dauer = if (dauerMs > 0) dauerMs else song.dauerMs
         val starts = remember(song.lyrics, song.marken, song.zeilenZeiten, dauer) {
-            Zeitplan.zeilenStarts(abschnitte, marken, Zeitplan.zeitenLesen(song.zeilenZeiten), dauer)
+            Zeitplan.zeilenStarts(abschnitte, ablauf, Zeitplan.zeitenLesen(song.zeilenZeiten), dauer)
         }
         // collectAsState: nur so merkt derivedStateOf, dass sich die Position ändert.
         val position = App.buehne.position.collectAsState()
         // Nur neu zeichnen, wenn Seite oder Zeile wechseln (nicht bei jedem 200-ms-Takt).
-        val auto by remember(seiten, starts) { derivedStateOf { autoSeite(seiten, marken, starts, position.value + Zeitplan.SEITE_VORLAUF_MS) } }
-        val zeile by remember(starts) { derivedStateOf { Zeitplan.aktiveZeile(starts, position.value + Zeitplan.ZEILE_VORLAUF_MS) } }
+        val auto by remember(seiten, starts) { derivedStateOf { autoSeite(seiten, ablauf, starts, position.value + Zeitplan.SEITE_VORLAUF_MS) } }
+        val zeile by remember(starts) { derivedStateOf { Zeitplan.aktiveZeile(ablauf, starts, position.value + Zeitplan.ZEILE_VORLAUF_MS) } }
         var hand by remember(song.id) { mutableStateOf<Pair<Int, Int>?>(null) } // (Hand-Seite, Auto-Seite beim Blättern)
         val vonHand = hand?.let { (h, a) -> if (a == auto && h != auto) h else null }
         val gezeigt = (vonHand ?: auto).coerceIn(0, seiten.size - 1)
@@ -263,8 +268,9 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
         // Keil: voll = diese Zeile läuft, hohl = kommt gleich (Seite schon umgeblättert).
         val z = zeile
         val keil: Pair<Int, Boolean> = when {
-            marken.isEmpty() || vonHand != null -> -1 to false
+            !mitZeiten || vonHand != null -> -1 to false
             z != null && z.first == seite.abschnitt && z.second in seite.ersteZeile until seite.ersteZeile + seite.textZeilen -> (z.second - seite.ersteZeile) to true
+            // Teil hat begonnen (Vorspiel) oder Seite schon umgeblättert: erste Zeile kommt gleich.
             (starts.getOrNull(seite.abschnitt)?.size ?: 0) > seite.ersteZeile -> 0 to false
             else -> -1 to false
         }
@@ -332,14 +338,12 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
     }
 }
 
-/** Seite für die Position: Abschnitt nach Einmess-Punkt, darin die Seite mit der laufenden Zeile. */
-private fun autoSeite(seiten: List<LyricsSeite>, marken: Map<Int, Long>, starts: List<List<Long>?>, posMs: Long): Int {
-    if (marken.isEmpty()) return 0
-    val abschnitt = marken.filter { it.value <= posMs }.maxByOrNull { it.value }?.key ?: return 0
-    val kandidaten = seiten.withIndex().filter { it.value.abschnitt == abschnitt }
-    if (kandidaten.isEmpty()) return seiten.indexOfLast { it.abschnitt <= abschnitt }.coerceAtLeast(0)
-    val s = starts.getOrNull(abschnitt)
-    val zeile = s?.indexOfLast { it <= posMs }?.coerceAtLeast(0) ?: 0
+/** Seite für die Position: Teil nach dem Ablauf, darin die Seite mit der laufenden Zeile. */
+private fun autoSeite(seiten: List<LyricsSeite>, ablauf: List<Teil>, starts: List<List<Long>?>, posMs: Long): Int {
+    val k = Zeitplan.aktiverTeil(ablauf, posMs) ?: return 0
+    val kandidaten = seiten.withIndex().filter { it.value.abschnitt == k }
+    if (kandidaten.isEmpty()) return seiten.indexOfLast { it.abschnitt <= k }.coerceAtLeast(0)
+    val zeile = starts.getOrNull(k)?.indexOfLast { it <= posMs }?.coerceAtLeast(0) ?: 0
     return kandidaten.lastOrNull { it.value.ersteZeile <= zeile }?.index ?: kandidaten.first().index
 }
 
@@ -368,8 +372,7 @@ private fun lyricsStil(sp: Float, fett: Boolean = false) = TextStyle(fontFamily 
  * Zeilen dürfen erst bei 24 umbrechen. Was dann noch nicht passt, wird geteilt, bevorzugt an
  * Leerzeilen.
  */
-private fun seitenBauen(text: String, breite: Int, hoehe: Int, messen: (List<String>, Float) -> Int, breiteVon: (String, Float) -> Int): List<LyricsSeite> {
-    val abschnitte = Abschnitte.zerlegen(text)
+private fun seitenBauen(abschnitte: List<Abschnitt>, breite: Int, hoehe: Int, messen: (List<String>, Float) -> Int, breiteVon: (String, Float) -> Int): List<LyricsSeite> {
     if (abschnitte.isEmpty()) return emptyList()
     val groessen = listOf(31f, 30f, 29f, 28f, 27f, 26f, 25f, 24f)
     val breitesteBei31 = abschnitte.flatMap { it.zeilen }.filter { it.isNotBlank() }.maxOfOrNull { breiteVon(it, 31f) } ?: 0

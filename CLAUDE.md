@@ -45,47 +45,44 @@ installieren mit `adb install -r app/build/outputs/apk/debug/app-debug.apk`.
 Testdaten direkt ändern: `adb exec-out run-as show.jangregersen.buehne cat files/bestand.json`
 (Git-Bash: bei Gerätepfaden `MSYS_NO_PATHCONV=1` setzen).
 
-## Übergabe an die nächste Session (geschrieben 2026-11-12, ca. 23:55)
+## Übergabe an die nächste Session (geschrieben 2026-11-13, ca. 00:30)
 
-**Stand:** `main`, alles committet und gepusht. Arbeitsliste und Entscheidungen: `PLAN.md`,
-Abschnitt "Lyrics-Paket (Loop ab 12.11.)" (L1–L7 erledigt, L8–L10 offen).
+**Stand:** `main`, committet und gepusht. Der Code baut, alle Unit-Tests sind grün
+(`./gradlew --no-daemon -q :app:testDebugUnitTest`). Aufgaben: `PLAN.md`, Abschnitt
+"Umbau 13.11. nachts" → Arbeitsliste **A1–A7**. Dort stehen auch Jans Wünsche dazu.
 
-**GERÄTE-REGEL: Am Kompakt nichts installieren oder antippen, bis Jan es freigibt.** Jan spielt
-am Fr 13.11. den Gig "Bar Eriksson" (Set 1, 8 Songs, keiner mit Lyrics). Installiert ist der
-Bau mit neuem Bühnenkopf und neuer Danach-Zeile (Commit 5eded7c). Neuere Commits (Setliste
-zweizeilig, Probe stellt bereiten Song wieder her, Überspringen in der Trefferliste,
-Pause-Ansicht zweizeilig) sind NICHT installiert. Daten-Sicherung vor den Tests:
-Scratchpad der Session vom 12.11. (`bestand-vorher.json`), danach nur "Two Princes" geändert.
+**GERÄTE-REGEL:** Am Kompakt nichts installieren oder antippen, bevor Jan es im Chat freigibt.
+Jan spielt am **Fr 13.11.** den Gig "Bar Eriksson" (Set 1, 8 Songs, keiner mit Lyrics) und hat
+den Kompakt zuletzt selbst benutzt (Set lief). Vor JEDEM Tipp: `sh werkzeug/geraet.sh fokus`.
+Läuft TrikTrak mit einem Song, sofort Finger weg.
 
-**Neu seit 12.11. (Lyrics-Paket):**
-- Texte holen aus LRCLIB (`netz/Lrclib.kt`, User-Agent ohne persönliche Daten, Pausen,
-  verständliche Fehler). Archiv: Knopf "Texte holen" neben Gigs/Archiv (alle ohne Text),
-  Song-Editor › Lyrics: "Text suchen". Ablauf: Ist es dieser? › Anderer/Suchwort › Abschnitte
-  prüfen › nächster Song › Fertig-Liste. Texte liegen danach fest in `bestand.json` (offline).
-- Abschnitts-Erkennung `lyrics/Erkennung.kt` (Wiederholung = Refrain usw.), trifft nur teils,
-  deshalb Seite "Abschnitte prüfen" (`ui/SeitenTexte.kt`, Etikett wählen springt weiter).
-- Zeilen-Zeitplan `lyrics/Zeitplan.kt`: Zeitmarken des Originals auf Jans Einmess-Punkte
-  gestreckt. Bühne: Etikett-Pille (Refrain schwarz + Strich, Bridge gestrichelt), "dann …",
-  schwarzer Keil springt Zeile für Zeile, Seite blättert 1,5 s vorher. Am Gerät geprüft.
-- Song-Felder neu: `zeilenZeiten`, `originalMs`, `markenVorlaeufig`. Vorläufige Punkte nur bei
-  ±3 s gleicher Länge (bei Jans Tracks selten, die meisten sind gekürzt).
-- Einmessen zeigt den laufenden Abschnitt (gesungene Zeile fett) und den Anfang des nächsten;
-  "Weiter einmessen" (startet 5 s vor dem letzten Punkt) / "Neu einmessen".
-- "Auf der Bühne testen" (Editor › Lyrics) = `Seite.ProbeBuehne`, Song ohne Set.
-- Bühnenkopf: Titel immer 34 sp, bricht zweizeilig um statt zu schrumpfen; Restzeit oben rechts.
+**Was installiert ist:** Bau vom 12.11. ca. 23:50 (Setliste zweizeilig, Danach-Zeile, Texte holen,
+altes Einmessen). Der Umbau "eigener Ablauf + Zeilen-Tipps" (PLAN.md) ist NICHT installiert.
+Testdaten auf dem Gerät: Gig "Testlauf" (Set 1 mit "Test Eins", nur mit Jans OK löschen),
+"Two Princes" hat Text + Einmess-Punkte (aus dem Original umgerechnet, nicht von Jan getippt).
+Medienlautstärke: Jan nutzt 5/15. Für Tests leise stellen und **danach sofort zurück auf 5**
+(in TrikTrak blättern die Lautstärketasten, Jan kann dort nicht selbst lauter drehen).
 
-**Als Nächstes (nur mit Jans OK, frühestens nach dem Gig):**
-1. Neuesten Bau installieren, Setliste (zweizeilige Zeilen) und Danach-Zeile am Gerät ansehen.
-2. L8: Sammellauf "Texte holen" mit mehreren Songs, Bühne mit Offline+ an.
-3. L9: Gesamttest aus Jans Sicht (Gitarre um, Kompakt am Mikroständer, 60–80 cm, kurze Blicke).
-4. Two Princes hat Test-Einmesspunkte (aus dem Original umgerechnet) – Jan fragen oder neu
-   einmessen lassen.
+**Werkzeuge:**
+- Bauen: `JAVA_HOME="/c/Program Files/Android/Android Studio/jbr" ./gradlew --no-daemon -q :app:assembleDebug`,
+  danach `df -h /c` (Platte fast voll, ca. 6 GB frei).
+- Installieren: `"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe" -s LD20241004967 install -r app/build/outputs/apk/debug/app-debug.apk`
+  (vorher Daten sichern: `MSYS_NO_PATHCONV=1 adb … exec-out run-as show.jangregersen.buehne cat files/bestand.json > .geraet/bestand-DATUM.json`).
+- Gerät steuern: `sh werkzeug/geraet.sh fokus | texte | tap "Text" | shot name | key 25`
+  (Bilder in `.geraet/`, nicht im Repo). Starten: `adb … shell monkey -p show.jangregersen.buehne -c android.intent.category.LAUNCHER 1`.
+- Archiv-Navigation: A–Z-Knopf unten → Buchstabe → `key 25` blättert eine Seite weiter.
+- Song zum Testen ohne Set: Editor › Lyrics › "Auf der Bühne testen".
 
-**Vor jedem Tipp am Kompakt:** `dumpsys window | grep mCurrentFocus` prüfen. Navigation per
-`uiautomator dump` + Text suchen (Hilfsskript war `k.sh` im Scratchpad: tap "Text", shot, texte).
-Lautstärketasten per adb: 25 = vor, 24 = zurück. Medienlautstärke für Tests leise stellen und
-danach zurück (Jan: 5/15). Testdaten direkt ändern nur bei gestoppter App.
+**Code-Landkarte (nur das Nötige lesen):** `lyrics/Zeitplan.kt` (Teil, Ablauf, Zeitplan),
+`lyrics/Erkennung.kt` (Etiketten-Vorschlag), `lyrics/Abschnitte.kt` (Text ↔ Abschnitte),
+`ui/SeiteEinmessen.kt`, `ui/SeitenTexte.kt` (Texte holen, Teile & Ablauf, AbschnittPille),
+`ui/SeiteBuehne.kt` (Bühne, LyricsBereich), `netz/Lrclib.kt`, Tests in `app/src/test/…/LyricsTest.kt`.
 
-**Bekannte Kleinigkeiten:** Platzhalter-Lyrics in "Test Eins" und "Country Roads". Testsongs
-"Test Eins/Zwei/Drei" liegen noch im Archiv. "Frei spielen" aus der alten App fehlt weiter.
-App-Symbol offen (inkOS zeigt nur Namen, daher unwichtig).
+**Jans Maßstab (immer):** aus 60–80 cm am Mikroständer lesbar, Titel und nächster Song groß und
+vollständig, nichts springt, jeder Knopf sagt in einfachen Worten, was passiert, kein Tipp löst
+etwas Unumkehrbares aus. Antworten auf Deutsch, einfach, ohne Floskeln; Fragen als anklickbare
+Optionen, eine pro Runde.
+
+**Bekannte Kleinigkeiten:** Testsongs "Test Eins/Zwei/Drei" im Archiv, Platzhalter-Lyrics in
+"Test Eins" und "Country Roads", "Frei spielen" aus der alten App fehlt, App-Symbol offen
+(inkOS zeigt nur Namen).

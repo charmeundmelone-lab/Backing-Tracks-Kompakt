@@ -16,13 +16,13 @@ object Uebernahme {
 
     fun uebernehmen(song: Song, t: Lrclib.Treffer): Song? {
         val v = vorschau(t) ?: return null
-        val vorschlag = Zeitplan.markenVorschlag(v.abschnitte, v.ergebnis.zeiten, t.dauerMs, song.dauerMs)
+        val vorschlag = Zeitplan.vorschlag(v.abschnitte, v.ergebnis.zeiten, t.dauerMs, song.dauerMs)
         return song.copy(
             lyrics = v.ergebnis.text,
             zeilenZeiten = Zeitplan.zeitenSchreiben(v.ergebnis.zeiten),
             originalMs = t.dauerMs,
             interpret = song.interpret.ifBlank { t.interpret },
-            marken = Abschnitte.markenSchreiben(vorschlag),
+            marken = Ablauf.schreiben(vorschlag),
             markenVorlaeufig = vorschlag.isNotEmpty()
         )
     }

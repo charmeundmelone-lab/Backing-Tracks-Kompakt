@@ -289,7 +289,8 @@ private fun LyricsReiter(navi: Navi, song: Song) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     val abschnitte = remember(song.lyrics) { Abschnitte.zerlegen(song.lyrics) }
-    val marken = remember(song.marken) { Abschnitte.markenLesen(song.marken) }
+    val ablauf = remember(song.marken, abschnitte) { show.jangregersen.buehne.lyrics.Ablauf.von(song.marken, abschnitte) }
+    val eingemessen = ablauf.count { it.eingemessen }
     val pdf = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
         if (uri != null) scope.launch {
             val text = withContext(Dispatchers.IO) { runCatching { PdfLyrics.lesen(ctx, uri) }.getOrDefault("") }
@@ -302,11 +303,11 @@ private fun LyricsReiter(navi: Navi, song: Song) {
         }
     }
     Column(Modifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
-        T(if (abschnitte.isEmpty()) "Noch kein Text." else "${abschnitte.size} Abschnitte · ${marken.size} eingemessen" + if (song.markenVorlaeufig && marken.isNotEmpty()) " (vorläufig)" else "", textStil(15.sp))
+        T(if (abschnitte.isEmpty()) "Noch kein Text." else "${ablauf.size} Teile · " + (if (eingemessen == 0) "noch nicht eingemessen" else "$eingemessen eingemessen") + if (song.markenVorlaeufig && eingemessen > 0) " (vorläufig)" else "", textStil(15.sp))
         TextKnopf(if (song.lyrics.isBlank()) "Text suchen" else "Anderen Text suchen", Modifier.fillMaxWidth(), if (song.lyrics.isBlank()) Art.VOLL else Art.UMRISS, 52.dp, 18.sp) { navi.zu(Seite.TexteHolen(listOf(song.id), einzeln = true)) }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TextKnopf("Aus PDF", Modifier.weight(1f), hoehe = 48.dp, groesse = 16.sp) { pdf.launch(arrayOf("application/pdf")) }
-            TextKnopf("Abschnitte", Modifier.weight(1f), hoehe = 48.dp, groesse = 16.sp, aktiv = abschnitte.isNotEmpty()) { navi.zu(Seite.Pruefen(song.id)) }
+            TextKnopf("Teile", Modifier.weight(1f), hoehe = 48.dp, groesse = 16.sp, aktiv = abschnitte.isNotEmpty()) { navi.zu(Seite.Pruefen(song.id)) }
             TextKnopf("Einmessen", Modifier.weight(1f), if (song.lyrics.isBlank()) Art.UMRISS else Art.VOLL, 48.dp, 16.sp, aktiv = abschnitte.isNotEmpty()) { navi.zu(Seite.Einmessen(song.id)) }
         }
         val setLaeuft = App.buehne.zustand.collectAsState().value.let { (it.spielt || it.pause != null) && !it.probe }
@@ -402,144 +403,6 @@ private fun AnsageReiter(song: Song) {
 }
 
 // ── Lyrics einmessen ─────────────────────────────────────────────────────────
-
-@Composable
-fun EinmessenSeite(navi: Navi, songId: Long) {
-    val b by App.ablage.stand.collectAsState()
-    val z by App.buehne.zustand.collectAsState()
-    val pos by App.buehne.position.collectAsState()
-    val song = b.song(songId) ?: run { WegHier(navi); return }
-    val abschnitte = remember(song.lyrics) { Abschnitte.zerlegen(song.lyrics) }
-    val marken = Abschnitte.markenLesen(song.marken)
-    // Nur solange der Song wirklich spielt: nach dem Ende wieder "Song von vorn starten" zeigen.
-    val laeuft = z.probe && z.songId == songId && z.spielt
-    val naechster = (0 until abschnitte.size).firstOrNull { it !in marken }
-    DisposableEffect(Unit) { onDispose { App.buehne.probeEnde() } }
-    Lautstaerketasten { }
-    // Jeder eigene Tipp macht die Punkte "echt" (vorläufige Punkte stammen aus dem Original).
-    fun markenSetzen(m: Map<Int, Long>) = songAendern(songId) { it.copy(marken = Abschnitte.markenSchreiben(m), markenVorlaeufig = false) }
-    val vorlaeufig = song.markenVorlaeufig && marken.isNotEmpty() && !laeuft && naechster == null
-
-    Column(Modifier.fillMaxSize()) {
-        Row(Modifier.fillMaxWidth().background(Schwarz).padding(start = 18.dp, end = 18.dp, top = 10.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Etikett("Lyrics einmessen", farbe = Weiss)
-                T(song.titel, titelStil(26.sp, Weiss), zeilen = 1)
-            }
-            T(if (laeuft) "${zeit(pos)} / ${zeit(z.dauerMs)}" else zeit(song.dauerMs), titelStil(22.sp, Weiss))
-        }
-        T(when {
-            vorlaeufig -> "Die Punkte stammen aus dem Original (gleiche Länge). Prüfe sie einmal auf der Bühne. Passt etwas nicht: neu einmessen."
-            laeuft -> "Tippe genau dann, wenn der nächste Abschnitt anfängt."
-            else -> "Starte den Song und tippe bei jedem Abschnittsbeginn auf den großen Knopf."
-        }, textStil(15.sp), Modifier.padding(start = 18.dp, end = 18.dp, top = 10.dp, bottom = 4.dp))
-        val fenster = run {
-            val mitte = naechster ?: abschnitte.size - 1
-            val start = (mitte - 2).coerceAtLeast(0)
-            start until minOf(abschnitte.size, start + 7)
-        }
-        if (laeuft) {
-            // Während der Song läuft: Text des laufenden Abschnitts, darunter der Anfang des nächsten.
-            val jetzt = marken.filter { it.value <= pos }.maxByOrNull { it.value }?.key
-            val starts = remember(song.lyrics, song.marken, song.zeilenZeiten, z.dauerMs) {
-                show.jangregersen.buehne.lyrics.Zeitplan.zeilenStarts(abschnitte, marken, show.jangregersen.buehne.lyrics.Zeitplan.zeitenLesen(song.zeilenZeiten), z.dauerMs)
-            }
-            val aktiv = show.jangregersen.buehne.lyrics.Zeitplan.aktiveZeile(starts, pos)?.takeIf { it.first == jetzt }?.second
-            EinmessText(abschnitte, jetzt, aktiv, naechster, Modifier.weight(1f))
-        } else Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
-            for (i in fenster) {
-                val gesetzt = marken[i]
-                val istNaechster = i == naechster
-                val form = RoundedCornerShape(10.dp)
-                Row(
-                    Modifier.fillMaxWidth().height(40.dp).then(if (istNaechster) Modifier.clip(form).gestrichelt(10.dp, 2.5.dp) else Modifier).padding(horizontal = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
-                ) {
-                    Box(Modifier.width(22.dp), contentAlignment = Alignment.Center) {
-                        when {
-                            gesetzt != null -> Box(Modifier.size(18.dp).clip(RoundedCornerShape(9.dp)).background(Schwarz), contentAlignment = Alignment.Center) { Symbol(Sym.HAKEN, Weiss, 11.dp) }
-                            istNaechster -> Symbol(Sym.PLAY, Schwarz, 14.dp)
-                            else -> Box(Modifier.size(12.dp).border(2.dp, Schwarz, RoundedCornerShape(6.dp)))
-                        }
-                    }
-                    Box(Modifier.weight(1f)) { AbschnittPille(abschnitte[i].name, hoehe = 30.dp, groesse = 15.sp) }
-                    T(gesetzt?.let { zeit(it) } ?: "–", titelStil(18.sp, gewicht = FontWeight.SemiBold))
-                }
-            }
-        }
-        Column(Modifier.padding(horizontal = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            val neuStarten: () -> Unit = { markenSetzen(emptyMap()); App.buehne.probe(songId) }
-            if (!laeuft && naechster == null && marken.isNotEmpty()) {
-                // Alles eingemessen (oder vorläufig aus dem Original): prüfen oder neu.
-                if (vorlaeufig) Knopf(Modifier.fillMaxWidth(), Art.VOLL, 64.dp, 16.dp, onClick = { songAendern(songId) { it.copy(markenVorlaeufig = false) }; navi.zurueck() }) { f ->
-                    Symbol(Sym.HAKEN, f, 22.dp); T("Passt so", titelStil(28.sp, f))
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    TextKnopf("Auf der Bühne prüfen", Modifier.weight(1f), if (vorlaeufig) Art.UMRISS else Art.VOLL, if (vorlaeufig) 56.dp else 72.dp, 17.sp) { navi.zu(Seite.ProbeBuehne(songId)) }
-                    TextKnopf("Neu einmessen", Modifier.weight(1f), Art.UMRISS, if (vorlaeufig) 56.dp else 72.dp, 17.sp, onClick = neuStarten)
-                }
-            } else if (!laeuft && marken.isNotEmpty()) {
-                // Teilweise eingemessen: kurz vor dem letzten Punkt weitermachen, damit oben und unten zusammenpassen.
-                val ab = ((marken.values.maxOrNull() ?: 0L) - 5_000L).coerceAtLeast(0L)
-                Knopf(Modifier.fillMaxWidth(), Art.VOLL, 76.dp, 16.dp, onClick = { App.buehne.probe(songId, ab) }) { f ->
-                    Symbol(Sym.PLAY, f, 24.dp); T("Weiter einmessen", titelStil(28.sp, f))
-                }
-                TextKnopf("Neu einmessen (von vorn)", Modifier.fillMaxWidth(), Art.UMRISS, 50.dp, 17.sp, onClick = neuStarten)
-            } else if (!laeuft) {
-                Knopf(Modifier.fillMaxWidth(), Art.VOLL, 92.dp, 16.dp, onClick = { App.buehne.probe(songId) }) { f ->
-                    Symbol(Sym.PLAY, f, 26.dp); T("Song starten", titelStil(30.sp, f))
-                }
-            } else if (naechster != null) {
-                Knopf(Modifier.fillMaxWidth(), Art.VOLL, 92.dp, 16.dp, onClick = { markenSetzen(marken + (naechster to App.buehne.position.value)) }) { f ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Etikett("Jetzt beginnt", farbe = f)
-                        T(abschnitte[naechster].name, titelStil(36.sp, f), zeilen = 1)
-                    }
-                }
-            } else {
-                Knopf(Modifier.fillMaxWidth(), Art.UMRISS, 92.dp, 16.dp, onClick = { App.buehne.probeEnde(); navi.zurueck() }) { f ->
-                    Symbol(Sym.HAKEN, f, 24.dp); T("Alles eingemessen", titelStil(30.sp, f))
-                }
-            }
-        }
-        Row(Modifier.padding(14.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            TextKnopf("Tipp löschen", Modifier.weight(1f), hoehe = 50.dp, groesse = 15.sp, aktiv = marken.isNotEmpty()) {
-                val letzter = marken.maxByOrNull { it.value }?.key
-                if (letzter != null) markenSetzen(marken - letzter)
-            }
-            TextKnopf("10 s zurück", Modifier.weight(1f), hoehe = 50.dp, groesse = 15.sp, aktiv = laeuft) { App.buehne.springen(-10_000) }
-        }
-    }
-}
-
-@Composable
-private fun EinmessText(abschnitte: List<show.jangregersen.buehne.lyrics.Abschnitt>, jetzt: Int?, aktiv: Int?, naechster: Int?, modifier: Modifier) {
-    Column(modifier.fillMaxWidth().padding(start = 16.dp, end = 14.dp, top = 6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Etikett("Gerade")
-            if (jetzt != null) AbschnittPille(abschnitte[jetzt].name, hoehe = 30.dp, groesse = 15.sp) else T("Vorspiel", textStil(18.sp, gewicht = FontWeight.Bold))
-        }
-        // Abgeschnitten statt überlappend; die laufende Zeile (fett) bleibt immer oben sichtbar.
-        Column(Modifier.weight(1f).fillMaxWidth().clipToBounds()) {
-            val zeilen = jetzt?.let { abschnitte[it].zeilen.filter { z -> z.isNotBlank() } } ?: emptyList()
-            if (zeilen.isEmpty()) T(if (jetzt == null) "Noch kein Gesang. Tippe, sobald der erste Abschnitt beginnt." else "(instrumental)", textStil(18.sp, gewicht = FontWeight.Medium))
-            val ab = ((aktiv ?: 0) - 1).coerceAtLeast(0)
-            zeilen.drop(ab).forEachIndexed { i, z -> T(z, textStil(20.sp, gewicht = if (i + ab == aktiv) FontWeight.ExtraBold else FontWeight.Medium), zeilen = 1) }
-        }
-        if (naechster != null) {
-            val form = RoundedCornerShape(12.dp)
-            Column(Modifier.fillMaxWidth().clip(form).gestrichelt(12.dp, 2.5.dp).padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Etikett("Als Nächstes")
-                    AbschnittPille(abschnitte[naechster].name, hoehe = 28.dp, groesse = 14.sp)
-                }
-                abschnitte[naechster].zeilen.filter { it.isNotBlank() }.take(2).forEach { T(it, textStil(21.sp, gewicht = FontWeight.Bold), zeilen = 1) }
-                if (abschnitte[naechster].zeilen.none { it.isNotBlank() }) T("(instrumental)", textStil(18.sp, gewicht = FontWeight.Medium))
-            }
-        }
-        Abstand(4.dp)
-    }
-}
 
 // ── Mixer ────────────────────────────────────────────────────────────────────
 

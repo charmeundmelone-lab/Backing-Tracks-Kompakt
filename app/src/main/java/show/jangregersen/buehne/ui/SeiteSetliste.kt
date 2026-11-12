@@ -122,8 +122,10 @@ private fun SetZeile(nr: Int, s: Song, e: Eintrag, aktuell: Boolean, spielt: Boo
         // Titel über die volle Breite (nichts daneben, was ihn abschneidet); Pause, Automatik
         // und Ansage stehen klein in der zweiten Zeile.
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            T(s.titel, textStil(22.sp), zeilen = 1, durchgestrichen = e.gespielt)
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            val mitZeile2 = s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank() || s.pauseSek > 0 || e.ende == Ende.WEITER || songInfo(s).isNotBlank()
+            // Ohne zweite Zeile darf ein langer Titel umbrechen statt abgeschnitten zu werden.
+            T(s.titel, textStil(22.sp).copy(lineHeight = 24.sp), zeilen = if (mitZeile2) 1 else 2, durchgestrichen = e.gespielt)
+            if (mitZeile2) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank()) Symbol(Sym.MIKRO, Schwarz, 15.dp)
                 if (s.pauseSek > 0) Box(Modifier.border(1.5.dp, Schwarz, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) { T("Pause ${pauseText(s.pauseSek)}", textStil(13.sp, gewicht = FontWeight.Bold), zeilen = 1) }
                 if (e.ende == Ende.WEITER) Box(Modifier.border(1.5.dp, Schwarz, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) { T("weiter", textStil(13.sp, gewicht = FontWeight.Bold), zeilen = 1) }

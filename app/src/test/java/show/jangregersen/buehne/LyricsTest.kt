@@ -7,6 +7,8 @@ import org.junit.Test
 import show.jangregersen.buehne.lyrics.Abschnitte
 import show.jangregersen.buehne.lyrics.Erkennung
 import show.jangregersen.buehne.lyrics.Zeitplan
+import show.jangregersen.buehne.lyrics.Teil
+import show.jangregersen.buehne.lyrics.Ablauf
 
 /** Erfundene Liedtexte, nur zum Prüfen der Logik. */
 class LyricsTest {
@@ -64,40 +66,82 @@ class LyricsTest {
         assertNull(Erkennung.aufbereiten(null, null))
     }
 
-    @Test fun markenVorschlagNurBeiPassenderLaenge() {
-        val text = "[Strophe 1]\na\nb\n\n[Refrain]\nc\nd"
-        val ab = Abschnitte.zerlegen(text)
+    @Test fun vorschlagNurBeiPassenderLaenge() {
+        val ab = Abschnitte.zerlegen("[Strophe 1]\na\nb\n\n[Refrain]\nc\nd")
         val zeiten = listOf(10_000L, 14_000L, 30_000L, 34_000L)
-        assertEquals(mapOf(0 to 10_000L, 1 to 30_000L), Zeitplan.markenVorschlag(ab, zeiten, 200_000, 201_500))
-        assertTrue(Zeitplan.markenVorschlag(ab, zeiten, 200_000, 210_000).isEmpty())   // andere Fassung
-        assertTrue(Zeitplan.markenVorschlag(ab, zeiten.dropLast(1), 200_000, 200_000).isEmpty()) // Zeilenzahl passt nicht
+        assertEquals(listOf(Teil(0, 10_000L), Teil(1, 30_000L)), Zeitplan.vorschlag(ab, zeiten, 200_000, 201_500))
+        assertTrue(Zeitplan.vorschlag(ab, zeiten, 200_000, 210_000).isEmpty())   // andere Fassung
+        assertTrue(Zeitplan.vorschlag(ab, zeiten.dropLast(1), 200_000, 200_000).isEmpty()) // Zeilenzahl passt nicht
     }
 
-    @Test fun zeilenWerdenAufDenTrackGestreckt() {
-        val ab = Abschnitte.zerlegen("[Strophe 1]\na\nb\n\n[Refrain]\nc\nd")
-        val zeiten = listOf(10_000L, 15_000L, 20_000L, 25_000L)
-        // Jan hat Strophe bei 12 s und Refrain bei 32 s eingemessen: Strophe dauert 20 statt 10 s.
-        val s = Zeitplan.zeilenStarts(ab, mapOf(0 to 12_000L, 1 to 32_000L), zeiten, 60_000)
-        assertEquals(listOf(12_000L, 22_000L), s[0])
-        assertEquals(32_000L, s[1]!![0])
-        assertEquals(0 to 1, Zeitplan.aktiveZeile(s, 25_000))
-        assertEquals(1 to 0, Zeitplan.aktiveZeile(s, 32_000))
-        assertNull(Zeitplan.aktiveZeile(s, 5_000))
-        assertEquals(1 to 0, Zeitplan.naechsteZeile(s, 25_000))
+    @Test fun eigenerAblaufMitWiederholungUndAuslassung() {
+        // Text: Strophe 1, Refrain, Strophe 2. Jan singt: Refrain, Strophe 1, Refrain (Strophe 2 weg).
+        val ab = Abschnitte.zerlegen("[Strophe 1]\na\nb\n\n[Refrain]\nc\nd\n\n[Strophe 2]\ne\nf")
+        val zeiten = listOf(10_000L, 14_000L, 20_000L, 24_000L, 40_000L, 44_000L)
+        val ablauf = listOf(Teil(1, 5_000), Teil(0, 15_000), Teil(1, 30_000))
+        val s = Zeitplan.zeilenStarts(ab, ablauf, zeiten, 60_000)
+        // Refrain im Original 20 s lang (bis Strophe 2), auf dem Track nur 10 s: gestaucht.
+        assertEquals(listOf(5_000L, 7_000L), s[0])
+        // Strophe 1 im Original 10 s, auf dem Track 15 s: Originaltempo.
+        assertEquals(listOf(15_000L, 19_000L), s[1])
+        assertEquals(listOf(30_000L, 34_000L), s[2])
+        assertEquals(1 to 1, Zeitplan.aktiveZeile(ablauf, s, 20_000))
+        assertEquals(1 to 1, Zeitplan.aktiveZeile(ablauf, s, 29_999))
+        assertEquals(2 to 0, Zeitplan.aktiveZeile(ablauf, s, 30_000))
+        assertNull(Zeitplan.aktiveZeile(ablauf, s, 4_000))
+    }
+
+    @Test fun getippteZeilenGeltenGenau() {
+        val ab = Abschnitte.zerlegen("[Strophe 1]\na\nb\nc")
+        val zeiten = listOf(10_000L, 14_000L, 18_000L)
+        // Jan hat Zeile 1 und 2 getippt (langsamer gesungen), Zeile 3 fehlt: Abstand wie im Original.
+        val s = Zeitplan.zeilenStarts(ab, listOf(Teil(0, 2_000, listOf(2_000L, 7_000L))), zeiten, 60_000)
+        assertEquals(listOf(2_000L, 7_000L, 11_000L), s[0])
+    }
+
+    @Test fun nichtEingemesseneTeileHabenKeineZeiten() {
+        val ab = Abschnitte.zerlegen("[Strophe 1]\na\n\n[Refrain]\nb")
+        val ablauf = listOf(Teil(0, 1_000), Teil(1))
+        val s = Zeitplan.zeilenStarts(ab, ablauf, emptyList(), 30_000)
+        assertEquals(listOf(1_000L), s[0])
+        assertNull(s[1])
+        assertEquals(0, Zeitplan.aktiverTeil(ablauf, 20_000))
+    }
+
+    @Test fun ablaufLesenUndSchreiben() {
+        val l = Ablauf.lesen("1:30000,0:5000:5000|8000,-1:45000,1:-1")
+        assertEquals(listOf(Teil(1, 30000), Teil(0, 5000, listOf(5000L, 8000L)), Teil(-1, 45000), Teil(1)), l)
+        assertEquals("1:30000,0:5000:5000|8000,-1:45000,1:-1", Ablauf.schreiben(l))
+        val ab = Abschnitte.zerlegen("[A]\na\n\n[B]\nb")
+        assertEquals(listOf(Teil(0), Teil(1)), Ablauf.von("", ab))
+        assertEquals(listOf(Teil(1, 5)), Ablauf.von("7:1,1:5", ab))
+    }
+
+    @Test fun ablaufNachZusammenlegen() {
+        val l = listOf(Teil(0, 0), Teil(1, 10), Teil(2, 20), Teil(1, 30), Teil(3, 40))
+        // Abschnitt 1 an 0 gehängt: 0+1 direkt hintereinander werden ein Teil, 2→1, die spätere 1→0, 3→2.
+        assertEquals(listOf(Teil(0, 0), Teil(1, 20), Teil(0, 30), Teil(2, 40)), Ablauf.nachZusammenlegen(l, 1))
+    }
+
+    @Test fun abHierOhneZeit() {
+        val l = listOf(Teil(0, 0, listOf(0L)), Teil(1, 10), Teil(2, 20))
+        assertEquals(listOf(Teil(0, 0, listOf(0L)), Teil(1), Teil(2)), Ablauf.abHierOhneZeit(l, 1))
     }
 
     @Test fun ohneZeitmarkenNachTextlaenge() {
         val ab = Abschnitte.zerlegen("[Strophe 1]\nkurz\neine viel längere Zeile hier")
-        val s = Zeitplan.zeilenStarts(ab, mapOf(0 to 0L), emptyList(), 10_000)
-        assertEquals(0L, s[0]!![0])
-        assertTrue(s[0]!![1] in 1_000L..3_000L)
+        val s = Zeitplan.teilZeiten(ab, emptyList(), 0, 0L, 10_000)
+        assertEquals(0L, s[0])
+        assertTrue(s[1] in 1_000L..3_000L)
     }
 
-    @Test fun abschnittOhneMarkeHatKeineZeiten() {
-        val ab = Abschnitte.zerlegen("[Strophe 1]\na\n\n[Refrain]\nb")
-        val s = Zeitplan.zeilenStarts(ab, mapOf(1 to 5_000L), emptyList(), 10_000)
-        assertNull(s[0])
-        assertEquals(listOf(5_000L), s[1])
+    @Test fun instrumentalHatKeineZeilen() {
+        val ab = Abschnitte.zerlegen("[Strophe 1]\na")
+        val ablauf = listOf(Teil(0, 0), Teil(Ablauf.INSTRUMENTAL, 5_000))
+        val s = Zeitplan.zeilenStarts(ab, ablauf, emptyList(), 10_000)
+        assertEquals(1, s[0]!!.size)
+        assertTrue(s[1]!!.isEmpty())
+        assertEquals(1 to -1, Zeitplan.aktiveZeile(ablauf, s, 6_000))
     }
 }
 

@@ -280,3 +280,55 @@ Stand 12.11. ca. 23:35 (Jan geht schlafen, Loop läuft weiter bis zum Wochenlimi
 - Offen für L8/L9: Sammellauf "Texte holen" (mehrere Songs) am Gerät, Offline+-Test,
   Setliste: lange Titel werden neben den Kästchen (0:30, weiter) abgeschnitten → Kästchen in
   zweite Zeile; Seite "Keine Lyrics" auf der Bühne nutzt den Platz nicht.
+  (Nachtrag 12.11. 23:50: Setliste zweizeilig und Sammellauf am Gerät geprüft, erledigt.)
+
+### Umbau 13.11. nachts: eigener Ablauf + Zeilen-Tipps (Jans Wünsche, wörtlich sinngemäß)
+
+1. "Es muss immer ersichtlich sein, welche Zeile ich gerade singen soll" – beim Einmessen UND
+   auf der Bühne, mit Kontext oben und unten.
+2. Jan singt oft NICHT in Originalstruktur: lässt Refrain/Strophe weg, bringt Teile an anderer
+   Stelle wieder, lässt Teile ganz weg – individuell pro Song.
+3. Einmessen ganz genau: "das Gesungene eintippen" – jede Zeile tippen, wenn sie gesungen wird.
+4. Teile frei verschieben/einfügen (auch Instrumental ohne Text), vor UND nach dem Einmessen,
+   "muss immer nachträglich möglich sein".
+
+Umsetzung (Code fertig, baut, Unit-Tests grün, am Gerät NOCH NICHT getestet):
+- Modell `lyrics/Zeitplan.kt`: Songtext = Vorrat an Abschnitten. **Ablauf** = Liste `Teil`
+  (abschnitt-Index oder `Ablauf.INSTRUMENTAL`, `startMs` -1 = nicht eingemessen, `zeilenMs` =
+  getippte Zeilenanfänge) in Spielreihenfolge, gespeichert im Song-Feld `marken`
+  ("a:ms" oder "a:ms:z1|z2|…", kommagetrennt; leer = alle Abschnitte in Textreihenfolge).
+  Alte Daten ("a:ms") werden weiter gelesen. `Zeitplan.zeilenStarts`: getippte Zeilen exakt,
+  Rest im Abstand des Originals (LRCLIB-Zeitmarken), sonst nach Textlänge.
+- Seite **Teile & Ablauf** (`ui/SeitenTexte.kt`, `TeileUndAblauf`, Seite.Pruefen; auch nach
+  "Ja, übernehmen" in Texte holen): Teil antippen → ↑ ↓, Doppeln, Weg, Etikett (Palette, springt
+  weiter, "Mit vorigem verbinden" = Text-Bruchstücke zusammenlegen), + Instrumental, + Teil
+  (aus dem Vorrat). Änderung nach dem Einmessen → Zeiten ab dieser Stelle gelöscht, Hinweis
+  "ab Teil N bitte weiter einmessen".
+- **Einmessen** (`ui/SeiteEinmessen.kt`, ersetzt das alte in SeitenSong.kt): großer Knopf zeigt
+  die nächste Zeile ("Tippen, wenn du singst") bzw. "<Teil> beginnt" + erste Zeile; Tipp =
+  Zeilenanfang. Oben Kontext: Zeile davor, laufende (fett, voller Keil), nächste (hohler Keil),
+  Anfang des nächsten Teils. Darunter: Anderer Teil (Zeit sofort gemerkt, dann wählen → wird
+  eingefügt), Auslassen (nächsten Teil aus dem Ablauf nehmen), Tipp weg, −10 s.
+  Nicht laufend: Ablauf-Liste mit Zeiten, Song starten / Bühne prüfen / Weiter / Neu einmessen.
+- **Bühne** (`ui/SeiteBuehne.kt`): Seiten in Ablauf-Reihenfolge (Wiederholungen, Instrumental-
+  Seite), Keil nach `zeilenStarts`, Blättern 1,5 s vorher.
+
+Arbeitsliste ab hier (für die nächste Session):
+- [ ] A1 Neuen Bau am Kompakt testen (nur nach Jans OK; Gig "Bar Eriksson" am Fr 13.11.!):
+  Two Princes: Teile & Ablauf (verschieben, doppeln, Instrumental, Etikett, verbinden),
+  Einmessen Zeile für Zeile mit Anderer Teil/Auslassen/Tipp weg/−10 s, danach "Auf der Bühne
+  prüfen": Keil exakt, Wiederholung und Instrumental-Seite richtig, "dann …" stimmt.
+- [ ] A2 Darstellung am Gerät prüfen: Einmessen-Kontext lesbar (21 sp), nichts abgeschnitten,
+  langer Teilname auf dem großen Knopf, E-Ink ruhig (Einmessen zeichnet alle 200 ms neu → falls
+  Flackern: Position nur bei Zeilenwechsel neu zeichnen, wie auf der Bühne mit derivedStateOf).
+- [ ] A3 L8-Rest: Bühne mit Offline+ an (Jan schaltet; Schalter ist Hardware), Texte holen
+  ohne Netz → verständliche Meldung.
+- [ ] A4 L9 Gesamttest aus Jans Sicht (Gitarre um, Kompakt am Mikroständer 60–80 cm, kurze
+  Blicke, Tipps zwischen zwei Akkorden): Set mit Test-Gig "Testlauf" (liegt schon an: Set 1 mit
+  Test Eins; Test Zwei hat Ansagen, Two Princes hat Text), Show-Automatik, Pause, Ansage,
+  Bühne ↔ Setliste während der Wiedergabe. Danach Test-Gig mit Jans OK löschen.
+- [ ] A5 Aufräumen: `Abschnitte.markenLesen/markenSchreiben/markenNachZusammenlegen` und
+  `Seitenlauf` sind Altlast (nur noch LogikTest) – entfernen oder auf Ablauf umstellen.
+- [ ] A6 Offene Idee (nicht umgesetzt, Jan fragen): In TrikTrak blättern die Lautstärketasten,
+  Jan kann dort die Medienlautstärke nicht ändern → evtl. Lautstärke-Anzeige/-Regler in der App.
+- [ ] A7 Übergabe in CLAUDE.md + PLAN.md nachziehen.
