@@ -83,6 +83,11 @@ vollständig, nichts springt, jeder Knopf sagt in einfachen Worten, was passiert
 etwas Unumkehrbares aus. Antworten auf Deutsch, einfach, ohne Floskeln; Fragen als anklickbare
 Optionen, eine pro Runde.
 
+**Optik (Jan, 13.11.):** Wo nötig, darf die Session optische Anpassungen selbst entscheiden und
+umsetzen (Größen, Abstände, Anordnung, Darstellung von Etiketten/Keil/Kontext), solange Richtung
+B "Signal" erhalten bleibt (Schwarz auf Weiß, Barlow Condensed, schwarzes Kopfband, Bühnenschrift
+Stufe 3). Jede sichtbare Änderung am Gerät per Foto prüfen und Jan kurz zeigen.
+
 **Bekannte Kleinigkeiten:** Testsongs "Test Eins/Zwei/Drei" im Archiv, Platzhalter-Lyrics in
 "Test Eins" und "Country Roads", "Frei spielen" aus der alten App fehlt, App-Symbol offen
 (inkOS zeigt nur Namen).
