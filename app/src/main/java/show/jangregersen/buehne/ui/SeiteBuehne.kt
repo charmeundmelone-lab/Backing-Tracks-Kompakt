@@ -92,6 +92,9 @@ fun BuehneSeite(navi: Navi) {
     }
 }
 
+/** Eine Größe für alle Songtitel im Bühnenkopf. */
+const val TITEL_SP = 34f
+
 @Composable
 private fun BuehnenKopf(song: Song, ober: String, dauerMs: Long, spielt: Boolean) {
     val pos by App.buehne.position.collectAsState()
@@ -100,23 +103,24 @@ private fun BuehnenKopf(song: Song, ober: String, dauerMs: Long, spielt: Boolean
     val voll = if (dauer > 0) ((pos * 20) / dauer).toInt().coerceIn(0, 20) else 0
     // Feste Höhe und feste Breite für die Zeit: Der Kopf darf sich beim Herunterzählen nie
     // verändern, sonst baut das E-Ink jede Sekunde den ganzen Balken neu auf.
-    val zeitStil = titelStil(46.sp, Weiss).copy(lineHeight = 46.sp, fontFeatureSettings = "tnum")
+    val zeitStil = titelStil(38.sp, Weiss).copy(lineHeight = 38.sp, fontFeatureSettings = "tnum")
     val messer = rememberTextMeasurer()
     val zeitBreite = with(LocalDensity.current) {
         val muster = zeit(maxOf(dauer, song.dauerMs)).replace(Regex("[0-9]"), "0")
         messer.measure(muster, zeitStil).size.width.toDp()
     }
-    Column(Modifier.fillMaxWidth().background(Schwarz).padding(start = 18.dp, end = 18.dp, top = 12.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Row {
-            Etikett(ober, Modifier.weight(1f), Weiss)
-            Etikett(if (spielt) "noch" else "Länge", farbe = Weiss)
-        }
-        Row(Modifier.height(50.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            EinzeilerPassend(song.titel, titelStil(40.sp, Weiss), kleinste = 22f, modifier = Modifier.weight(1f))
+    // Titel immer in derselben Größe (Jan, 12.11.: "einheitlich, auf keinen Fall durcheinander").
+    // Lange Titel brechen in eine zweite Zeile um statt zu schrumpfen; die Kopfhöhe steht damit
+    // pro Song fest. Die Restzeit steht oben rechts in fester Breite.
+    Column(Modifier.fillMaxWidth().background(Schwarz).padding(start = 18.dp, end = 18.dp, top = 10.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Row(verticalAlignment = Alignment.Bottom) {
+            Etikett(ober, Modifier.weight(1f).padding(bottom = 4.dp), Weiss)
+            Etikett(if (spielt) "noch" else "Länge", Modifier.padding(end = 8.dp, bottom = 4.dp), Weiss)
             Box(Modifier.width(zeitBreite), contentAlignment = Alignment.BottomEnd) {
                 T(zeit(if (spielt || pos > 0) rest else dauer), zeitStil, zeilen = 1)
             }
         }
+        T(song.titel, titelStil(TITEL_SP.sp, Weiss).copy(lineHeight = (TITEL_SP * 1.02f).sp), zeilen = 2)
         Kaestchen(20, voll, Weiss, hoehe = 6.dp)
     }
 }
@@ -167,13 +171,12 @@ private fun GrossWert(etikett: String, wert: String, modifier: Modifier, klein: 
 
 @Composable
 private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boolean) {
+    // Eine Zeile, immer an derselben Stelle: so bleibt den Lyrics mehr Platz und nichts springt.
     Column(Modifier.padding(horizontal = 18.dp)) {
         Linie(dicke = 2.5.dp)
-        Row(Modifier.fillMaxWidth().padding(top = 8.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Column(Modifier.weight(1f)) {
-                Etikett("Danach")
-                T(naechster?.titel ?: if (setEnde) "Set zu Ende" else "–", titelStil(27.sp), zeilen = 1)
-            }
+        Row(Modifier.fillMaxWidth().height(44.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Etikett("Danach")
+            T(naechster?.titel ?: if (setEnde) "Set zu Ende" else "–", titelStil(23.sp), Modifier.weight(1f), zeilen = 1)
             if (naechster != null) {
                 val (sym, text) = when {
                     ende == Ende.ANHALTEN -> Sym.STOP to "hält an"
@@ -183,7 +186,7 @@ private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boo
                     else -> null to "ohne Pause"
                 }
                 Row(
-                    Modifier.border(2.dp, Schwarz, RoundedCornerShape(10.dp)).padding(horizontal = 9.dp, vertical = 5.dp),
+                    Modifier.border(2.dp, Schwarz, RoundedCornerShape(10.dp)).padding(horizontal = 9.dp, vertical = 4.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     if (sym != null) Symbol(sym, Schwarz, 16.dp)

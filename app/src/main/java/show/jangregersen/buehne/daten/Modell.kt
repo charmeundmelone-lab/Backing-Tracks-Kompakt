@@ -36,6 +36,12 @@ data class Song(
     val lyrics: String = "",
     /** Einmess-Punkte: "abschnittIndex:ms" kommagetrennt. */
     val marken: String = "",
+    /** true = Punkte stammen aus den Zeitmarken des Originals und sind noch nicht von Jan bestätigt. */
+    val markenVorlaeufig: Boolean = false,
+    /** Zeit jeder Textzeile im Original (ms, kommagetrennt, -1 = unbekannt). Gilt nur bei passender Zeilenzahl. */
+    val zeilenZeiten: String = "",
+    /** Länge des Originals aus der Songtext-Datenbank (zum Vergleich mit dem Track). */
+    val originalMs: Long = 0,
     val ansageVorher: String = "",
     val ansageVorherMs: Long = 0,
     val ansageNachher: String = "",

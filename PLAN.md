@@ -252,7 +252,7 @@ Entscheidungen (Claude, Jan hat freie Hand gegeben):
   im Song (`zeilenZeiten`, `originalMs`) und gelten nur, solange die Zeilenzahl passt.
 
 Arbeitsliste (abhaken mit [x], Datum dazu):
-- [ ] L1 Titel im Kopfband einheitlich (Bühne + Song-Karte), Danach kompakt
+- [x] L1 Titel im Kopfband einheitlich (Bühne + Song-Karte), Danach kompakt (12.11., Gerätetest in L8)
 - [ ] L2 Logik: LRC lesen, Abschnitte erkennen, Zeitplan (Zeile + Seite), Vorschlag Einmess-Punkte; Unit-Tests
 - [ ] L3 Netz: LRCLIB-Suche (INTERNET-Recht, User-Agent, Pausen, Fehlertexte, Offline+-Hinweis)
 - [ ] L4 Ablauf "Texte holen" (Archiv-Feld, Ist es dieser?, Anderer/Suchwort, Nicht gefunden, Fertig) + "Text suchen" im Song
@@ -260,5 +260,9 @@ Arbeitsliste (abhaken mit [x], Datum dazu):
 - [ ] L6 Bühne: Pillen, Refrain-/Bridge-Strich, "dann …", Zeilen-Keil, Vorschau, Vorlauf
 - [ ] L7 Einmessen: Etiketten, vorläufige Punkte, Zeilenzeiten neu strecken
 - [ ] L8 Gerätetest aller neuen Abläufe am Kompakt (echte Songs)
-- [ ] L9 Gesamttest der App auf Logikfehler (alle Seiten, Show-Automatik, Daten), Fehler beheben
+- [ ] L9 Gesamttest der App auf Logikfehler (alle Seiten, Show-Automatik, Daten), Fehler beheben.
+  Prüfmaßstab (Jan, 12.11.): testen, als wäre ich Jan beim Auftritt. Sänger mit umgehängter
+  Gitarre, Kompakt am Mikroständer (ca. 60–80 cm Abstand), Hände meist an der Gitarre, nur
+  kurze Blicke und einzelne Tipps zwischen zwei Akkorden. Alles Wichtige muss aus der Entfernung
+  lesbar sein, kein Tipp darf etwas Unumkehrbares auslösen, nichts darf springen oder verwirren.
 - [ ] L10 Übergabe in CLAUDE.md, Gedächtnis, Loop beenden

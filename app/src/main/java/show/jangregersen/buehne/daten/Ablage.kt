@@ -89,6 +89,7 @@ class Ablage(context: Context) {
             put("id", s.id); put("titel", s.titel); put("interpret", s.interpret); put("bpm", s.bpm)
             put("tonart", s.tonart); put("kapo", s.kapo); put("tempo", s.tempo); put("pfad", s.pfad)
             put("dauerMs", s.dauerMs); put("lyrics", s.lyrics); put("marken", s.marken)
+            put("markenVorlaeufig", s.markenVorlaeufig); put("zeilenZeiten", s.zeilenZeiten); put("originalMs", s.originalMs)
             put("ansageVorher", s.ansageVorher); put("ansageVorherMs", s.ansageVorherMs)
             put("ansageNachher", s.ansageNachher); put("ansageNachherMs", s.ansageNachherMs)
             put("pauseSek", s.pauseSek)
@@ -104,6 +105,7 @@ class Ablage(context: Context) {
                 bpm = o.optInt("bpm"), tonart = o.optString("tonart"), kapo = o.optInt("kapo"),
                 tempo = o.optInt("tempo"), pfad = o.optString("pfad"), dauerMs = o.optLong("dauerMs"),
                 lyrics = o.optString("lyrics"), marken = o.optString("marken"),
+                markenVorlaeufig = o.optBoolean("markenVorlaeufig"), zeilenZeiten = o.optString("zeilenZeiten"), originalMs = o.optLong("originalMs"),
                 ansageVorher = o.optString("ansageVorher"), ansageVorherMs = o.optLong("ansageVorherMs"),
                 ansageNachher = o.optString("ansageNachher"), ansageNachherMs = o.optLong("ansageNachherMs"),
                 pauseSek = o.optInt("pauseSek"), mix = mix

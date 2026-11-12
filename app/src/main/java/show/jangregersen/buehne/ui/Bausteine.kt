@@ -117,21 +117,6 @@ fun T(text: String, stil: TextStyle, modifier: Modifier = Modifier, zeilen: Int 
     )
 }
 
-/** Eine Zeile, die sich verkleinert statt umzubrechen (bis [kleinste] sp, danach „…“). */
-@Composable
-fun EinzeilerPassend(text: String, stil: TextStyle, kleinste: Float, modifier: Modifier = Modifier) {
-    val messer = rememberTextMeasurer()
-    BoxWithConstraints(modifier, contentAlignment = Alignment.BottomStart) {
-        val breite = constraints.maxWidth
-        val groesse = remember(text, breite, stil) {
-            var sp = stil.fontSize.value
-            while (sp > kleinste && messer.measure(text, stil.copy(fontSize = sp.sp), maxLines = 1).size.width > breite) sp -= 1f
-            sp
-        }
-        T(text, stil.copy(fontSize = groesse.sp, lineHeight = (groesse * 1.05f).sp), zeilen = 1)
-    }
-}
-
 @Composable
 fun Etikett(text: String, modifier: Modifier = Modifier, farbe: Color = Schwarz) =
     T(text.uppercase(), etikettStil(farbe), modifier, zeilen = 1)

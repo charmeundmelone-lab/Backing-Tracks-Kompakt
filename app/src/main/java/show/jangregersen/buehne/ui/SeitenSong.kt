@@ -96,7 +96,7 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
         Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 14.dp, top = 10.dp, bottom = 8.dp), verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f)) {
                 Etikett("Platz $platz${if (e.gespielt) " · gespielt" else ""}")
-                EinzeilerPassend(song.titel, titelStil(30.sp), 22f)
+                T(song.titel, titelStil(30.sp), zeilen = 2)
                 T(listOf(songInfo(song), zeit(song.dauerMs)).filter { it.isNotBlank() }.joinToString(" · "), textStil(16.sp), zeilen = 1)
             }
             SymbolKnopf(Sym.KREUZ, "Schließen", Modifier.width(52.dp), hoehe = 52.dp, groesse = 16.dp) { navi.zurueck() }
