@@ -353,7 +353,7 @@ Arbeitsliste ab hier (für die nächste Session):
   `Seitenlauf` sind Altlast (nur noch LogikTest) – entfernen oder auf Ablauf umstellen.
 - [x] A6 (Jan, 13.11.: kein Regler; beim Öffnen volle Medienlautstärke, bleibt so, solange die App offen ist. Umgesetzt in `audio/VolleLautstaerke.kt`, am Gerät geprüft) Offene Idee (nicht umgesetzt, Jan fragen): In TrikTrak blättern die Lautstärketasten,
   Jan kann dort die Medienlautstärke nicht ändern → evtl. Lautstärke-Anzeige/-Regler in der App.
-- [ ] A7 Übergabe in CLAUDE.md + PLAN.md nachziehen.
+- [x] A7 (13.11. mittags: CLAUDE.md neu geschrieben, Arbeitsliste B am Ende dieser Datei) Übergabe in CLAUDE.md + PLAN.md nachziehen.
 
 Gerätetest 13.11. früh (Bau von ca. 07:00 installiert, Jan hatte freigegeben):
 - A1 an Two Princes: Verschieben fragt vor Zeitverlust (Abbrechen und Ja geprüft), Doppeln,
@@ -472,3 +472,63 @@ OFFEN in Stufe 1:
 - [ ] Am Mudita "Teile & Ablauf" auf Ansehen mit vollem Text zurückbauen (Jans Wunsch).
 - [ ] Jan probiert die Werkstatt aus und sagt, wo er hängen bleibt.
 - [ ] Lesbarkeit auf der Bühne (kurzsichtig): Probeseiten in drei Größen, noch nicht begonnen.
+
+### Arbeitsliste B (ab 13.11. mittags, für die nächste Session) – HIER WEITERMACHEN
+
+Reihenfolge ist Empfehlung. Was Jan zuerst will, geht vor. Reste der alten Liste A stehen unten.
+
+Laptop-Programm, Stufe 1 fertig machen:
+- [ ] B1 "Vom Mudita holen" mit angeschlossenem, entsperrtem Kompakt testen (liest nur). Prüfen:
+  Songs erscheinen, Sicherung liegt in `TrikTrak-Werkstatt\sicherungen\`, eine Laptop-Änderung an
+  Text/Teilen übersteht ein zweites Holen (`Arbeit.vomGeraet` + `Abgleich.textUndTeile`).
+- [ ] B2 "Zum Mudita senden". Entwurf: Laptop schreibt die geänderten Songs als
+  `files/eingang.json` aufs Gerät (per adb: `push` nach `/data/local/tmp`, dann `run-as … cp`;
+  `run-as` geht, weil Debug-Bau). Die App liest die Datei beim Start/Wiederkehren, führt pro Song
+  mit `Abgleich.textUndTeile(geraet, laptop)` zusammen, löscht die Datei und zeigt einen Hinweis.
+  Nicht `bestand.json` direkt überschreiben: Die App hält den Bestand im Speicher und schriebe
+  ihn wieder drüber. Laptop sendet nur, wenn die installierte App das kann (`versionCode`
+  hochzählen und per `dumpsys package` prüfen). Nach dem Senden `geaendert` leeren und frisch
+  holen. Am Gerät erst installieren, wenn Jan es freigibt (vorher `bestand.json` sichern).
+- [ ] B3 Text aus dem Internet in der Werkstatt holen (LRCLIB). `netz/Lrclib.kt`,
+  `lyrics/Erkennung.kt` und `Uebernahme.kt` sind schon eingebunden; es fehlen der Aufruf in
+  `Main.kt` und die Seite (Treffer zeigen, wählen, übernehmen). Bis dahin: Text von Hand einfügen.
+- [ ] B4 Am Mudita "Teile & Ablauf" zurückbauen auf Ansehen mit vollem Text (Jans Wunsch: Text und
+  Teile nur am Laptop). Erst wenn B2 läuft, sonst kann er nirgends mehr ordnen.
+
+Lesbarkeit (Jan ist kurzsichtig, Bühnentext 24–31 sp ist ihm zu klein):
+- [ ] B5 Drei Probeseiten in verschiedenen Schriftgrößen als Bilder in die App "Entwürfe" legen
+  (`entwuerfe/werkzeug/render.sh`, `bau.sh betrachter`), Jan stellt den Kompakt an den
+  Mikroständer und sagt, welche er lesen kann. TrikTrak dafür nicht anfassen.
+- [ ] B6 Danach die Bühne umbauen. Claudes Favorit "halbe Seite": deutlich größere Schrift, 4–5
+  Zeilen pro Seite, Text steht ruhig, nur Rahmen/Keil wandern, es wird öfter geblättert.
+  Alternative "große Zeile": laufende Zeile riesig, darunter die nächste (wechselt bei jeder
+  Zeile). Jan hat noch nicht gewählt.
+
+Werkstatt verbessern (nach Jans erstem Ausprobieren):
+- [ ] B7 Jan probiert die Werkstatt aus (Doppelklick `TrikTrak-Werkstatt.bat`) und sagt, wo er
+  hängen bleibt. Noch nicht mit ihm zusammen angesehen.
+- [ ] B8 Jans eigene Labels für Teile ohne Gesang auf der Bühne zeigen (Intro, Solo, Outro statt
+  "Instrumental"). Weg: leerer Textabschnitt mit diesem Namen (`[Intro]` ohne Zeilen), ein Teil
+  ohne Zeilen gilt überall schon als Instrumental.
+- [ ] B9 "Text ab hier ↓" schiebt bisher die ganze Folge samt leerer Fächer. Mit Jan klären, ob
+  nur die Texte wandern sollen.
+- [ ] B10 Für Songs ohne gleichnamige Studio-One-Datei (11 von 42, Liste oben unter "Fertige
+  Songs") die Datei von Hand wählen lassen; für Songs mit Markern statt Arranger-Teilen prüfen.
+
+Stufen 2 und 3:
+- [ ] B11 Stufe 2: Gigs und Setlisten am Laptop (bleiben auch am Mudita). Braucht eine Regel für
+  beidseitige Änderungen (Vorschlag: pro Set gewinnt die neuere Änderung, Zeitstempel fehlen noch
+  im Modell).
+- [ ] B12 Stufe 3: neue Songs aus `Music\Backing Tracks\Nothingphone` aufs Gerät, Songdaten
+  (Titel, Tonart, Kapo, BPM), Ansagen.
+
+Reste der Liste A und Kleines:
+- [ ] A2-Rest: Jan schaut, ob das E-Ink beim Einmessen ruhig bleibt (kein Flackern).
+- [ ] A3-Rest: Bühne mit Offline+ an (Hardware-Schalter, Jan schaltet), "Texte holen" ohne Netz.
+- [ ] A4-Rest: Jans Gesamttest mit Gitarre am Mikroständer.
+- [ ] Volle Lautstärke mit Jans Kabel an der Anlage prüfen (Schutzgrenze bei Kopfhörer-Ausgang?).
+  Jan fragen, ob "beim Verlassen der App zurück auf die alte Lautstärke" für ihn passt.
+- [ ] Test-Gig "Testlauf" und Testsongs löschen, nur mit Jans OK.
+- [ ] Ordner `Nothingphone` in "Mudita" umbenennen (Jan erlaubt es). Vorher prüfen, was den Pfad
+  benutzt (Werkstatt noch nicht, alte Skripte im Ordner, Jans Gewohnheit).
+- [ ] Nicht am Gerät geprüft, nur per Unit-Test: "Mit vorigem verbinden", Doppeltipp-Schutz.

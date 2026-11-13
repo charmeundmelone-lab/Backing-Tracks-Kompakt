@@ -1,113 +1,164 @@
-# Backing-Tracks Kompakt — Projektkontext für Claude
+# Backing-Tracks Kompakt (TrikTrak) — Projektkontext für Claude
+
+Zwei Programme in einem Repo: die App **TrikTrak** für den Mudita Kompakt (`app/`) und das
+Laptop-Programm **TrikTrak Werkstatt** (`werkstatt/`). Beide benutzen denselben Text- und
+Ablauf-Code.
 
 ## Session-Start
 
 1. Branch prüfen: `git branch` muss `* main` zeigen. Nur `main`, kein Feature-Branching.
-2. `PLAN.md` lesen (Entscheidungen, Design, Bedienkonzept, offene Punkte).
-3. Abschnitt "Letzter Stand" unten lesen.
+2. Unten "Übergabe an die nächste Session" lesen. Das reicht zum Weitermachen.
+3. In `PLAN.md` nur lesen, was die Aufgabe braucht: die **Arbeitsliste B** ganz am Ende, bei
+   Bedarf die Abschnitte "Laptop-Programm" und "Jans Rückmeldung 13.11.". Der Rest ist Geschichte.
 
 ## Arbeitsweise
 
 - Antworten auf Deutsch, einfach erklärt (Jan ist kein Entwickler), keine Floskeln.
-- Planungsfragen als anklickbare Optionen, eine Frage pro Runde (GrillMe-Stil).
-- Bei Neubau nach Vorbild: nicht Bekanntes neu abfragen, sondern fragen, was in der alten App
-  funktioniert und was nicht. Das Verhalten der alten App gilt als gut, Loop fällt weg.
-- Design: Jan hat Claude die volle Kontrolle übergeben. Richtung B "Signal" ist bestätigt.
-- Bühne ↔ Setliste muss jederzeit gehen, auch während der Wiedergabe, ohne sie zu stören.
+- Fragen an Jan als anklickbare Optionen, eine pro Runde. Jan diktiert oft: "Modita/Monitor"
+  heißt Mudita.
+- **Wenn Jan durcheinanderkommt oder unsicher ist: erst Vorschläge mit Favorit, nichts ungefragt
+  umbauen.** Ein klares "Ja, so will ich es" von ihm ist der Auftrag.
+- Jans Maßstab (immer): Er singt mit Gitarre, der Kompakt hängt am Mikroständer (60–80 cm), er
+  ist **kurzsichtig**. Die Zeile, die er gerade singt, muss eindeutig erkennbar sein, mit Kontext.
+  Sein Ablauf weicht oft vom Original ab. Alles groß lesbar, nichts springt, jeder Knopf sagt in
+  einfachen Worten, was passiert, kein Tipp löst etwas Unumkehrbares aus.
+- Optik: Die Session darf optische Anpassungen selbst entscheiden, solange Richtung B "Signal"
+  bleibt (Schwarz auf Weiß, Barlow Condensed, schwarzes Kopfband). Jede sichtbare Änderung am
+  Gerät per Foto prüfen und Jan kurz zeigen.
+- Nach jedem fertigen Punkt: committen, pushen, in `PLAN.md` abhaken. Tokens sparen: nur nötige
+  Dateien lesen, am Gerät meist `geraet.sh texte` statt Fotos.
+- Das Repo ist **öffentlich**: nie Songtexte, `bestand.json` oder Jans Daten einchecken.
 
-## Gerät und Werkzeuge
+## Übergabe an die nächste Session (geschrieben 2026-11-13, mittags)
 
-- Mudita Kompakt per USB-adb: `"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe" -s LD20241004967`.
-  Wird es nicht erkannt: `adb kill-server`, `adb start-server`, kurz warten.
-- Kompakt hat eine PIN-Sperre: Bildschirm nicht ausschalten, solange Claude noch daran testen
-  will. Vor Tipps prüfen, welche App vorne ist (Jan nutzt das Gerät selbst).
-- Nie `am start -S` / force-stop auf WebView-Apps: danach startet der WebView-Renderer nicht mehr
-  (schwarzer Bildschirm), nur ein Neustart hilft. Vorschauen deshalb als PNG.
-- Mudita bremst nachinstallierte Apps im Hintergrund. Der Ton-Test lief trotzdem durch
-  (Vordergrund-Dienst). Für die echte App beim Live-Test erneut prüfen.
-- Laptop-Platte C: ist fast voll (ca. 7 GB frei). Nach jedem Bau `df -h /c` prüfen, kein Emulator.
-- Mini-Apps ohne Gradle bauen: `sh entwuerfe/werkzeug/bau.sh betrachter` bzw. `tontest`.
-- Vorschau-Bilder der Entwürfe: `sh entwuerfe/werkzeug/render.sh` (node + Headless-Chromium
-  aus `~/AppData/Local/ms-playwright`), dann `bau.sh betrachter` und `adb install -r`.
-- Canvas online: https://claude.ai/artifact/7BXLnocEYEibvLqdEqzeHo. Die Dateien in
-  `entwuerfe/canvas/` sind die Quelle; nach Änderungen im Canvas dort nachziehen.
+**Stand:** `main`, alles committet und gepusht. App und Werkstatt bauen, alle Tests grün
+(`:app:testDebugUnitTest` 55 Tests, `:werkstatt:test` 11 Tests).
 
-## Letzter Stand
+**Was am 13.11. passiert ist (kurz):**
+1. Neuer Code "eigener Ablauf + Zeilen-Tipps" geprüft, Fehler behoben, Tests ergänzt, am Kompakt
+   getestet (A1, A5, A6 erledigt). Jan: "Das Einmessen selbst hat gut geklappt."
+2. Jan kam beim **Ordnen der Teile am Kompakt durcheinander** (er sieht dort nur den ersten
+   Textschnipsel) und der **Bühnentext ist ihm zu klein**.
+3. Daraus Jans Auftrag: ein **Laptop-Programm**. Stufe 1 ist gebaut (siehe unten).
+4. Neu in der App: volle Medienlautstärke, solange sie offen ist.
 
-**2026-11-09:** Repo angelegt. Planung (GrillMe Welle 1), Ton-Test, Design B und Bedienkonzept
-ohne Scrollen sind fertig und in `PLAN.md`. Entwürfe online:
-https://claude.ai/artifact/7BXLnocEYEibvLqdEqzeHo, auf dem Kompakt als App "Entwürfe".
-Später am selben Tag: alle 14 Bildschirme gezeichnet, dann die App gebaut (`app/`), am Kompakt
-installiert und die Kernabläufe getestet, Details in `PLAN.md` unter "Stand der App".
-Lokal bauen: `JAVA_HOME="/c/Program Files/Android/Android Studio/jbr" ./gradlew --no-daemon
-:app:assembleDebug` (local.properties mit `sdk.dir=C:/Users/HUAWEI/AppData/Local/Android/Sdk`),
-installieren mit `adb install -r app/build/outputs/apk/debug/app-debug.apk`.
-Testdaten direkt ändern: `adb exec-out run-as show.jangregersen.buehne cat files/bestand.json`
-(Git-Bash: bei Gerätepfaden `MSYS_NO_PATHCONV=1` setzen).
+**Jans Entscheidungen zum Laptop-Programm:**
+- Text und Teile: NUR am Laptop. Am Mudita ansehen und einmessen, nicht mehr umbauen.
+- Gigs, Setlisten, Songdaten, neue Songs, Ansagen: am Laptop UND weiter am Mudita.
+- Maßgeblich sind die fertigen Songs in `C:\Users\HUAWEI\Music\Backing Tracks\Nothingphone`
+  (42 WAV), nicht die Entwürfe in Studio One. Den Ordner darf man in "Mudita" umbenennen (noch
+  nicht geschehen, vorher prüfen, ob etwas den Pfad benutzt).
+- Reihenfolge (Claudes Entscheidung, Jan fragte, was sinnvoll ist): Stufe 1 Text & Teile + Studio
+  One, Stufe 2 Gigs & Setlisten, Stufe 3 neue Songs, Songdaten, Ansagen.
 
-## Übergabe an die nächste Session (geschrieben 2026-11-13, ca. 00:30)
+**TrikTrak Werkstatt, Stand Stufe 1:**
+- Start für Jan: Doppelklick auf `TrikTrak-Werkstatt.bat` im Repo-Ordner. Es öffnet die Seite
+  `http://127.0.0.1:47811` im Browser (Anschluss weicht aus, wenn belegt). Fenster offen lassen.
+- Bauen: `JAVA_HOME="/c/Program Files/Android/Android Studio/jbr" ./gradlew --no-daemon -q :werkstatt:test :werkstatt:installDist`.
+  Nach jeder Änderung an der Werkstatt `installDist` laufen lassen, sonst startet die `.bat` den
+  alten Stand.
+- Arbeitsdaten AUSSERHALB des Repos: `C:\Users\HUAWEI\TrikTrak-Werkstatt\` (`bestand.json`,
+  `zustand.json`, `sicherungen/`). Am 13.11. noch leer: Jan muss einmal "Vom Mudita holen".
+- Kann: Daten vom Mudita holen (liest nur), Songliste, pro Song Karten in Ablauf-Reihenfolge mit
+  vollem Text, Ziehen/▲▼/Doppeln/Weg, anderen Text auf einen Platz legen, Teil an einer Zeile
+  teilen, an vorigen hängen, umbenennen, Text bearbeiten, Rückgängig, Rückfrage vor Zeitverlust.
+  Studio One: Datei nach Namen finden oder wählen, Teile mit Zeiten zeigen, "Ablauf daraus
+  vorschlagen", Text ein Fach weiter/zurück schieben.
+- **Kann noch NICHT zum Mudita senden.** Was Jan in der Werkstatt ändert, bleibt auf dem Laptop.
+- Selbst testen ohne Jans Daten anzufassen: Kopie einer Sicherung in einen Scratch-Ordner legen,
+  dann `java -Dtriktrak.daten=<Ordner mit /> -Dfile.encoding=UTF-8 -cp "werkstatt/build/install/werkstatt/lib/*" show.jangregersen.werkstatt.MainKt --ohne-browser`
+  im Hintergrund starten, im eingebauten Browser `http://127.0.0.1:47811` öffnen oder per `curl`
+  die `/api/…`-Aufrufe testen (POST braucht den Kopf `X-TrikTrak: 1`). Danach den Prozess beenden
+  (PID über `netstat -ano | grep 47811`, dann `taskkill //PID … //F`).
 
-**Stand:** `main`, committet und gepusht. Der Code baut, alle Unit-Tests sind grün
-(`./gradlew --no-daemon -q :app:testDebugUnitTest`). Aufgaben: `PLAN.md`, Abschnitt
-"Umbau 13.11. nachts" → Arbeitsliste **A1–A7**. Dort stehen auch Jans Wünsche dazu.
-Nachtrag 13.11. vormittags: Code geprüft und korrigiert, am Kompakt getestet (Listen in
-`PLAN.md`). Erledigt: A1, A5, A6 (volle Lautstärke). Offen: A2 (Jan schaut auf E-Ink-Ruhe), A3
-(Offline+), A4 (Jans Test mit Gitarre), A7. Einmessen: Jan sagt "hat gut geklappt".
-**WICHTIG, Jans Rückmeldung 13.11. (PLAN.md, "Jans Rückmeldung"): Beim Ordnen der Teile kommt er
-durcheinander, der Bühnentext ist ihm zu klein (kurzsichtig). Er will dazu ERST Vorschläge, NICHTS
-ungefragt umbauen.** Vorgeschlagen und noch nicht entschieden: Ordnen am Laptop mit vollem Text,
-Teile + Startzeiten aus Studio One übernehmen (geprüft, geht), Bühne "halbe Seite" mit größerer
-Schrift, vorher Probeseiten in drei Größen auf den Kompakt.
+**Studio One (an Jans Dateien geprüft, wichtig für alles Weitere):**
+- Songs: `C:\Users\HUAWEI\Documents\Studio One\Songs*\<Ordner>\<Name>.song`, ZIP, darin
+  `Song/song.xml`. Nur lesen. ZIP mit Latin-1 öffnen (Umlaute in Dateinamen im ZIP).
+- Zeiten je Angabe in Vierteln (`timeFormat="2"`, mal Tempo = Sekunden pro Viertel) ODER in
+  Sekunden (`timeFormat="0"`). Beides kommt vor, auch gemischt in einer Datei.
+- Jan exportiert genau den Bereich seiner Arranger-Teile: Bei 15 von 21 Songs endet der letzte
+  Teil auf 0,1 s am Ende der WAV. Die Zeiten passen also zum Track. Über 3 s Abweichung = andere
+  Fassung, das Programm warnt (z. B. Wonderwall, Jolene).
+- **Jans Labels sind lose** ("Vers" steht bei ihm auch über Refrains, Tippfehler wie "OURTO",
+  "EN>D"). Deshalb: Seine Teile sind Zeit-Fächer, der Internet-Text wird der Reihe nach
+  hineingelegt; Namen entscheiden nur, wo sicher kein Gesang ist. Probe: Bei "Two Princes" ergibt
+  das exakt Jans selbst eingetippte Reihenfolge, Zeiten 0–2 s neben seinen Tipps.
+- 31 der 42 fertigen Songs haben eine gleichnamige `.song`, 27 mit Arranger-Teilen. Der Rest
+  braucht eine Auswahl von Hand (Knopf "Andere Datei") oder hat nur Marker.
 
-**Laptop-Programm "TrikTrak Werkstatt" (seit 13.11.):** Modul `werkstatt/`, Start per
-`TrikTrak-Werkstatt.bat`, Stand und offene Punkte in `PLAN.md` (letzter Abschnitt). Es teilt den
-Code mit der App: Wer `lyrics/*`, `daten/Modell.kt`, `Aenderungen.kt` oder `BestandJson.kt` ändert,
-baut danach auch `:werkstatt:test`. Diese Dateien müssen frei von Android-Teilen bleiben.
-Arbeitsdaten liegen in `C:\Users\HUAWEI\TrikTrak-Werkstatt\` (nie ins öffentliche Repo).
-Jan will: Text und Teile nur am Laptop, alles andere an beiden Orten.
-
-**GERÄTE-REGEL:** Am Kompakt nichts installieren oder antippen, bevor Jan es im Chat freigibt.
-Jan spielt am **Fr 13.11.** den Gig "Bar Eriksson" (Set 1, 8 Songs, keiner mit Lyrics) und hat
-den Kompakt zuletzt selbst benutzt (Set lief). Vor JEDEM Tipp: `sh werkzeug/geraet.sh fokus`.
-Läuft TrikTrak mit einem Song, sofort Finger weg.
-
-**Was installiert ist:** Bau vom 13.11. ca. 09:30 (Stand `main`, mit voller Lautstärke): eigener Ablauf, Einmessen Zeile
-für Zeile, Rückfragen vor Zeitverlust, Rahmen um die laufende Zeile. Rückweg, falls nötig:
-`.geraet/alt-2026-11-13.apk` (Bau vom 12.11.) und `.geraet/bestand-2026-11-13.json`.
-Testdaten auf dem Gerät: Gig "Testlauf" (nur mit Jans OK löschen), "Two Princes" hat Text,
-11 Teile, 4 davon von Claude per adb eingemessen (Zufallszeiten, Jan misst selbst neu ein).
-Medienlautstärke: TrikTrak stellt sie beim Öffnen selbst auf voll (15/15) und hält sie dort,
-solange die App offen ist oder etwas läuft (Jans Wunsch, `audio/VolleLautstaerke.kt`). Für Tests
-mit Ton deshalb VORHER `adb … shell run-as show.jangregersen.buehne touch files/test-leise`
-anlegen (dann fasst die App die Lautstärke nicht an), leise stellen, testen, danach die Datei
-löschen (`rm files/test-leise`) und prüfen, dass sie weg ist. Sonst spielt der Test in voller
-Lautstärke bzw. Jan steht abends ohne volle Lautstärke da.
+**Kompakt (Gerät):**
+- **GERÄTE-REGEL:** Nichts installieren oder antippen, bevor Jan es im Chat freigibt. Vor JEDEM
+  Tipp `sh werkzeug/geraet.sh fokus`. Läuft TrikTrak mit einem Song: Finger weg. Jan spielte am
+  Abend des 13.11. den Gig "Bar Eriksson"; danach fragen, wie es lief (Lautstärke, Pausen).
+- Installiert: Bau vom 13.11. ca. 09:30 (Commit `c06ad51`, App-Code seitdem nur umsortiert:
+  `BestandJson.kt` ausgelagert, `Abgleich.kt` neu, beides noch nicht auf dem Gerät).
+- Rückweg: `.geraet/alt-2026-11-13.apk` (Bau vom 12.11.), `.geraet/bestand-2026-11-13.json` (vor
+  allen Tests), `.geraet/bestand-2026-11-13-d.json` (09:27, nach Jans eigenem Einmessen).
+- Daten laut letzter Sicherung: 46 Songs, Gig "Bar Eriksson" (Set 1, 8 Songs), Test-Gig
+  "Testlauf" (nur mit Jans OK löschen). "Two Princes": Jan hat selbst neuen Text geholt und
+  eingemessen (10 Teile, alle eingemessen). Text haben außerdem: Country Roads (2×), Test Eins,
+  There she goes.
+- **Lautstärke:** TrikTrak stellt die Medienlautstärke beim Öffnen auf voll (15/15) und hält sie,
+  solange die App zu sehen ist oder etwas läuft; beim Verlassen kommt die alte zurück
+  (`audio/VolleLautstaerke.kt`). Noch nicht mit Jans Kabel an der Anlage geprüft. Für Tests mit
+  Ton VORHER `adb … shell run-as show.jangregersen.buehne touch files/test-leise`, dann leise
+  stellen, testen, **danach die Datei löschen und prüfen, dass sie weg ist**.
+- Kompakt hat eine PIN-Sperre: Claude kann nicht entsperren. Gesperrt geht nur Sichern und
+  Installieren, kein Tippen.
 
 **Werkzeuge:**
-- Bauen: `JAVA_HOME="/c/Program Files/Android/Android Studio/jbr" ./gradlew --no-daemon -q :app:assembleDebug`,
-  danach `df -h /c` (Platte fast voll, ca. 6 GB frei).
-- Installieren: `"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe" -s LD20241004967 install -r app/build/outputs/apk/debug/app-debug.apk`
-  (vorher Daten sichern: `MSYS_NO_PATHCONV=1 adb … exec-out run-as show.jangregersen.buehne cat files/bestand.json > .geraet/bestand-DATUM.json`).
-- Gerät steuern: `sh werkzeug/geraet.sh fokus | texte | tap "Text" | shot name | key 25`
+- App bauen: `JAVA_HOME="/c/Program Files/Android/Android Studio/jbr" ./gradlew --no-daemon -q :app:testDebugUnitTest :app:assembleDebug`,
+  danach `df -h /c` (Platte war lange fast voll; am 13.11. mittags 17 GB frei. Kein Emulator).
+- Gerät: `"$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe" -s LD20241004967 …`. Vor dem
+  Installieren Daten sichern: `MSYS_NO_PATHCONV=1 adb … exec-out run-as show.jangregersen.buehne cat files/bestand.json > .geraet/bestand-DATUM.json`,
+  dann `adb … install -r app/build/outputs/apk/debug/app-debug.apk`.
+- Steuern: `sh werkzeug/geraet.sh fokus | texte | tap "Text" [n] | shot name | key 25 | xy X Y`
   (Bilder in `.geraet/`, nicht im Repo). Starten: `adb … shell monkey -p show.jangregersen.buehne -c android.intent.category.LAUNCHER 1`.
-- Archiv-Navigation: A–Z-Knopf unten → Buchstabe → `key 25` blättert eine Seite weiter.
-- Song zum Testen ohne Set: Editor › Lyrics › "Auf der Bühne testen".
+  Symbol-Knöpfe (▲▼, Play) stehen nicht in `texte`: Koordinaten aus einem Foto nehmen.
+- Am Gerät navigieren: Archiv → "A–Z"-Knopf → Buchstabe → `key 25` blättert. Listen merken sich
+  die Seite, also vor `tap` mit `texte` prüfen, was zu sehen ist. In "Hinzufügen zu Set" schaltet
+  ein Tipp auf einen Song ihn ein UND aus.
+- Stolperstein in dieser Umgebung: Bash-Heredocs mit Kotlin/JS-Inhalt scheitern manchmal mit
+  "unexpected EOF". Dateien dann mit dem Write-Werkzeug schreiben, Python-Hilfsskripte ebenso.
+  `cmd /c datei.bat` findet Dateien im aktuellen Ordner hier nicht: vollen Pfad angeben.
 
-**Code-Landkarte (nur das Nötige lesen):** `lyrics/Zeitplan.kt` (Teil, Ablauf, Zeitplan),
-`lyrics/Einmessung.kt` (Regeln des Einmessens, ohne Bildschirm), `lyrics/Erkennung.kt` (Etiketten-Vorschlag), `lyrics/Abschnitte.kt` (Text ↔ Abschnitte),
-`ui/SeiteEinmessen.kt`, `ui/SeitenTexte.kt` (Texte holen, Teile & Ablauf, AbschnittPille),
-`ui/SeiteBuehne.kt` (Bühne, LyricsBereich), `netz/Lrclib.kt`, Tests in `app/src/test/…/LyricsTest.kt` und `EinmessungTest.kt`.
+**Code-Landkarte (nur das Nötige lesen):**
+- Gemeinsam (App + Werkstatt, müssen frei von Android-Teilen bleiben): `lyrics/Abschnitte.kt`
+  (Text ↔ Abschnitte), `lyrics/Zeitplan.kt` (Teil, Ablauf, Zeitplan, `nachTextAenderung`),
+  `lyrics/Einmessung.kt` (Regeln des Einmessens), `lyrics/Abgleich.kt` (Laptop ↔ Kompakt:
+  `folgeSetzen`, `textUndTeile`), `lyrics/Erkennung.kt`, `lyrics/Uebernahme.kt`,
+  `daten/Modell.kt`, `daten/Aenderungen.kt`, `daten/BestandJson.kt`, `netz/Lrclib.kt`.
+  Wer dort ändert, baut `:app:testDebugUnitTest` UND `:werkstatt:test`.
+- Nur App: `ui/SeiteEinmessen.kt`, `ui/SeitenTexte.kt` (Texte holen, Teile & Ablauf),
+  `ui/SeiteBuehne.kt` (Bühne, LyricsBereich), `ui/SeitenListe.kt`, `spiel/Buehne.kt`,
+  `audio/VolleLautstaerke.kt`, `daten/Ablage.kt`.
+- Nur Werkstatt (`werkstatt/src/main/kotlin/…/werkstatt/`): `Main.kt` (Server, alle `/api/`-
+  Aufrufe), `Arbeit.kt` (Arbeitskopie, Sicherungen, Rückgängig, `Texte.teilen`), `StudioOne.kt`
+  (Datei lesen, `Vorschlag`), `Geraet.kt` (adb, liest nur); Seite in
+  `werkstatt/src/main/resources/web/` (`index.html`, `stil.css`, `app.js`).
+- Tests: `app/src/test/…/LyricsTest.kt`, `EinmessungTest.kt` (auch Ablauf-Pflege und Abgleich),
+  `LogikTest.kt`; `werkstatt/src/test/…/WerkstattTest.kt`.
 
-**Jans Maßstab (immer):** aus 60–80 cm am Mikroständer lesbar, Titel und nächster Song groß und
-vollständig, nichts springt, jeder Knopf sagt in einfachen Worten, was passiert, kein Tipp löst
-etwas Unumkehrbares aus. Antworten auf Deutsch, einfach, ohne Floskeln; Fragen als anklickbare
-Optionen, eine pro Runde.
+**Als Nächstes (Reihenfolge und Details: `PLAN.md`, Arbeitsliste B am Ende):**
+1. Jan fragen, wie der Gig lief, und ob er die Werkstatt schon ausprobiert hat.
+2. B1 "Vom Mudita holen" mit angeschlossenem Gerät testen, B2 "Zum Mudita senden" bauen.
+3. B5 Lesbarkeit: Probeseiten in drei Größen auf den Kompakt, Jan wählt.
 
-**Optik (Jan, 13.11.):** Wo nötig, darf die Session optische Anpassungen selbst entscheiden und
-umsetzen (Größen, Abstände, Anordnung, Darstellung von Etiketten/Keil/Kontext), solange Richtung
-B "Signal" erhalten bleibt (Schwarz auf Weiß, Barlow Condensed, schwarzes Kopfband, Bühnenschrift
-Stufe 3). Jede sichtbare Änderung am Gerät per Foto prüfen und Jan kurz zeigen.
+## Gerät: Grundwissen
 
-**Bekannte Kleinigkeiten:** Testsongs "Test Eins/Zwei/Drei" im Archiv, Platzhalter-Lyrics in
-"Test Eins" und "Country Roads", "Frei spielen" aus der alten App fehlt, App-Symbol offen
-(inkOS zeigt nur Namen).
+- Mudita Kompakt, E-Ink, 480×800, Dichte 213. USB-adb, Seriennummer `LD20241004967`. Wird es
+  nicht erkannt: `adb kill-server`, `adb start-server`, kurz warten. Die Verbindung setzt manchmal
+  kurz aus (`geraet.sh` wartet bis 10 s).
+- Nie `am start -S` / force-stop auf WebView-Apps (schwarzer Bildschirm bis zum Neustart).
+- In TrikTrak blättern die Lautstärketasten. Mudita bremst nachinstallierte Apps im Hintergrund;
+  die Wiedergabe läuft als Vordergrund-Dienst trotzdem durch.
+- Entwürfe: `sh entwuerfe/werkzeug/render.sh` rendert Vorschau-Bilder, `sh entwuerfe/werkzeug/bau.sh betrachter`
+  baut die App "Entwürfe" (zeigt PNGs auf dem Kompakt, ohne TrikTrak anzufassen). Canvas:
+  https://claude.ai/artifact/7BXLnocEYEibvLqdEqzeHo, Quelle in `entwuerfe/canvas/`.
+
+## Bekannte Kleinigkeiten
+
+Testsongs "Test Eins/Zwei/Drei" im Archiv, Platzhalter-Lyrics in "Test Eins" und "Country Roads",
+"Frei spielen" aus der alten App fehlt, App-Symbol offen (inkOS zeigt nur Namen). Der Abschnitt
+"Strophe 1" kann in einem Text zweimal vorkommen (Wiederholung); beim Umbenennen werden Strophen
+neu durchgezählt.
