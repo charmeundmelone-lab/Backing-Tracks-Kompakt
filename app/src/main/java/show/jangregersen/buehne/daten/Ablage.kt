@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import org.json.JSONObject
+import show.jangregersen.buehne.lyrics.Ablauf
+import show.jangregersen.buehne.lyrics.Abschnitte
 import java.io.File
 
 /**
@@ -88,7 +90,7 @@ class Ablage(context: Context) {
         private fun songJson(s: Song) = JSONObject().apply {
             put("id", s.id); put("titel", s.titel); put("interpret", s.interpret); put("bpm", s.bpm)
             put("tonart", s.tonart); put("kapo", s.kapo); put("tempo", s.tempo); put("pfad", s.pfad)
-            put("dauerMs", s.dauerMs); put("lyrics", s.lyrics); put("marken", s.marken)
+            put("dauerMs", s.dauerMs); put("lyrics", s.lyrics); put("marken", s.marken); put("ablauf", 1)
             put("markenVorlaeufig", s.markenVorlaeufig); put("zeilenZeiten", s.zeilenZeiten); put("originalMs", s.originalMs)
             put("ansageVorher", s.ansageVorher); put("ansageVorherMs", s.ansageVorherMs)
             put("ansageNachher", s.ansageNachher); put("ansageNachherMs", s.ansageNachherMs)
@@ -104,7 +106,9 @@ class Ablage(context: Context) {
                 id = o.getLong("id"), titel = o.optString("titel"), interpret = o.optString("interpret"),
                 bpm = o.optInt("bpm"), tonart = o.optString("tonart"), kapo = o.optInt("kapo"),
                 tempo = o.optInt("tempo"), pfad = o.optString("pfad"), dauerMs = o.optLong("dauerMs"),
-                lyrics = o.optString("lyrics"), marken = o.optString("marken"),
+                lyrics = o.optString("lyrics"),
+                // Ohne "ablauf": Stand von vor dem eigenen Ablauf, nur eingemessene Abschnitte gespeichert.
+                marken = o.optString("marken").let { m -> if (o.has("ablauf") || m.isBlank()) m else Ablauf.ausAltemStand(m, Abschnitte.zerlegen(o.optString("lyrics")).size) },
                 markenVorlaeufig = o.optBoolean("markenVorlaeufig"), zeilenZeiten = o.optString("zeilenZeiten"), originalMs = o.optLong("originalMs"),
                 ansageVorher = o.optString("ansageVorher"), ansageVorherMs = o.optLong("ansageVorherMs"),
                 ansageNachher = o.optString("ansageNachher"), ansageNachherMs = o.optLong("ansageNachherMs"),

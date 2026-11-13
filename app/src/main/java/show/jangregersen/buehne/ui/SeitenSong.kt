@@ -297,7 +297,7 @@ private fun LyricsReiter(navi: Navi, song: Song) {
             if (text.isBlank()) App.buehne.hinweis("In diesem PDF steht kein lesbarer Text (eingescannt?).")
             else {
                 val neu = if (song.lyrics.isBlank()) text else song.lyrics.trimEnd() + "\n\n" + text
-                songAendern(song.id) { it.copy(lyrics = neu) }
+                songAendern(song.id) { it.copy(lyrics = neu, marken = show.jangregersen.buehne.lyrics.Ablauf.markenNachText(it.marken, it.lyrics, neu)) }
                 App.buehne.hinweis(if (song.lyrics.isBlank()) "Text aus dem PDF übernommen. Bitte kurz prüfen." else "Text aus dem PDF unten angehängt.")
             }
         }
@@ -313,7 +313,7 @@ private fun LyricsReiter(navi: Navi, song: Song) {
         val setLaeuft = App.buehne.zustand.collectAsState().value.let { (it.spielt || it.pause != null) && !it.probe }
         TextKnopf("Auf der Bühne testen", Modifier.fillMaxWidth(), Art.GESTRICHELT, 46.dp, 16.sp, symbol = Sym.PLAY, aktiv = abschnitte.isNotEmpty() && !setLaeuft) { navi.zu(Seite.ProbeBuehne(song.id)) }
         BasicTextField(
-            value = song.lyrics, onValueChange = { t -> songAendern(song.id) { it.copy(lyrics = t) } },
+            value = song.lyrics, onValueChange = { t -> songAendern(song.id) { it.copy(lyrics = t, marken = show.jangregersen.buehne.lyrics.Ablauf.markenNachText(it.marken, it.lyrics, t)) } },
             textStyle = textStil(18.sp, gewicht = FontWeight.Medium),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
             modifier = Modifier.fillMaxWidth().weight(1f).border(2.5.dp, Schwarz, RoundedCornerShape(12.dp)).padding(12.dp)

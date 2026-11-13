@@ -50,7 +50,6 @@ import show.jangregersen.buehne.daten.Song
 import show.jangregersen.buehne.daten.naechsterNach
 import show.jangregersen.buehne.lyrics.Abschnitte
 import show.jangregersen.buehne.lyrics.LyricsSeite
-import show.jangregersen.buehne.lyrics.Seitenlauf
 
 /** Ein Song auf der Bühne zum Ausprobieren (ohne Set): Lyrics, Blättern und Zeilen-Keil prüfen. */
 @Composable
@@ -254,7 +253,7 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
         // collectAsState: nur so merkt derivedStateOf, dass sich die Position ändert.
         val position = App.buehne.position.collectAsState()
         // Nur neu zeichnen, wenn Seite oder Zeile wechseln (nicht bei jedem 200-ms-Takt).
-        val auto by remember(seiten, starts) { derivedStateOf { autoSeite(seiten, ablauf, starts, position.value + Zeitplan.SEITE_VORLAUF_MS) } }
+        val auto by remember(seiten, starts) { derivedStateOf { Zeitplan.seiteFuer(seiten, ablauf, starts, position.value + Zeitplan.SEITE_VORLAUF_MS) } }
         val zeile by remember(starts) { derivedStateOf { Zeitplan.aktiveZeile(ablauf, starts, position.value + Zeitplan.ZEILE_VORLAUF_MS) } }
         var hand by remember(song.id) { mutableStateOf<Pair<Int, Int>?>(null) } // (Hand-Seite, Auto-Seite beim Blättern)
         val vonHand = hand?.let { (h, a) -> if (a == auto && h != auto) h else null }
@@ -318,7 +317,9 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
                     }
                     Spacer(Modifier.weight(1f))
                     // Vorschau: auf der letzten Zeile der Seite kommt unten die erste Zeile der nächsten.
-                    val letzte = keil.second && keil.first == seite.textZeilen - 1
+                    // Auf einer Seite ohne Gesang (Instrumental) steht sie immer da: Womit geht es weiter?
+                    val ohneGesang = ablauf.getOrNull(seite.abschnitt)?.let { Zeitplan.zeilen(abschnitte, it).isEmpty() } == true
+                    val letzte = ohneGesang || (keil.second && keil.first == seite.textZeilen - 1)
                     val vorschau = naechste?.zeilen?.firstOrNull { it.isNotBlank() }
                     val platz = hoehePx - seite.hoehePx
                     if (letzte && naechste != null && vorschau != null && platz > with(dichte) { 52.dp.roundToPx() }) {
@@ -336,15 +337,6 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
             }
         }
     }
-}
-
-/** Seite für die Position: Teil nach dem Ablauf, darin die Seite mit der laufenden Zeile. */
-private fun autoSeite(seiten: List<LyricsSeite>, ablauf: List<Teil>, starts: List<List<Long>?>, posMs: Long): Int {
-    val k = Zeitplan.aktiverTeil(ablauf, posMs) ?: return 0
-    val kandidaten = seiten.withIndex().filter { it.value.abschnitt == k }
-    if (kandidaten.isEmpty()) return seiten.indexOfLast { it.abschnitt <= k }.coerceAtLeast(0)
-    val zeile = starts.getOrNull(k)?.indexOfLast { it <= posMs }?.coerceAtLeast(0) ?: 0
-    return kandidaten.lastOrNull { it.value.ersteZeile <= zeile }?.index ?: kandidaten.first().index
 }
 
 @Composable
@@ -397,11 +389,10 @@ private fun seitenBauen(abschnitte: List<Abschnitt>, breite: Int, hoehe: Int, me
             }
             if (aktuell.isNotEmpty()) teile.add(aktuell)
         }
-        val gesamt = teile.sumOf { t -> t.count { it.isNotBlank() } }.coerceAtLeast(1)
         var vorher = 0
         teile.forEachIndexed { ti, t ->
             val zeilen = if (t.isEmpty()) listOf("— instrumental —") else t
-            seiten.add(LyricsSeite(ai, a.name, ti + 1, teile.size, zeilen, schrift, vorher.toFloat() / gesamt, ersteZeile = vorher, hoehePx = messen(zeilen, schrift)))
+            seiten.add(LyricsSeite(ai, a.name, ti + 1, teile.size, zeilen, schrift, ersteZeile = vorher, hoehePx = messen(zeilen, schrift)))
             vorher += t.count { it.isNotBlank() }
         }
     }

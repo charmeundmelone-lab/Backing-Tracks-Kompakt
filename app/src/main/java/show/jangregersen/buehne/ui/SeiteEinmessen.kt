@@ -33,6 +33,7 @@ import show.jangregersen.buehne.daten.songAendern
 import show.jangregersen.buehne.lyrics.Abschnitt
 import show.jangregersen.buehne.lyrics.Abschnitte
 import show.jangregersen.buehne.lyrics.Ablauf
+import show.jangregersen.buehne.lyrics.Einmessung
 import show.jangregersen.buehne.lyrics.Teil
 import show.jangregersen.buehne.lyrics.Zeitplan
 
@@ -47,40 +48,28 @@ import show.jangregersen.buehne.lyrics.Zeitplan
 fun EinmessenSeite(navi: Navi, songId: Long) {
     val b by App.ablage.stand.collectAsState()
     val z by App.buehne.zustand.collectAsState()
-    val pos by App.buehne.position.collectAsState()
     val song = b.song(songId) ?: run { WegHier(navi); return }
     val abschnitte = remember(song.lyrics) { Abschnitte.zerlegen(song.lyrics) }
     val ablauf = remember(song.marken, abschnitte) { Ablauf.von(song.marken, abschnitte) }
     val laeuft = z.probe && z.songId == songId && z.spielt
     val dauer = if (z.dauerMs > 0) z.dauerMs else song.dauerMs
     var wahlAb by remember { mutableStateOf<Long?>(null) }
+    var neuFrage by remember { mutableStateOf(false) }
     DisposableEffect(Unit) { onDispose { App.buehne.probeEnde() } }
     Lautstaerketasten { }
 
     // Jede eigene Änderung macht den Ablauf "echt" (vorläufig = aus dem Original übernommen).
     fun setzen(l: List<Teil>) = App.ablage.aendern { it.songAendern(songId) { s -> s.copy(marken = Ablauf.schreiben(l), markenVorlaeufig = false) } }
-    fun getippt(t: Teil): List<Long> = if (t.zeilenMs.isEmpty() && t.eingemessen && Zeitplan.zeilen(abschnitte, t).isNotEmpty()) listOf(t.startMs) else t.zeilenMs
+    fun getippt(t: Teil): List<Long> = Einmessung.getippt(abschnitte, t)
 
     // Stand: letzter eingemessener Teil und das nächste Ziel (Teil, Zeile).
-    val k = ablauf.indices.lastOrNull { ablauf[it].eingemessen }
-    val ziel: Pair<Int, Int>? = when {
-        k == null -> if (ablauf.isNotEmpty()) 0 to 0 else null
-        getippt(ablauf[k]).size < Zeitplan.zeilen(abschnitte, ablauf[k]).size -> k to getippt(ablauf[k]).size
-        k + 1 < ablauf.size -> (k + 1) to 0
-        else -> null
-    }
+    val k = Einmessung.letzter(ablauf)
+    val ziel = Einmessung.ziel(abschnitte, ablauf)
     val vorlaeufig = song.markenVorlaeufig && Ablauf.hatZeiten(ablauf)
 
     fun tippen() {
-        val t = App.buehne.position.value
-        val (ti, zi) = ziel ?: return
-        val teil = ablauf[ti]
-        val neu = if (zi == 0) {
-            val l = Ablauf.abHierOhneZeit(ablauf, ti + 1).toMutableList()
-            l[ti] = Teil(teil.abschnitt, t, if (Zeitplan.zeilen(abschnitte, teil).isNotEmpty()) listOf(t) else emptyList())
-            l
-        } else ablauf.toMutableList().also { it[ti] = teil.copy(zeilenMs = getippt(teil) + t) }
-        setzen(neu)
+        val neu = Einmessung.tippen(abschnitte, ablauf, App.buehne.positionJetzt())
+        if (neu != ablauf) setzen(neu)
     }
 
     Column(Modifier.fillMaxSize()) {
@@ -89,17 +78,13 @@ fun EinmessenSeite(navi: Navi, songId: Long) {
                 Etikett("Einmessen", farbe = Weiss)
                 T(song.titel, titelStil(26.sp, Weiss), zeilen = 1)
             }
-            T(if (laeuft) "${zeit(pos)} / ${zeit(dauer)}" else zeit(dauer), titelStil(22.sp, Weiss))
+            if (laeuft) LaufZeit(dauer) else T(zeit(dauer), titelStil(22.sp, Weiss))
         }
         if (laeuft) {
             val ab = wahlAb
             if (ab != null) {
                 TeilWahl(abschnitte, Modifier.weight(1f), abbrechen = { wahlAb = null }) { a ->
-                    // Gewählten Teil direkt nach dem letzten eingemessenen einfügen, beginnt zur gemerkten Zeit.
-                    val stelle = (k ?: -1) + 1
-                    val l = Ablauf.abHierOhneZeit(ablauf, stelle).toMutableList()
-                    l.add(stelle, Teil(a, ab, if (a != Ablauf.INSTRUMENTAL && abschnitte[a].zeilen.any { it.isNotBlank() }) listOf(ab) else emptyList()))
-                    setzen(l); wahlAb = null
+                    setzen(Einmessung.teilBeginnt(abschnitte, ablauf, a, ab)); wahlAb = null
                 }
             } else {
                 KontextAnsicht(abschnitte, ablauf, k, k?.let { getippt(ablauf[it]).size - 1 }, ziel, Modifier.weight(1f))
@@ -119,21 +104,19 @@ fun EinmessenSeite(navi: Navi, songId: Long) {
                         }
                     }
                     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        TextKnopf("Anderer Teil", Modifier.weight(1.25f), hoehe = 52.dp, groesse = 15.sp) { wahlAb = App.buehne.position.value }
-                        TextKnopf("Auslassen", Modifier.weight(1.1f), hoehe = 52.dp, groesse = 15.sp, aktiv = ziel != null && ziel.second == 0 && ablauf.size > 1) {
+                        TextKnopf("Anderer Teil", Modifier.weight(1.25f), hoehe = 52.dp, groesse = 15.sp) { wahlAb = App.buehne.positionJetzt() }
+                        TextKnopf("Auslassen", Modifier.weight(1.1f), hoehe = 52.dp, groesse = 15.sp, aktiv = Einmessung.kannAuslassen(abschnitte, ablauf)) {
                             val zi = ziel?.first ?: return@TextKnopf
-                            setzen(ablauf.filterIndexed { i, _ -> i != zi })
-                            App.buehne.hinweis("„${Ablauf.name(abschnitte, ablauf[zi])}“ ausgelassen.")
+                            setzen(Einmessung.auslassen(abschnitte, ablauf))
+                            App.buehne.hinweis("„${Ablauf.name(abschnitte, ablauf[zi])}“ ausgelassen. Zurück geht es mit „Anderer Teil“.")
                         }
                         TextKnopf("Tipp weg", Modifier.weight(1f), hoehe = 52.dp, groesse = 15.sp, aktiv = k != null) {
-                            val kk = k ?: return@TextKnopf
-                            val g = getippt(ablauf[kk])
-                            setzen(ablauf.toMutableList().also { it[kk] = if (g.size > 1) ablauf[kk].copy(zeilenMs = g.dropLast(1)) else Teil(ablauf[kk].abschnitt) })
+                            setzen(Einmessung.tippWeg(abschnitte, ablauf))
                         }
                         TextKnopf("−10 s", Modifier.weight(0.85f), hoehe = 52.dp, groesse = 15.sp) {
                             App.buehne.springen(-10_000)
-                            val jetzt = App.buehne.position.value
-                            setzen(ablauf.map { t -> if (t.startMs > jetzt) Teil(t.abschnitt) else t.copy(zeilenMs = t.zeilenMs.filter { it <= jetzt }) })
+                            val neu = Einmessung.zurueck(ablauf, App.buehne.positionJetzt())
+                            if (neu != ablauf) setzen(neu)
                         }
                     }
                 }
@@ -143,12 +126,21 @@ fun EinmessenSeite(navi: Navi, songId: Long) {
             T(when {
                 !Ablauf.hatZeiten(ablauf) -> "Starte den Song und tippe jede Zeile in dem Moment, in dem du sie singst. Andere Reihenfolge? Vorher unter „Teile & Ablauf“ ordnen oder live mit „Anderer Teil“."
                 vorlaeufig -> "Die Zeiten stammen aus dem Original (gleiche Länge). Prüfe sie einmal auf der Bühne. Singst du es anders: neu einmessen."
-                else -> "Dein Ablauf mit Zeiten. Prüfe ihn auf der Bühne oder miss ab dem letzten Teil weiter."
+                ziel == null -> "Alles eingemessen. Prüfe es auf der Bühne."
+                else -> "Dein Ablauf mit Zeiten. Prüfe ihn auf der Bühne oder miss dort weiter, wo du aufgehört hast."
             }, textStil(16.sp, gewicht = FontWeight.Medium), Modifier.padding(start = 18.dp, end = 18.dp, top = 10.dp, bottom = 4.dp))
             AblaufListe(abschnitte, ablauf, Modifier.weight(1f))
             Column(Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                val neuStarten: () -> Unit = { setzen(Ablauf.abHierOhneZeit(ablauf, 0)); App.buehne.probe(songId) }
-                if (!Ablauf.hatZeiten(ablauf)) {
+                if (neuFrage) {
+                    T("Alle getippten Zeiten löschen und von vorn einmessen?", textStil(19.sp, gewicht = FontWeight.Bold), Modifier.padding(horizontal = 4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        TextKnopf("Abbrechen", Modifier.weight(1f), hoehe = 58.dp, groesse = 18.sp) { neuFrage = false }
+                        TextKnopf("Ja, von vorn", Modifier.weight(1f), Art.VOLL, 58.dp, 18.sp) {
+                            neuFrage = false
+                            if (App.buehne.probe(songId)) setzen(Ablauf.abHierOhneZeit(ablauf, 0))
+                        }
+                    }
+                } else if (!Ablauf.hatZeiten(ablauf)) {
                     Knopf(Modifier.fillMaxWidth(), Art.VOLL, 80.dp, 16.dp, onClick = { App.buehne.probe(songId) }) { f ->
                         Symbol(Sym.PLAY, f, 26.dp); T("Song starten", titelStil(30.sp, f))
                     }
@@ -159,19 +151,23 @@ fun EinmessenSeite(navi: Navi, songId: Long) {
                     }
                     TextKnopf("Auf der Bühne prüfen", Modifier.fillMaxWidth(), if (vorlaeufig) Art.UMRISS else Art.VOLL, 58.dp, 20.sp, symbol = Sym.PLAY) { navi.zu(Seite.ProbeBuehne(songId)) }
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                        TextKnopf("Weiter einmessen", Modifier.weight(1f), hoehe = 52.dp, groesse = 16.sp) {
-                            // Ab dem letzten eingemessenen Teil neu: 5 s vor seinem Anfang weiterspielen.
-                            val letzter = ablauf.indices.last { ablauf[it].eingemessen }
-                            val ab = (ablauf[letzter].startMs - 5_000).coerceAtLeast(0)
-                            setzen(Ablauf.abHierOhneZeit(ablauf, letzter))
-                            App.buehne.probe(songId, ab)
+                        // Spielt kurz vor dem letzten Tipp weiter. Gelöscht wird dabei nichts.
+                        TextKnopf("Weiter einmessen", Modifier.weight(1f), hoehe = 52.dp, groesse = 16.sp, aktiv = ziel != null) {
+                            App.buehne.probe(songId, Einmessung.weiterAb(abschnitte, ablauf))
                         }
-                        TextKnopf("Neu einmessen", Modifier.weight(1f), Art.GESTRICHELT, 52.dp, 16.sp, onClick = neuStarten)
+                        TextKnopf("Neu einmessen", Modifier.weight(1f), Art.GESTRICHELT, 52.dp, 16.sp) { neuFrage = true }
                     }
                 }
             }
         }
     }
+}
+
+/** Laufzeit im Kopf. Eigener Baustein, damit der 200-ms-Takt nur diese eine Zahl neu zeichnet. */
+@Composable
+private fun LaufZeit(dauer: Long) {
+    val pos by App.buehne.position.collectAsState()
+    T("${zeit(pos)} / ${zeit(dauer)}", titelStil(22.sp, Weiss))
 }
 
 /**

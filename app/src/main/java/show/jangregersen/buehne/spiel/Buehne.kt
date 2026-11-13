@@ -314,6 +314,9 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         if (song != null && set != null && set.eintraege.any { it.songId == song.id }) laden(song, setId) else setWaehlen(setId)
     }
 
+    /** Position in diesem Moment (der 200-ms-Takt wäre fürs Einmessen zu grob). */
+    fun positionJetzt(): Long = if (engine.hatSpuren) engine.positionMs else _position.value
+
     fun springen(deltaMs: Long) { if (engine.hatSpuren) { engine.seek(engine.positionMs + deltaMs); _position.value = engine.positionMs } }
 
     fun mixGeaendert(songId: Long) {

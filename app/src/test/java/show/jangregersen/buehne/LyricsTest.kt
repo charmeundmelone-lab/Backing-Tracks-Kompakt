@@ -161,10 +161,6 @@ class AbschnitteAendernTest {
         assertEquals(text, Abschnitte.mitVorigem(text, 0)) // erster hat keinen Vorgänger
     }
 
-    @Test fun markenRueckenNachZusammenlegen() {
-        assertEquals(mapOf(0 to 1000L, 1 to 9000L, 2 to 12000L), Abschnitte.markenNachZusammenlegen(mapOf(0 to 1000L, 1 to 5000L, 2 to 9000L, 3 to 12000L), 1))
-    }
-
     @Test fun artErkennen() {
         assertEquals(Abschnitte.Art.REFRAIN, Abschnitte.art("Refrain"))
         assertEquals(Abschnitte.Art.VORREFRAIN, Abschnitte.art("Vorrefrain"))

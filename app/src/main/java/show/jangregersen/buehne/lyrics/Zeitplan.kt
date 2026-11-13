@@ -65,6 +65,65 @@ object Ablauf {
     }
 
     fun name(abschnitte: List<Abschnitt>, t: Teil): String = if (t.abschnitt == INSTRUMENTAL) "Instrumental" else abschnitte.getOrNull(t.abschnitt)?.name ?: "?"
+
+    /**
+     * Daten von vor dem eigenen Ablauf: Gespeichert waren nur die eingemessenen Abschnitte. Die
+     * übrigen gehören trotzdem auf die Bühne, also alle Abschnitte in Textreihenfolge.
+     */
+    fun ausAltemStand(marken: String, anzahlAbschnitte: Int): String {
+        val alt = lesen(marken).associate { it.abschnitt to it.startMs }
+        if (alt.isEmpty() || anzahlAbschnitte == 0) return ""
+        return schreiben((0 until anzahlAbschnitte).map { Teil(it, alt[it] ?: -1) })
+    }
+
+    /**
+     * Der Songtext wurde von Hand geändert ([alt] → [neu]). Der Ablauf verweist auf Abschnitte per
+     * Nummer, also müssen die Verweise mitziehen:
+     * - gleich viele Abschnitte: Verweise bleiben; hat ein Abschnitt jetzt mehr/weniger Zeilen,
+     *   gelten seine getippten Zeilen nicht mehr (der Anfang des Teils bleibt).
+     * - Abschnitt dazu, weg, geteilt oder verbunden: unveränderte Abschnitte davor/dahinter behalten
+     *   ihre Teile; die geänderte Stelle wird durch die neuen Abschnitte ersetzt, ab dort ohne Zeiten.
+     */
+    fun nachTextAenderung(l: List<Teil>, alt: List<Abschnitt>, neu: List<Abschnitt>): List<Teil> {
+        if (alt == neu) return l
+        val kurz = minOf(alt.size, neu.size)
+        var p = 0
+        while (p < kurz && alt[p] == neu[p]) p++
+        var q = 0
+        while (q < kurz - p && alt[alt.size - 1 - q] == neu[neu.size - 1 - q]) q++
+        val altBis = alt.size - q
+        val neuBis = neu.size - q
+        val d = neu.size - alt.size
+        fun textZeilen(a: Abschnitt) = a.zeilen.count { it.isNotBlank() }
+        if (d == 0) return l.map { t ->
+            if (t.abschnitt in p until altBis && textZeilen(alt[t.abschnitt]) != textZeilen(neu[t.abschnitt])) t.copy(zeilenMs = emptyList()) else t
+        }
+        val ersatz = (p until neuBis).map { Teil(it) }
+        if (altBis == p) {
+            // Nur neue Abschnitte: hinter den letzten Teil, der auf den Abschnitt davor zeigt.
+            val geschoben = l.map { if (it.abschnitt >= p) it.copy(abschnitt = it.abschnitt + d) else it }
+            val stelle = if (p == 0) 0 else geschoben.indexOfLast { it.abschnitt == p - 1 }.let { if (it < 0) geschoben.size else it + 1 }
+            return abHierOhneZeit(geschoben.take(stelle) + ersatz + geschoben.drop(stelle), stelle)
+        }
+        val out = mutableListOf<Teil>()
+        var erste = -1
+        var imLauf = false
+        for (t in l) when {
+            t.abschnitt < p -> { out += t; imLauf = false }             // auch Instrumental (-1)
+            t.abschnitt >= altBis -> { out += t.copy(abschnitt = t.abschnitt + d); imLauf = false }
+            !imLauf -> { if (erste < 0) erste = out.size; out += ersatz; imLauf = true }
+        }
+        // Fällt nur etwas weg, bleiben die übrigen Zeiten gültig (der Track ändert sich nicht).
+        return if (erste < 0 || ersatz.isEmpty()) out else abHierOhneZeit(out, erste)
+    }
+
+    /** Wie [nachTextAenderung], für das Song-Feld `marken`. Leer bleibt leer (Standard folgt dem Text). */
+    fun markenNachText(marken: String, altText: String, neuText: String): String {
+        if (marken.isBlank()) return marken
+        val alt = Abschnitte.zerlegen(altText)
+        val neu = Abschnitte.zerlegen(neuText)
+        return if (alt == neu) marken else schreiben(nachTextAenderung(von(marken, alt), alt, neu))
+    }
 }
 
 /**
@@ -153,6 +212,18 @@ object Zeitplan {
         val k = aktiverTeil(ablauf, posMs) ?: return null
         val s = starts.getOrNull(k) ?: return k to -1
         return k to s.indexOfLast { it <= posMs }
+    }
+
+    /**
+     * Bühnenseite zur Position. [seiten] sind in Ablauf-Reihenfolge gebaut (`abschnitt` = Index
+     * des Teils im Ablauf). Innerhalb eines Teils: die Seite mit der laufenden Zeile.
+     */
+    fun seiteFuer(seiten: List<LyricsSeite>, ablauf: List<Teil>, starts: List<List<Long>?>, posMs: Long): Int {
+        val k = aktiverTeil(ablauf, posMs) ?: return 0
+        val kandidaten = seiten.withIndex().filter { it.value.abschnitt == k }
+        if (kandidaten.isEmpty()) return seiten.indexOfLast { it.abschnitt <= k }.coerceAtLeast(0)
+        val zeile = starts.getOrNull(k)?.indexOfLast { it <= posMs }?.coerceAtLeast(0) ?: 0
+        return kandidaten.lastOrNull { it.value.ersteZeile <= zeile }?.index ?: kandidaten.first().index
     }
 
     /**

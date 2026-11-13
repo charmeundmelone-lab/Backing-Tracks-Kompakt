@@ -337,15 +337,24 @@ fun TeileUndAblauf(song: Song) {
     if (wahl > ablauf.size - 1) wahl = (ablauf.size - 1).coerceAtLeast(0)
     val gewaehlt = ablauf.getOrNull(wahl)
 
-    fun speichern(neu: List<Teil>, ab: Int, lyrics: String = aktuell.lyrics) {
-        var l = neu
-        if (ablauf.drop(ab).any { it.eingemessen } || neu.drop(ab).any { it.eingemessen }) {
-            l = Ablauf.abHierOhneZeit(neu, ab)
-            App.buehne.hinweis("Ablauf geändert: ab Teil ${ab + 1} bitte weiter einmessen.")
-        }
+    // Rückfrage, bevor eingemessene Zeiten verloren gehen: (Text, was bei "Ja" passiert).
+    var frage by remember(song.id) { mutableStateOf<Pair<String, () -> Unit>?>(null) }
+
+    fun schreiben(l: List<Teil>, lyrics: String) =
         App.ablage.aendern { it.songAendern(song.id) { s -> s.copy(lyrics = lyrics, marken = Ablauf.schreiben(l), markenVorlaeufig = s.markenVorlaeufig && Ablauf.hatZeiten(l)) } }
+
+    /**
+     * Ändert den Ablauf ab Teil [ab]. Die Zeiten dahinter passen dann nicht mehr. Sind dort schon
+     * welche eingemessen, wird erst gefragt (kein Tipp löscht Arbeit ohne Rückfrage).
+     */
+    fun aendern(neu: List<Teil>, ab: Int, lyrics: String = aktuell.lyrics, neueWahl: Int = wahl) {
+        val verloren = ablauf.drop(ab).count { it.eingemessen }
+        if (verloren == 0) { schreiben(neu, lyrics); wahl = neueWahl; return }
+        frage = "Das löscht die Zeiten ab Teil ${ab + 1} ($verloren eingemessen). Dort musst du danach neu einmessen." to {
+            schreiben(Ablauf.abHierOhneZeit(neu, ab), lyrics); wahl = neueWahl
+        }
     }
-    fun einfuegen(t: Teil) { val l = ablauf.toMutableList(); l.add(wahl + 1, t); speichern(l, wahl + 1); wahl++ }
+    fun einfuegen(t: Teil) { val l = ablauf.toMutableList(); l.add(wahl + 1, t); aendern(l, wahl + 1, neueWahl = wahl + 1) }
 
     Column(Modifier.fillMaxSize()) {
         if (modus == TeileModus.EINFUEGEN) {
@@ -367,7 +376,14 @@ fun TeileUndAblauf(song: Song) {
                             SymbolKnopf(Sym.RECHTS, "Nächste Seite", Modifier.width(46.dp), hoehe = 34.dp, groesse = 15.dp, aktiv = s < n - 1, onClick = v)
                         }
                     }
-                    if (modus == TeileModus.ETIKETT) {
+                    val f = frage
+                    if (f != null) {
+                        T(f.first, textStil(17.sp, gewicht = FontWeight.Bold), Modifier.padding(horizontal = 4.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TextKnopf("Abbrechen", Modifier.weight(1f), hoehe = 50.dp, groesse = 17.sp) { frage = null }
+                            TextKnopf("Ja, ändern", Modifier.weight(1f), Art.VOLL, 50.dp, 17.sp) { frage = null; f.second() }
+                        }
+                    } else if (modus == TeileModus.ETIKETT) {
                         listOf(ETIKETTEN.take(3), ETIKETTEN.drop(3)).forEach { reihe ->
                             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                 reihe.forEach { e ->
@@ -375,19 +391,21 @@ fun TeileUndAblauf(song: Song) {
                                         val a = gewaehlt?.abschnitt
                                         if (a != null && a != Ablauf.INSTRUMENTAL) {
                                             App.ablage.aendern { it.songAendern(song.id) { s -> s.copy(lyrics = Abschnitte.umbenennen(s.lyrics, a, e)) } }
-                                            if (wahl < ablauf.size - 1) wahl++
+                                            // Weiter zum nächsten Teil mit Text (Instrumental hat kein Etikett).
+                                            (wahl + 1 until ablauf.size).firstOrNull { ablauf[it].abschnitt != Ablauf.INSTRUMENTAL }?.let { wahl = it }
                                         }
                                     }) { AbschnittPille(e, Modifier.fillMaxWidth(), hoehe = 40.dp, groesse = 15.sp, innen = 4.dp, sperrung = 0.5.sp) }
                                 }
                             }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TextKnopf("Mit vorigem verbinden", Modifier.weight(1.6f), Art.GESTRICHELT, 42.dp, 15.sp, aktiv = (gewaehlt?.abschnitt ?: -1) >= 1) {
-                                val a = gewaehlt?.abschnitt
-                                if (a != null && a >= 1) {
-                                    speichern(Ablauf.nachZusammenlegen(ablauf, a), (wahl - 1).coerceAtLeast(0), Abschnitte.mitVorigem(aktuell.lyrics, a))
-                                    if (wahl > 0) wahl--
-                                }
+                            // Nur wenn der Teil darüber im Text direkt davor steht (dann ist "voriger" eindeutig).
+                            val a = gewaehlt?.abschnitt ?: -1
+                            val verbindbar = a >= 1 && ablauf.getOrNull(wahl - 1)?.abschnitt == a - 1
+                            TextKnopf("Mit vorigem verbinden", Modifier.weight(1.6f), Art.GESTRICHELT, 42.dp, 15.sp, aktiv = verbindbar) {
+                                // Betroffen ist jeder Teil, der auf einen der beiden Abschnitte zeigt.
+                                val ab = ablauf.indexOfFirst { it.abschnitt == a || it.abschnitt == a - 1 }
+                                aendern(Ablauf.nachZusammenlegen(ablauf, a), ab, Abschnitte.mitVorigem(aktuell.lyrics, a), neueWahl = wahl - 1)
                             }
                             TextKnopf("Fertig", Modifier.weight(1f), Art.VOLL, 42.dp, 16.sp) { modus = TeileModus.ORDNEN }
                         }
@@ -395,15 +413,18 @@ fun TeileUndAblauf(song: Song) {
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             SymbolKnopf(Sym.HOCH, "Nach oben", Modifier.weight(1f), hoehe = 44.dp, groesse = 18.dp, aktiv = wahl > 0) {
                                 val l = ablauf.toMutableList(); val x = l[wahl]; l[wahl] = l[wahl - 1]; l[wahl - 1] = x
-                                speichern(l, wahl - 1); wahl--
+                                aendern(l, wahl - 1, neueWahl = wahl - 1)
                             }
                             SymbolKnopf(Sym.RUNTER, "Nach unten", Modifier.weight(1f), hoehe = 44.dp, groesse = 18.dp, aktiv = wahl < ablauf.size - 1) {
                                 val l = ablauf.toMutableList(); val x = l[wahl]; l[wahl] = l[wahl + 1]; l[wahl + 1] = x
-                                speichern(l, wahl); wahl++
+                                aendern(l, wahl, neueWahl = wahl + 1)
                             }
                             TextKnopf("Doppeln", Modifier.weight(1.3f), hoehe = 44.dp, groesse = 15.sp, aktiv = gewaehlt != null) { gewaehlt?.let { einfuegen(Teil(it.abschnitt)) } }
                             TextKnopf("Weg", Modifier.weight(1f), Art.GESTRICHELT, 44.dp, 15.sp, aktiv = ablauf.size > 1) {
-                                speichern(ablauf.filterIndexed { i, _ -> i != wahl }, wahl)
+                                // Weglassen ändert die Zeiten der anderen Teile nicht (der Track bleibt gleich).
+                                val ohne = ablauf.filterIndexed { i, _ -> i != wahl }
+                                if (gewaehlt?.eingemessen == true) frage = "Teil ${wahl + 1} ist eingemessen. Weglassen löscht seine Zeiten." to { schreiben(ohne, aktuell.lyrics) }
+                                else schreiben(ohne, aktuell.lyrics)
                             }
                         }
                         Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -419,7 +440,7 @@ fun TeileUndAblauf(song: Song) {
             Row(
                 Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(12.dp))
                     .then(if (an) Modifier.border(3.dp, Schwarz, RoundedCornerShape(12.dp)) else Modifier)
-                    .tipp { wahl = i }.padding(horizontal = 8.dp),
+                    .tipp(aktiv = frage == null) { wahl = i }.padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 T("${i + 1}", titelStil(17.sp), Modifier.width(22.dp), zeilen = 1)

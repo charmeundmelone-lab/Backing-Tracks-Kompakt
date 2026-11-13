@@ -313,6 +313,28 @@ Umsetzung (Code fertig, baut, Unit-Tests grün, am Gerät NOCH NICHT getestet):
 - **Bühne** (`ui/SeiteBuehne.kt`): Seiten in Ablauf-Reihenfolge (Wiederholungen, Instrumental-
   Seite), Keil nach `zeilenStarts`, Blättern 1,5 s vorher.
 
+Prüfung 13.11. vormittags (ohne Gerät; baut, 49 Unit-Tests grün, am Gerät NOCH NICHT getestet):
+- Einmess-Regeln stehen jetzt in `lyrics/Einmessung.kt` (ohne Bildschirm, Tests in
+  `EinmessungTest.kt`); `SeiteEinmessen.kt` ruft sie nur noch auf.
+- Kein Tipp löscht mehr Arbeit ohne Rückfrage: "Neu einmessen" fragt erst ("Ja, von vorn"),
+  und löscht nur, wenn der Song wirklich startet (vorher: Zeiten weg, auch wenn ein Set-Song
+  lief und die Probe verweigert wurde). "Weiter einmessen" löscht nichts mehr, spielt 5 s vor
+  dem letzten Tipp weiter. In Teile & Ablauf kommt eine Rückfrage, sobald eine Änderung
+  eingemessene Zeiten kosten würde. "Weg" lässt die Zeiten der anderen Teile stehen (der Track
+  ändert sich ja nicht).
+- Tipp-Zeit genau (`Buehne.positionJetzt()`, vorher bis 200 ms zu früh). Doppeltipp unter
+  300 ms zählt nicht.
+- "Anderer Teil": Steht der gewählte Teil ohnehin als Nächstes im Ablauf, wird er genommen
+  statt doppelt eingefügt (Fall: letzte Zeile nicht getippt, Refrain beginnt).
+- Text von Hand ändern (Editor, PDF anhängen) zieht den Ablauf mit
+  (`Ablauf.nachTextAenderung`), vorher zeigten die Teile danach auf falsche Abschnitte.
+- Alte Daten (nur eingemessene Abschnitte gespeichert) bekommen beim Laden alle Abschnitte
+  (`Ablauf.ausAltemStand`, Kennzeichen `"ablauf": 1` im Song).
+- Teile & Ablauf: "Mit vorigem verbinden" nur, wenn der Teil darüber im Text direkt davor
+  steht; Etikett-Modus überspringt Instrumental.
+- Bühne: Auf einer Instrumental-Seite steht unten immer die erste Zeile des nächsten Teils.
+- Einmessen: Die Laufzeit im Kopf zeichnet allein neu (Vorgriff auf A2, E-Ink-Ruhe).
+
 Arbeitsliste ab hier (für die nächste Session):
 - [ ] A1 Neuen Bau am Kompakt testen (nur nach Jans OK; Gig "Bar Eriksson" am Fr 13.11.!):
   Two Princes: Teile & Ablauf (verschieben, doppeln, Instrumental, Etikett, verbinden),
@@ -327,7 +349,7 @@ Arbeitsliste ab hier (für die nächste Session):
   Blicke, Tipps zwischen zwei Akkorden): Set mit Test-Gig "Testlauf" (liegt schon an: Set 1 mit
   Test Eins; Test Zwei hat Ansagen, Two Princes hat Text), Show-Automatik, Pause, Ansage,
   Bühne ↔ Setliste während der Wiedergabe. Danach Test-Gig mit Jans OK löschen.
-- [ ] A5 Aufräumen: `Abschnitte.markenLesen/markenSchreiben/markenNachZusammenlegen` und
+- [x] A5 (13.11., vorgezogen, braucht kein Gerät; entfernt) Aufräumen: `Abschnitte.markenLesen/markenSchreiben/markenNachZusammenlegen` und
   `Seitenlauf` sind Altlast (nur noch LogikTest) – entfernen oder auf Ablauf umstellen.
 - [ ] A6 Offene Idee (nicht umgesetzt, Jan fragen): In TrikTrak blättern die Lautstärketasten,
   Jan kann dort die Medienlautstärke nicht ändern → evtl. Lautstärke-Anzeige/-Regler in der App.

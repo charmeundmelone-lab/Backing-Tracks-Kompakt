@@ -14,8 +14,6 @@ import show.jangregersen.buehne.daten.naechsterNach
 import show.jangregersen.buehne.daten.schieben
 import show.jangregersen.buehne.daten.verschieben
 import show.jangregersen.buehne.lyrics.Abschnitte
-import show.jangregersen.buehne.lyrics.LyricsSeite
-import show.jangregersen.buehne.lyrics.Seitenlauf
 
 class LogikTest {
 
@@ -41,27 +39,6 @@ class LogikTest {
         val a = Abschnitte.zerlegen("eins\nzwei\n\n\ndrei\n\nvier")
         assertEquals(listOf("Teil 1", "Teil 2", "Teil 3"), a.map { it.name })
         assertEquals(listOf("eins", "zwei"), a[0].zeilen)
-    }
-
-    @Test fun marken() {
-        val m = mapOf(0 to 0L, 2 to 46000L, 1 to 14000L)
-        assertEquals("0:0,1:14000,2:46000", Abschnitte.markenSchreiben(m))
-        assertEquals(m, Abschnitte.markenLesen("0:0,1:14000,2:46000"))
-    }
-
-    @Test fun seitenlauf() {
-        val s = listOf(
-            LyricsSeite(0, "Intro", 1, 1, listOf("a"), 28f, 0f),
-            LyricsSeite(1, "Strophe", 1, 2, listOf("b"), 28f, 0f),
-            LyricsSeite(1, "Strophe", 2, 2, listOf("c"), 28f, 0.5f),
-            LyricsSeite(2, "Refrain", 1, 1, listOf("d"), 28f, 0f)
-        )
-        val m = mapOf(0 to 0L, 1 to 10_000L, 2 to 30_000L)
-        assertEquals(0, Seitenlauf.seiteFuer(s, m, 5_000, 100_000))
-        assertEquals(1, Seitenlauf.seiteFuer(s, m, 12_000, 100_000))
-        assertEquals(2, Seitenlauf.seiteFuer(s, m, 21_000, 100_000))
-        assertEquals(3, Seitenlauf.seiteFuer(s, m, 31_000, 100_000))
-        assertEquals(0, Seitenlauf.seiteFuer(s, emptyMap(), 31_000, 100_000))
     }
 
     private fun bestand(): Bestand {

@@ -50,6 +50,9 @@ Testdaten direkt ändern: `adb exec-out run-as show.jangregersen.buehne cat file
 **Stand:** `main`, committet und gepusht. Der Code baut, alle Unit-Tests sind grün
 (`./gradlew --no-daemon -q :app:testDebugUnitTest`). Aufgaben: `PLAN.md`, Abschnitt
 "Umbau 13.11. nachts" → Arbeitsliste **A1–A7**. Dort stehen auch Jans Wünsche dazu.
+Nachtrag 13.11. vormittags: Code ohne Gerät geprüft und korrigiert (Liste in `PLAN.md` unter
+"Prüfung 13.11. vormittags"), A5 erledigt. Offen: A1–A4 (Gerät, nur mit Jans OK), A6 (Jan
+fragen), A7.
 
 **GERÄTE-REGEL:** Am Kompakt nichts installieren oder antippen, bevor Jan es im Chat freigibt.
 Jan spielt am **Fr 13.11.** den Gig "Bar Eriksson" (Set 1, 8 Songs, keiner mit Lyrics) und hat
@@ -74,9 +77,9 @@ Medienlautstärke: Jan nutzt 5/15. Für Tests leise stellen und **danach sofort 
 - Song zum Testen ohne Set: Editor › Lyrics › "Auf der Bühne testen".
 
 **Code-Landkarte (nur das Nötige lesen):** `lyrics/Zeitplan.kt` (Teil, Ablauf, Zeitplan),
-`lyrics/Erkennung.kt` (Etiketten-Vorschlag), `lyrics/Abschnitte.kt` (Text ↔ Abschnitte),
+`lyrics/Einmessung.kt` (Regeln des Einmessens, ohne Bildschirm), `lyrics/Erkennung.kt` (Etiketten-Vorschlag), `lyrics/Abschnitte.kt` (Text ↔ Abschnitte),
 `ui/SeiteEinmessen.kt`, `ui/SeitenTexte.kt` (Texte holen, Teile & Ablauf, AbschnittPille),
-`ui/SeiteBuehne.kt` (Bühne, LyricsBereich), `netz/Lrclib.kt`, Tests in `app/src/test/…/LyricsTest.kt`.
+`ui/SeiteBuehne.kt` (Bühne, LyricsBereich), `netz/Lrclib.kt`, Tests in `app/src/test/…/LyricsTest.kt` und `EinmessungTest.kt`.
 
 **Jans Maßstab (immer):** aus 60–80 cm am Mikroständer lesbar, Titel und nächster Song groß und
 vollständig, nichts springt, jeder Knopf sagt in einfachen Worten, was passiert, kein Tipp löst
