@@ -351,7 +351,7 @@ Arbeitsliste ab hier (für die nächste Session):
   Bühne ↔ Setliste während der Wiedergabe. Danach Test-Gig mit Jans OK löschen.
 - [x] A5 (13.11., vorgezogen, braucht kein Gerät; entfernt) Aufräumen: `Abschnitte.markenLesen/markenSchreiben/markenNachZusammenlegen` und
   `Seitenlauf` sind Altlast (nur noch LogikTest) – entfernen oder auf Ablauf umstellen.
-- [ ] A6 (Jan, 13.11.: kein Regler nötig, die App soll IMMER auf voller Medienlautstärke stehen; noch nicht umgesetzt) Offene Idee (nicht umgesetzt, Jan fragen): In TrikTrak blättern die Lautstärketasten,
+- [x] A6 (Jan, 13.11.: kein Regler; beim Öffnen volle Medienlautstärke, bleibt so, solange die App offen ist. Umgesetzt in `audio/VolleLautstaerke.kt`, am Gerät geprüft) Offene Idee (nicht umgesetzt, Jan fragen): In TrikTrak blättern die Lautstärketasten,
   Jan kann dort die Medienlautstärke nicht ändern → evtl. Lautstärke-Anzeige/-Regler in der App.
 - [ ] A7 Übergabe in CLAUDE.md + PLAN.md nachziehen.
 
@@ -403,3 +403,23 @@ Startzeit auf dem Track auslesen. Vorbehalte: Das Format ist nicht offiziell bes
 Jans Dateien abgelesen, Studio One 7); der Versatz zwischen Song-Anfang und exportierter Datei
 muss an einem echten Song geprüft werden; welche `.song` zu welchem Track gehört, muss Jan
 einmal zuordnen (Ordner heißen oft nur nach Datum).
+
+Volle Lautstärke (13.11., Jans ausdrücklicher Auftrag: "sobald ich die App öffne … und das soll so
+bleiben, solange die App geöffnet ist"): `audio/VolleLautstaerke.kt`. Gilt, solange die App zu
+sehen ist oder ein Song/eine Pause läuft (auch bei dunklem Bildschirm); wird sie von außen
+verstellt, springt sie zurück auf voll. Beim Verlassen der App kommt die Lautstärke von vorher
+zurück (Claudes Entscheidung, damit Kopfhörer in anderen Apps nicht plötzlich auf voll stehen;
+Jan weiß es, kann geändert werden). Am Gerät geprüft: 5 → öffnen 15 → von außen 7 gesetzt → 15 →
+Home 5 → öffnen 15. NICHT geprüft: mit Jans Kabel/Anlage (Android kann mit Kopfhörer-Ausgang
+eine Schutzgrenze setzen; dann zeigt die App "Die Lautstärke lässt sich nicht auf voll stellen").
+Tests am Gerät: vorher `run-as show.jangregersen.buehne touch files/test-leise` (dann fasst die
+App die Lautstärke nicht an), danach die Datei wieder löschen.
+
+Fertige Songs (Jan, 13.11.): In Studio One liegen auch Entwürfe. Maßgeblich sind die fertigen
+Dateien in `C:\Users\HUAWEI\Music\Backing Tracks\Nothingphone` (42 WAV; Jan: Ordner darf in
+"Mudita" umbenannt werden, noch NICHT umbenannt). Abgleich nach Namen (nur gelesen): 31 der 42
+haben einen gleichnamigen Studio-One-Song, 27 davon mit Arranger-Teilen. Ohne automatischen
+Treffer: Dont look back in anger, Ein Hoch auf uns, Englishman in New York (heißt in Studio One
+"ENGISHMAN", hat Marker statt Arranger-Teile), Friday Love, Grenade, Put your records drums new,
+Remember us (2×), Sunny, Talking Revolution, Thats alright Mama. Für die müsste Jan die
+Studio-One-Datei einmal von Hand zuordnen oder die Teile ohne Studio One anlegen.
