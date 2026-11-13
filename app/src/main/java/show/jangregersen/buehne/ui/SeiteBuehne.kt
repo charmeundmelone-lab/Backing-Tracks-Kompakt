@@ -365,13 +365,13 @@ private fun Modifier.strichelLinie(): Modifier = this.drawBehind {
 
 private fun lyricsStil(sp: Float, fett: Boolean = false) = TextStyle(fontFamily = Halbschmal, fontWeight = if (fett) FontWeight.Bold else FontWeight.SemiBold, fontSize = sp.sp, lineHeight = (sp * ZEILEN_FAKTOR).sp, color = Schwarz, textIndent = androidx.compose.ui.text.style.TextIndent(restLine = (sp * 0.8f).sp))
 
-/** Schrift der Bühne. Jan hat am 13.11. am Mikroständer Probeseite B gewählt (40, vorher 24–31). */
-private const val BUEHNE_SP = 40f
+/** Schrift der Bühne. Jan wählte am 13.11. Probeseite B (40), am Ständer war ihm 40 dann zu groß für schnelle Songs: 34 "erstmal gut" (vorher 24–31). */
+private const val BUEHNE_SP = 34f
 /** Zeilenabstand der Lyrics (mal Schriftgröße). */
 private const val ZEILEN_FAKTOR = 1.2f
 
 /**
- * Baut die Bildschirmseiten: eine Schriftgröße für alle Songs (40, damit nichts springt). Lange
+ * Baut die Bildschirmseiten: eine Schriftgröße für alle Songs (34, damit nichts springt). Lange
  * Zeilen brechen um (Rest eingerückt). Ein Abschnitt, der nicht auf eine Seite passt, wird auf
  * so wenige Seiten wie nötig verteilt, möglichst gleich voll. Nur wenn eine einzelne Zeile nicht
  * einmal allein auf die Seite passt, wird die Schrift kleiner.
@@ -379,7 +379,7 @@ private const val ZEILEN_FAKTOR = 1.2f
 private fun seitenBauen(abschnitte: List<Abschnitt>, breite: Int, hoehe: Int, messen: (List<String>, Float) -> Int): List<LyricsSeite> {
     if (abschnitte.isEmpty()) return emptyList()
     val alle = abschnitte.flatMap { it.zeilen }.filter { it.isNotBlank() }
-    val schrift = listOf(BUEHNE_SP, 36f, 32f, 28f).firstOrNull { sp -> alle.all { messen(listOf(it), sp) <= hoehe } } ?: 24f
+    val schrift = listOf(BUEHNE_SP, 30f, 28f).firstOrNull { sp -> alle.all { messen(listOf(it), sp) <= hoehe } } ?: 24f
     val seiten = mutableListOf<LyricsSeite>()
     abschnitte.forEachIndexed { ai, a ->
         val teile = show.jangregersen.buehne.lyrics.seitenTeilen(a.zeilen) { messen(it, schrift) <= hoehe }
