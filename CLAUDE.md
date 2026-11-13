@@ -29,16 +29,32 @@ Ablauf-Code.
   Dateien lesen, am Gerät meist `geraet.sh texte` statt Fotos.
 - Das Repo ist **öffentlich**: nie Songtexte, `bestand.json` oder Jans Daten einchecken.
 
-## Übergabe an die nächste Session (geschrieben 2026-11-13, ca. 15:15, ergänzt 15:35, vor Jans Gig)
+## Übergabe an die nächste Session (geschrieben 2026-11-13, ca. 15:15, ergänzt 19:30, vor Jans Gig)
 
-**Ganz kurz, wo es weitergeht (Stand 15:35):** Jan hat bei B5 Seite **B** gewählt ("halbe
-Seite", 40 sp, 3 Zeilen). B6 (Bühne danach umbauen) ist gebaut (Commit `8ab856d`), aber **nicht
-installiert**: Am Kompakt läuft für den Gig noch die Bühne mit der alten Schrift. Nach dem Gig:
-Jan nach dem Gig fragen, dann mit seinem ausdrücklichen Ja B6 aufspielen (vorher `bestand.json`
-sichern) und mit ihm am Mikroständer prüfen. Danach B7 (Werkstatt mit Jan ausprobieren).
+**Ganz kurz, wo es weitergeht (Stand 19:30):**
+- B5 erledigt (Jan wählte Seite B). **B6 ist installiert, auf Jans Wunsch noch VOR dem Gig**
+  (Commit `f66cadf`, 17:40): Bühne fest 34 sp in Barlow Condensed (Schmal), Zeilenabstand 1,12,
+  Seiten werden voll gemacht (6 Bildschirmzeilen), lange Zeilen brechen eingerückt um, mitten im
+  Teil blättert die Seite erst 0,3 s vor der Zeile. Weg dahin: 40 sp war Jan am Ständer "etwas zu
+  groß" für schnelle Songs, 34 "erstmal gut, bis uns etwas Besseres einfällt", dann "da ist noch
+  mehr Platz nach unten" → schmalere Schrift, volle Seiten. Foto: `.geraet/b6-112.png`.
+  Rückweg zur Fassung von 15:10: `.geraet/vor-b6-2026-11-13.apk`, Daten `.geraet/bestand-2026-11-13-k.json`.
+- B7 läuft: Jan hat die Werkstatt zum ersten Mal selbst benutzt. Hänger und Lösungen: (1) Er fand
+  das Programm nicht (Desktop zugedeckt: Windows+D). (2) "Bed of Roses" aus dem Internet zerfiel in
+  13 Teile mit falschen Namen → `Erkennung.kt` fasst jetzt zwei kurze Stücke (je ≤ 5 Zeilen) ohne
+  Refrain dazwischen zusammen (nur in Liedern mit Refrain), abgewandelter Refrain (≥ 50 % gleiche
+  Zeilen) bleibt Refrain, zweite Bridge heißt "Bridge 2". Ergebnis passt zu Jans Studio-One-Teilen.
+  (3) "An vorigen hängen" stand nur im Vorrat → jede Karte hat jetzt "↑ Mit Teil darüber
+  zusammenfügen" und "Umbenennen". Jan hat Bed of Roses neu geholt und selbst zum Mudita gesendet
+  (kam an, 9 Teile). Noch nicht ausprobiert: Studio-One-Vorschlag (bei Bed of Roses ist die
+  `.song` eine andere Fassung, 7:28 statt 6:50), Gig-Check, Sicherungen.
+- Lehre: Eine eigene Test-Werkstatt belegt Port 47811; Jans Start weicht dann auf 47812 aus, sein
+  alter Browser-Tab zeigt aber die Testinstanz. Testinstanzen nur starten, wenn Jans Werkstatt aus
+  ist, und danach prüfen, dass der Prozess wirklich weg ist (`Get-NetTCPConnection` OHNE
+  `-State Listen`, der Filter findet hier nichts).
 
-**Stand:** `main`, alles committet und gepusht. App und Werkstatt bauen, alle 68 Tests grün
-(`:app:testDebugUnitTest` + `:werkstatt:test`). Am Kompakt läuft der neueste Bau (B4 inklusive).
+**Stand:** `main`, alles committet und gepusht. App und Werkstatt bauen, alle Tests grün
+(`:app:testDebugUnitTest` + `:werkstatt:test`). Am Kompakt läuft der Bau von `f66cadf` (B6 inklusive).
 
 **13.11. nachmittags (diese Session):**
 - B1 geprüft, B2 "Zum Mudita senden" gebaut und am Gerät hin und zurück getestet.
@@ -113,9 +129,12 @@ sichern) und mit ihm am Mikroständer prüfen. Danach B7 (Werkstatt mit Jan ausp
 - **GERÄTE-REGEL:** Nichts installieren oder antippen, bevor Jan es im Chat freigibt. Vor JEDEM
   Tipp `sh werkzeug/geraet.sh fokus`. Läuft TrikTrak mit einem Song: Finger weg. Jan spielte am
   Abend des 13.11. den Gig "Bar Eriksson"; danach fragen, wie es lief (Lautstärke, Pausen).
-- Installiert: Bau von Commit `25ef0f5` (versionCode 3, 13.11. ca. 15:10, mit Jans OK vor dem Gig):
-  kann `eingang.json` (Senden und Wiederherstellen) und B4 (Text/Teile nur ansehen). Am Gerät
-  geprüft, Daten danach Byte für Byte unverändert. App "Entwürfe" mit Lesbarkeits-Probe A/B/C.
+- Installiert: Bau von Commit `f66cadf` (13.11. 17:40, mit Jans Ja): B6-Bühne (siehe oben), dazu
+  alles aus `25ef0f5` (versionCode 3: `eingang.json` Senden/Wiederherstellen, B4 Text/Teile nur
+  ansehen). Daten nach jeder Installation Byte für Byte gleich. Vorsicht: Lautstärketaste auf der
+  Setliste öffnete das Mudita-Schnellmenü (mit `key 4` geschlossen, nichts umgeschaltet).
+  "Jetzt bereitlegen" auf der Song-Karte springt direkt auf die Bühne. App "Entwürfe" mit Probe A/B/C.
+  Fassung von 15:10 (vor B6): `.geraet/vor-b6-2026-11-13.apk`.
   Rückweg zur Gig-Fassung vom Vormittag: `.geraet/vor-b2-2026-11-13.apk`, Daten von 14:50:
   `.geraet/bestand-2026-11-13-e.json`.
 - Rückweg: `.geraet/alt-2026-11-13.apk` (Bau vom 12.11.), `.geraet/bestand-2026-11-13.json` (vor
@@ -166,13 +185,12 @@ sichern) und mit ihm am Mikroständer prüfen. Danach B7 (Werkstatt mit Jan ausp
   `LogikTest.kt`; `werkstatt/src/test/…/WerkstattTest.kt`.
 
 **Als Nächstes (Reihenfolge und Details: `PLAN.md`, Arbeitsliste B am Ende):**
-1. Jan fragen, wie der Gig am 13.11. abends lief (Lautstärke voll ok? Pausen? Die Fassung mit
-   B2/B4 lief zum ersten Mal live). Probleme gehen vor allem anderen.
-2. B6 aufspielen (gebaut, Commit `8ab856d`, Jans Wahl B) und mit Jan am Mikroständer prüfen:
-   Kann er die laufende Zeile sicher lesen, springt nichts, passt das Blättern?
-3. B7: Jan probiert die Werkstatt über das Desktop-Symbol aus (holen, Text aus dem Internet,
-   Studio-One-Vorschlag, senden, Gig-Check). Dabei zuschauen, wo er hängt.
-4. Danach B8–B12 (siehe PLAN.md). B11 Gigs am Laptop ist der nächste große Brocken.
+1. Jan fragen, wie der Gig am 13.11. abends lief. Zum ersten Mal live: B2/B4, volle Lautstärke
+   UND die neue Bühne (34 sp schmal, volle Seiten, Blättern mitten im Teil erst zur Zeile).
+   Lesbar? Zu oft geblättert? Rahmen/Keil zu sehen? Probleme gehen vor allem anderen.
+2. B7 weiter: Studio-One-Vorschlag an einem Song mit passender `.song` (nicht Bed of Roses),
+   Gig-Check, Sicherungen. Zuschauen, wo Jan hängt.
+3. Danach B8–B12 (siehe PLAN.md). B11 Gigs am Laptop ist der nächste große Brocken.
 
 ## Gerät: Grundwissen
 
