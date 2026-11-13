@@ -107,3 +107,8 @@ dialog li:hover { background: var(--hell); }
 .set li .stand { font-weight: 700; }
 .set li.fertig .stand { font-weight: 500; color: var(--grau); }
 .set li:hover { background: var(--hell); }
+
+.treffer { display: flex; align-items: center; gap: 16px; padding: 10px 4px; border-bottom: 2px solid var(--hell); max-width: 980px; }
+.treffer .weit { flex: 1; }
+.treffer .klein { font-size: 16px; color: var(--grau); }
+.treffer .zitat { font-style: italic; margin-top: 2px; }

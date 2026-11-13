@@ -10,6 +10,8 @@ import show.jangregersen.buehne.lyrics.Ablauf
 import show.jangregersen.buehne.lyrics.Abschnitte
 import show.jangregersen.buehne.lyrics.Einmessung
 import show.jangregersen.buehne.lyrics.Teil
+import show.jangregersen.buehne.lyrics.Uebernahme
+import show.jangregersen.buehne.netz.Lrclib
 import java.io.File
 import java.net.InetAddress
 import java.net.InetSocketAddress
@@ -26,6 +28,8 @@ private var port = ERSTER_PORT
 private val heim = File(System.getProperty("user.home"))
 private val arbeit by lazy { Arbeit(File(datenOrdner)) }
 private val s1Wurzel = File(heim, "Documents/Studio One")
+/** Letzte Suchtreffer je Song (die Seite wählt per Nummer). */
+private val treffer = java.util.concurrent.ConcurrentHashMap<Long, List<Lrclib.Treffer>>()
 private var s1Dateien: List<File> = emptyList()
 
 private val datenOrdner = System.getProperty("triktrak.daten") ?: File(heim, "TrikTrak-Werkstatt").path
@@ -109,6 +113,26 @@ private fun api(was: String, frage: Map<String, String>, k: JSONObject): JSONObj
         "liste" -> liste()
         "wer" -> JSONObject().put("daten", File(datenOrdner).absolutePath)
         "gigs" -> gigCheck()
+        "lrcsuche" -> id().let { i ->
+            val s = arbeit.bestand.song(i)!!
+            val l = try {
+                kotlinx.coroutines.runBlocking { Lrclib.suchen(s.titel, k.optString("suchwort").ifBlank { s.interpret }, s.dauerMs) }
+            } catch (e: Lrclib.Fehler) { throw Fehler(e.meldung) }
+            val gut = l.mapNotNull { t -> Uebernahme.vorschau(t)?.let { t to it } }.take(8)
+            treffer[i] = gut.map { it.first }
+            JSONObject().put("treffer", JSONArray(gut.mapIndexed { n, (t, v) ->
+                JSONObject().put("nr", n).put("titel", t.titel).put("interpret", t.interpret).put("dauerMs", t.dauerMs)
+                    .put("mitZeiten", !t.zeitmarken.isNullOrBlank()).put("teile", v.abschnitte.size).put("refrain", v.refrain).put("ersteZeile", v.ersteZeile)
+            }))
+        }
+        "lrcnehmen" -> id().let { i ->
+            val t = treffer[i]?.getOrNull(k.getInt("nr")) ?: throw Fehler("Bitte noch einmal suchen.")
+            val s = arbeit.bestand.song(i)!!
+            val verliert = if (s.markenVorlaeufig) 0 else Ablauf.von(s.marken, Abschnitte.zerlegen(s.lyrics)).count { it.eingemessen }
+            if (verliert > 0 && !k.optBoolean("sicher")) return rueckfrage(verliert)
+            arbeit.aendern(i) { Uebernahme.uebernehmen(it, t) ?: throw Fehler("Mit diesem Treffer ist nichts anzufangen.") }
+            songJson(i)
+        }
         "sicherungen" -> JSONObject().put("liste", JSONArray(arbeit.muditaSicherungen().mapNotNull { f ->
             runCatching {
                 val b = show.jangregersen.buehne.daten.BestandJson.ausJson(JSONObject(f.readText()))

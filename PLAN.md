@@ -489,7 +489,7 @@ Laptop-Programm, Stufe 1 fertig machen:
   ihn wieder drüber. Laptop sendet nur, wenn die installierte App das kann (`versionCode`
   hochzählen und per `dumpsys package` prüfen). Nach dem Senden `geaendert` leeren und frisch
   holen. Am Gerät erst installieren, wenn Jan es freigibt (vorher `bestand.json` sichern).
-- [ ] B3 Text aus dem Internet in der Werkstatt holen (LRCLIB). `netz/Lrclib.kt`,
+- [x] B3 (13.11.: Reiter "Text aus dem Internet", bis 8 Treffer, Rückfrage, wenn eingemessene Zeiten verloren gingen; mit der Testkopie geprüft) Text aus dem Internet in der Werkstatt holen (LRCLIB). `netz/Lrclib.kt`,
   `lyrics/Erkennung.kt` und `Uebernahme.kt` sind schon eingebunden; es fehlen der Aufruf in
   `Main.kt` und die Seite (Treffer zeigen, wählen, übernehmen). Bis dahin: Text von Hand einfügen.
 - [ ] B4 Am Mudita "Teile & Ablauf" zurückbauen auf Ansehen mit vollem Text (Jans Wunsch: Text und

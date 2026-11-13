@@ -127,8 +127,33 @@ function zeigeSong() {
       el("div", { class: "weit" }, el("div", { class: "etikett" }, s.interpret || "Song"), el("h2", {}, s.titel)),
       el("button", { class: "knopf", disabled: !s.kannZurueck, onclick: () => aendern("zurueck", {}) }, "↶ Rückgängig")),
     el("div", { class: "unterzeile" }, `Länge ${zeit(s.dauerMs)}` + (s.geaendert ? " · hier geändert, noch nicht zum Mudita gesendet" : "")),
-    el("div", { class: "reihe", style: "margin-bottom:16px" }, reiter("teile", "Teile & Ablauf"), reiter("text", "Text bearbeiten")),
-    Z.ansicht === "text" ? textAnsicht() : teileAnsicht());
+    el("div", { class: "reihe", style: "margin-bottom:16px" }, reiter("teile", "Teile & Ablauf"), reiter("text", "Text bearbeiten"), reiter("netz", "Text aus dem Internet")),
+    Z.ansicht === "text" ? textAnsicht() : Z.ansicht === "netz" ? netzAnsicht() : teileAnsicht());
+}
+
+function netzAnsicht() {
+  const s = Z.song;
+  const feld = el("input", { type: "search", placeholder: "Interpret (hilft beim Finden)", style: "font:inherit;padding:8px 10px;border:2.5px solid #000;border-radius:10px;width:320px" });
+  feld.value = s.interpret;
+  const liste = el("div", {}, el("p", { class: "leer" }, "Suche …"));
+  const suchen = async () => {
+    liste.replaceChildren(el("p", { class: "leer" }, "Frage die Songtext-Datenbank …"));
+    const j = await ruf("lrcsuche", { id: s.id, suchwort: feld.value });
+    if (!j) { liste.replaceChildren(el("p", { class: "leer" }, "Nichts gefunden.")); return; }
+    if (!j.treffer.length) { liste.replaceChildren(el("p", { class: "leer" }, "Nichts gefunden. Anderen Interpreten eintippen oder den Text unter „Text bearbeiten“ einfügen.")); return; }
+    liste.replaceChildren(...j.treffer.map((t) => el("div", { class: "treffer" },
+      el("div", { class: "weit" },
+        el("b", {}, t.titel), " · ", t.interpret,
+        el("div", { class: "klein" }, `Länge ${zeit(t.dauerMs)} (dein Track ${zeit(s.dauerMs)})` + (t.mitZeiten ? " · mit Zeitmarken" : " · ohne Zeitmarken") + ` · ${t.teile} Teile` + (t.refrain ? ", mit Refrain" : "")),
+        el("div", { class: "zitat" }, "„" + t.ersteZeile + " …“")),
+      el("button", { class: "knopf", onclick: async () => { await aendern("lrcnehmen", { nr: t.nr }); if (!Z.song.abschnitte.length) return; Z.ansicht = "teile"; zeigeSong(); } }, s.text ? "Diesen Text statt des alten nehmen" : "Diesen Text nehmen"))));
+  };
+  feld.addEventListener("keydown", (e) => { if (e.key === "Enter") suchen(); });
+  setTimeout(suchen, 0);
+  return el("div", {},
+    el("p", { class: "hinweis" }, "Treffer aus der freien Songtext-Datenbank LRCLIB, der passendste oben. Danach unter „Teile & Ablauf“ ordnen oder „Ablauf aus Studio One vorschlagen“."),
+    el("div", { class: "reihe", style: "margin-bottom:12px" }, feld, el("button", { class: "knopf", onclick: suchen }, "Suchen")),
+    liste);
 }
 
 function textAnsicht() {
