@@ -293,4 +293,34 @@ async function zurueckspielen(s, wann) {
 
 $("#sicherungen").addEventListener("click", zeigeSicherungen);
 
+// ── Gig-Check ────────────────────────────────────────────────────────────────
+
+async function zeigeGigCheck() {
+  const j = await ruf("gigs");
+  if (!j) return;
+  Z.song = null; zeigeListe();
+  const tag = (d) => d ? new Date(d * 86400000).toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" }) : "ohne Datum";
+  const stand = (s) => !s.hatText ? "kein Text" : s.eingemessen === 0 ? "nicht eingemessen" : s.vorlaeufig ? "Zeiten nur aus Vorlage" : s.eingemessen < s.teile ? `${s.eingemessen} von ${s.teile} Teilen eingemessen` : "fertig";
+  const fertig = (s) => stand(s) === "fertig" && !s.geaendert;
+  $("#werkbank").replaceChildren(
+    el("h2", {}, "Gig-Check"),
+    el("p", { class: "unterzeile" }, "Was den Songs in deinen Sets noch fehlt. Klick auf einen Song öffnet ihn. " +
+      "Ob die Musikdatei auf dem Mudita da ist, sieht nur der Mudita selbst."),
+    ...(j.gigs.length ? j.gigs.map((g) => el("div", { class: "gig" },
+      el("h3", {}, g.name, el("span", { class: "klein" }, "  ·  " + tag(g.datum))),
+      ...g.sets.map((set) => {
+        const offen = set.songs.filter((s) => !fertig(s)).length;
+        const dauer = set.songs.reduce((n, s) => n + s.buehneMs, 0);
+        return el("div", { class: "set" },
+          el("div", { class: "setkopf" }, el("b", {}, set.name), `  ·  ${set.songs.length} Songs  ·  ca. ${zeit(dauer)} Min.  ·  `,
+            offen ? el("b", {}, `${offen} noch nicht fertig`) : "alles fertig"),
+          el("ol", {}, ...set.songs.map((s) => el("li", { class: fertig(s) ? "fertig" : "", onclick: () => waehle(s.id) },
+            el("span", { class: "weit" }, s.titel), el("span", { class: "klein" }, zeit(s.dauerMs)),
+            el("span", { class: "stand" }, stand(s) + (s.geaendert ? " · am Laptop geändert, noch nicht gesendet" : ""))))));
+      })))
+      : [el("p", { class: "leer" }, "Noch keine Gigs. Die legst du bisher am Mudita an.")]));
+}
+
+$("#gigcheck").addEventListener("click", zeigeGigCheck);
+
 ladeListe();

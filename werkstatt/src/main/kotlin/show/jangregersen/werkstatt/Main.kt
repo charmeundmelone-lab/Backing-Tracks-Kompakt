@@ -108,6 +108,7 @@ private fun api(was: String, frage: Map<String, String>, k: JSONObject): JSONObj
     return when (was) {
         "liste" -> liste()
         "wer" -> JSONObject().put("daten", File(datenOrdner).absolutePath)
+        "gigs" -> gigCheck()
         "sicherungen" -> JSONObject().put("liste", JSONArray(arbeit.muditaSicherungen().mapNotNull { f ->
             runCatching {
                 val b = show.jangregersen.buehne.daten.BestandJson.ausJson(JSONObject(f.readText()))
@@ -178,6 +179,21 @@ private fun liste(): JSONObject = JSONObject().apply {
             .put("teile", l.size).put("eingemessen", l.count { it.eingemessen }).put("vorlaeufig", s.markenVorlaeufig).put("geaendert", s.id in arbeit.geaendert)
     }))
 }
+
+/** Gig-Check: pro Gig und Set, was jedem Song noch fehlt (neueste Gigs zuerst). */
+private fun gigCheck(): JSONObject = JSONObject().put("gigs", JSONArray(arbeit.bestand.gigs.sortedByDescending { it.datum }.map { g ->
+    JSONObject().put("name", g.name).put("datum", g.datum).put("sets", JSONArray(g.sets.map { set ->
+        JSONObject().put("name", set.name).put("songs", JSONArray(set.eintraege.mapNotNull { e -> arbeit.bestand.song(e.songId) }.map { s ->
+            val ab = Abschnitte.zerlegen(s.lyrics)
+            val l = if (ab.isEmpty()) emptyList() else Ablauf.von(s.marken, ab)
+            JSONObject().put("id", s.id).put("titel", s.titel).put("dauerMs", s.dauerMs).put("hatText", ab.isNotEmpty())
+                .put("teile", l.size).put("eingemessen", l.count { it.eingemessen }).put("vorlaeufig", s.markenVorlaeufig)
+                .put("geaendert", s.id in arbeit.geaendert)
+                // Ungefähre Länge auf der Bühne: Song, Ansagen und stille Pause danach.
+                .put("buehneMs", s.dauerMs + s.ansageVorherMs + s.ansageNachherMs + s.pauseSek * 1000L)
+        }))
+    }))
+}))
 
 private fun s1Fuer(s: Song): StudioOne.S1Song? {
     val gewaehlt = arbeit.s1[s.id]

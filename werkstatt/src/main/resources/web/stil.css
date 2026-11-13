@@ -93,3 +93,17 @@ dialog li:hover { background: var(--hell); }
 .sicherungen li { display: flex; align-items: center; gap: 16px; padding: 10px 12px; border-bottom: 2px solid var(--hell); }
 .sicherungen .weit { flex: 1; }
 .sicherungen .klein { font-size: 16px; color: var(--grau); }
+
+.gig { margin: 18px 0 26px; max-width: 980px; }
+.gig h3 { margin: 0 0 6px; }
+.gig .klein { font: 500 17px "Barlow Semi", sans-serif; color: var(--grau); }
+.set { margin: 0 0 14px; }
+.setkopf { padding: 6px 0; border-bottom: var(--rand); }
+.set ol { margin: 0; padding-left: 34px; }
+.set li { padding: 6px 4px; cursor: pointer; border-bottom: 1.5px solid var(--hell); }
+.set li > span { display: inline-block; }
+.set li .weit { min-width: 300px; font: 700 21px "Barlow Condensed", sans-serif; }
+.set li .klein { width: 60px; }
+.set li .stand { font-weight: 700; }
+.set li.fertig .stand { font-weight: 500; color: var(--grau); }
+.set li:hover { background: var(--hell); }

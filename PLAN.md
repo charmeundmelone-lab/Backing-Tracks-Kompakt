@@ -1,4 +1,4 @@
-# Backing-Track-App für den Mudita Kompakt — Plan (Entwurf, 2026-11-09)
+﻿# Backing-Track-App für den Mudita Kompakt — Plan (Entwurf, 2026-11-09)
 
 Stand: GrillMe Welle 1 mit Jan, noch kein Code.
 
@@ -530,7 +530,7 @@ Lücken, die Claude am 13.11. gefunden hat (Jan hat B13–B15 gewählt, Akku-War
   Grenze: Musikdateien selbst sichert das nicht (die liegen auf dem Mudita, Originale in
   `Music\Backing Tracks\Nothingphone`). Nach Neuinstallation mit Datenverlust müssten die Dateien
   neu verknüpft werden.
-- [ ] B14 Gig-Check am Laptop: pro Gig und Set eine Liste, welche Songs noch keinen Text haben,
+- [x] B14 (13.11.: Knopf "Gig-Check", mit ungefährer Set-Länge inkl. Ansagen/Pausen; Musikdatei prüft nur der Mudita) Gig-Check am Laptop: pro Gig und Set eine Liste, welche Songs noch keinen Text haben,
   nicht eingemessen sind oder deren Musikdatei fehlt.
 - [x] B15 (13.11.) Desktop-Symbol "TrikTrak Werkstatt" (startet die `.bat` mit kleinem Fenster).
 - [x] B16 (13.11.) Doppelstart der Werkstatt: Der zweite Start öffnet nur die laufende Seite,
