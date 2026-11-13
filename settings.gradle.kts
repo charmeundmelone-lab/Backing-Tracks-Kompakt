@@ -14,3 +14,4 @@ dependencyResolutionManagement {
 }
 rootProject.name = "BackingTracksKompakt"
 include(":app")
+include(":werkstatt")

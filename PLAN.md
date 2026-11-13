@@ -423,3 +423,52 @@ Treffer: Dont look back in anger, Ein Hoch auf uns, Englishman in New York (hei�
 "ENGISHMAN", hat Marker statt Arranger-Teile), Friday Love, Grenade, Put your records drums new,
 Remember us (2×), Sunny, Talking Revolution, Thats alright Mama. Für die müsste Jan die
 Studio-One-Datei einmal von Hand zuordnen oder die Teile ohne Studio One anlegen.
+
+### Laptop-Programm "TrikTrak Werkstatt" (begonnen 13.11. vormittags, Jans Auftrag)
+
+Entscheidungen von Jan (13.11.):
+- "Alles Sinnvolle in ein Laptop-Programm, das wir später mit dem Mudita synchronisieren."
+- Text und Teile: NUR am Laptop (am Mudita ansehen und einmessen, nicht mehr umbauen).
+- Gigs, Setlisten, Songdaten, neue Songs, Ansagen: am Laptop UND weiter am Mudita.
+- Maßgeblich sind die fertigen Songs in `Music\Backing Tracks\Nothingphone`, nicht die Entwürfe.
+- Claudes Entscheidung (Jan fragte, was am sinnvollsten ist): Bau in drei Stufen.
+  Stufe 1 Text & Teile + Studio One, Stufe 2 Gigs & Setlisten, Stufe 3 neue Songs, Songdaten,
+  Ansagen.
+
+Stand Stufe 1 (baut, 11 + 6 neue Tests grün, im Browser an einer Datenkopie geprüft):
+- Modul `werkstatt/` (Kotlin/JVM, kleiner Server nur auf 127.0.0.1, Seite im Browser). Benutzt
+  DENSELBEN Code wie die App (`lyrics/*`, `daten/Modell.kt`, `Aenderungen.kt`, neu
+  `daten/BestandJson.kt`, `lyrics/Abgleich.kt`), nichts doppelt.
+- Start: Doppelklick auf `TrikTrak-Werkstatt.bat` (Fenster offen lassen). Bauen:
+  `./gradlew --no-daemon -q :werkstatt:installDist`, Tests `:werkstatt:test`. Anschluss 47811
+  (8765 ist auf Jans Laptop belegt), weicht bei Bedarf aus.
+- Arbeitsdaten AUSSERHALB des Repos: `C:\Users\HUAWEI\TrikTrak-Werkstatt\` (bestand.json,
+  zustand.json, sicherungen/). Das Repo ist öffentlich: nie Songtexte einchecken.
+- Kann: "Vom Mudita holen" (liest nur, per adb), Songliste mit Suche/Filter, pro Song Karten in
+  Ablauf-Reihenfolge mit VOLLEM Text, Ziehen/▲▼/Doppeln/Weg, anderen Text auf einen Platz legen,
+  Teil an einer Zeile teilen, an vorigen hängen, umbenennen, Text bearbeiten, Rückgängig (50
+  Schritte), Rückfrage vor Zeitverlust. Studio One: Datei wird nach Namen gefunden oder von Hand
+  gewählt, Teile mit Zeiten angezeigt, "Ablauf daraus vorschlagen", Text ein Fach weiter/zurück.
+- Studio-One-Format (an Jans Dateien geprüft): Zeiten je Angabe in Vierteln (`timeFormat="2"`)
+  ODER Sekunden (`timeFormat="0"`), beides kommt vor. ZIP mit Latin-1 öffnen (Umlaute in
+  Dateinamen). Jan exportiert genau den Bereich seiner Arranger-Teile: Bei 15 von 21 Songs endet
+  der letzte Teil auf 0,1 s genau am Ende der fertigen WAV. Weicht es über 3 s ab (z. B.
+  Wonderwall, Jolene), warnt das Programm.
+- Jans Labels sind lose ("Vers" steht bei ihm auch über Refrains). Deshalb legt der Vorschlag den
+  Internet-Text der Reihe nach in seine Teile; Namen entscheiden nur, wo sicher kein Gesang ist.
+  Probe: Bei "Two Princes" ergibt der Vorschlag exakt Jans selbst eingetippte Reihenfolge, Zeiten
+  0–2 s neben seinen Tipps. "There she goes" stimmt ebenfalls.
+
+OFFEN in Stufe 1:
+- [ ] "Zum Mudita senden": App-Seite fehlt (App liest beim Start `files/eingang.json` und führt mit
+  `Abgleich.textUndTeile` zusammen; Laptop schreibt die Datei per adb). Erst NACH dem Gig am
+  13.11. installieren. Bis dahin bleibt alles nur auf dem Laptop.
+- [ ] "Vom Mudita holen" mit angeschlossenem Gerät testen (am 13.11. war es gerade abgezogen;
+  die Fehlermeldung "Kein Mudita gefunden" ist geprüft).
+- [ ] Text aus dem Internet holen (LRCLIB) in der Werkstatt (Code `netz/Lrclib.kt` ist eingebunden,
+  Seite fehlt). Bisher: Text einfügen von Hand.
+- [ ] Jans eigene Labels für Teile ohne Gesang auf der Bühne zeigen (Intro, Solo, Outro statt
+  "Instrumental").
+- [ ] Am Mudita "Teile & Ablauf" auf Ansehen mit vollem Text zurückbauen (Jans Wunsch).
+- [ ] Jan probiert die Werkstatt aus und sagt, wo er hängen bleibt.
+- [ ] Lesbarkeit auf der Bühne (kurzsichtig): Probeseiten in drei Größen, noch nicht begonnen.

@@ -217,3 +217,56 @@ class AblaufPflegeTest {
         assertEquals(listOf(Teil(1, 0), l[1], Teil(1, 20_000)), r)
     }
 }
+
+/** Abgleich Laptop ↔ Kompakt: Text und Reihenfolge vom Laptop, getippte Zeiten vom Kompakt. */
+class AbgleichTest {
+    private val text = "[Strophe 1]\na\nb\n\n[Refrain]\nc\nd\n\n[Strophe 2]\ne\nf"
+    private val getippt = listOf(Teil(0, 1_000, listOf(1_000L, 3_000L)), Teil(1, 10_000, listOf(10_000L, 12_000L)), Teil(2, 20_000, listOf(20_000L)))
+    private fun song(lyrics: String, l: List<Teil>?, vorl: Boolean = false) =
+        show.jangregersen.buehne.daten.Song(1, "T", pfad = "p", lyrics = lyrics, marken = l?.let { Ablauf.schreiben(it) } ?: "", markenVorlaeufig = vorl)
+    private val A = show.jangregersen.buehne.lyrics.Abgleich
+
+    @Test fun weglassenBehaeltAlleAnderenZeiten() {
+        assertEquals(listOf(getippt[0], getippt[2]), A.folgeSetzen(getippt, listOf(0, 2)))
+        assertEquals(1, A.verliertZeiten(getippt, listOf(0, 2)))   // nur der weggelassene Teil selbst
+    }
+
+    @Test fun umstellenLoeschtAbDerStelle() {
+        assertEquals(listOf(getippt[0], Teil(2), Teil(1)), A.folgeSetzen(getippt, listOf(0, 2, 1)))
+        assertEquals(2, A.verliertZeiten(getippt, listOf(0, 2, 1)))
+        // Hinten anfügen kostet nichts.
+        assertEquals(getippt + Teil(1), A.folgeSetzen(getippt, listOf(0, 1, 2, 1)))
+        assertEquals(0, A.verliertZeiten(getippt, listOf(0, 1, 2, 1)))
+    }
+
+    @Test fun laptopOhneAenderungLaesstDenKompaktInRuhe() {
+        val geraet = song(text, getippt)
+        // Der Laptop hat denselben Text und dieselbe Reihenfolge, aber noch den alten Stand ohne Zeiten.
+        val r = A.textUndTeile(geraet, song(text, Ablauf.standard(3)))
+        assertEquals(geraet, r)
+    }
+
+    @Test fun neueReihenfolgeVomLaptopBehaeltZeitenBisZurAenderung() {
+        val geraet = song(text, getippt)
+        val r = A.textUndTeile(geraet, song(text, listOf(Teil(0), Teil(2), Teil(1))))
+        assertEquals(listOf(getippt[0], Teil(2), Teil(1)), Ablauf.lesen(r.marken))
+    }
+
+    @Test fun geaenderterTextVomLaptopGilt() {
+        val geraet = song(text, getippt)
+        // Am Laptop bekam der Refrain eine dritte Zeile: Strophe 1 bleibt eingemessen, ab dem Refrain neu.
+        val neuerText = text.replace("\nc\nd", "\nc\nd\nd2")
+        val r = A.textUndTeile(geraet, song(neuerText, Ablauf.standard(3)))
+        assertEquals(neuerText, r.lyrics)
+        assertEquals(listOf(getippt[0], Teil(1), Teil(2)), Ablauf.lesen(r.marken))
+    }
+
+    @Test fun zeitenAusStudioOneGeltenWoNichtsGetipptIst() {
+        // Kompakt: noch nichts eingemessen. Laptop: Ablauf aus Studio One mit Zeiten (vorläufig).
+        val geraet = song(text, null)
+        val vomLaptop = listOf(Teil(1, 5_000), Teil(0, 20_000), Teil(1, 40_000))
+        val r = A.textUndTeile(geraet, song(text, vomLaptop, vorl = true))
+        assertEquals(vomLaptop, Ablauf.lesen(r.marken))
+        assertTrue(r.markenVorlaeufig)
+    }
+}

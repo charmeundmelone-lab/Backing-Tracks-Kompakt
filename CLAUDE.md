@@ -59,6 +59,13 @@ ungefragt umbauen.** Vorgeschlagen und noch nicht entschieden: Ordnen am Laptop 
 Teile + Startzeiten aus Studio One übernehmen (geprüft, geht), Bühne "halbe Seite" mit größerer
 Schrift, vorher Probeseiten in drei Größen auf den Kompakt.
 
+**Laptop-Programm "TrikTrak Werkstatt" (seit 13.11.):** Modul `werkstatt/`, Start per
+`TrikTrak-Werkstatt.bat`, Stand und offene Punkte in `PLAN.md` (letzter Abschnitt). Es teilt den
+Code mit der App: Wer `lyrics/*`, `daten/Modell.kt`, `Aenderungen.kt` oder `BestandJson.kt` ändert,
+baut danach auch `:werkstatt:test`. Diese Dateien müssen frei von Android-Teilen bleiben.
+Arbeitsdaten liegen in `C:\Users\HUAWEI\TrikTrak-Werkstatt\` (nie ins öffentliche Repo).
+Jan will: Text und Teile nur am Laptop, alles andere an beiden Orten.
+
 **GERÄTE-REGEL:** Am Kompakt nichts installieren oder antippen, bevor Jan es im Chat freigibt.
 Jan spielt am **Fr 13.11.** den Gig "Bar Eriksson" (Set 1, 8 Songs, keiner mit Lyrics) und hat
 den Kompakt zuletzt selbst benutzt (Set lief). Vor JEDEM Tipp: `sh werkzeug/geraet.sh fokus`.

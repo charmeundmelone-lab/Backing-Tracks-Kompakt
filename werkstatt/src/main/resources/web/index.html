@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TrikTrak Werkstatt</title>
+<link rel="stylesheet" href="stil.css">
+</head>
+<body>
+<header>
+  <div>
+    <div class="etikett hell">TrikTrak</div>
+    <h1>Werkstatt</h1>
+  </div>
+  <div id="stand"></div>
+  <button id="holen" class="knopf weiss">Vom Mudita holen</button>
+</header>
+<div id="meldung" hidden></div>
+<main>
+  <aside>
+    <input id="suche" type="search" placeholder="Song suchen …" autocomplete="off">
+    <div id="filter" class="reihe"></div>
+    <ul id="songs"></ul>
+  </aside>
+  <section id="werkbank">
+    <p class="leer">Links einen Song wählen.</p>
+  </section>
+</main>
+<script src="app.js"></script>
+</body>
+</html>
