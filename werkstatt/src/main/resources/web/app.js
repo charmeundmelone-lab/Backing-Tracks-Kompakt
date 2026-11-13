@@ -265,4 +265,32 @@ async function s1Waehlen() {
   suchen();
 }
 
+// ── Sicherungen vom Mudita ───────────────────────────────────────────────────
+
+async function zeigeSicherungen() {
+  const j = await ruf("sicherungen");
+  if (!j) return;
+  Z.song = null; zeigeListe();
+  const datum = (ms) => new Date(ms).toLocaleString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+  $("#werkbank").replaceChildren(
+    el("h2", {}, "Sicherungen vom Mudita"),
+    el("p", { class: "unterzeile" }, "Jedes Mal, wenn die Werkstatt Daten vom Mudita holt, legt sie hier eine Kopie ab (nur wenn sich etwas geändert hat). " +
+      "Falls der Mudita einmal Daten verliert, spielst du hier einen Stand zurück. Songs, Texte, Zeiten, Gigs und Setlisten kommen dann wieder so, wie sie zu dem Zeitpunkt waren."),
+    j.liste.length ? el("ul", { class: "sicherungen" }, ...j.liste.map((s, i) => el("li", {},
+      el("div", { class: "weit" }, el("b", {}, datum(s.zeit)), i === 0 ? " (neueste)" : "",
+        el("div", { class: "klein" }, `${s.songs} Songs, davon ${s.mitText} mit Text · ${s.gigs} ${s.gigs === 1 ? "Gig" : "Gigs"}`)),
+      el("button", { class: "knopf", onclick: () => zurueckspielen(s, datum(s.zeit)) }, "Auf den Mudita zurückspielen"))))
+      : el("p", { class: "leer" }, "Noch keine Sicherung. Sie entsteht beim ersten „Vom Mudita holen“."));
+}
+
+async function zurueckspielen(s, wann) {
+  if (!confirm(`Den Mudita auf den Stand vom ${wann} zurücksetzen?\n\n${s.songs} Songs, ${s.gigs} Gigs.\nAlles, was du seitdem am Mudita geändert hast, ist danach weg (TrikTrak hebt den Stand davor aber auf).`)) return;
+  const j = await ruf("wiederherstellen", { datei: s.datei });
+  if (!j) return;
+  Z.liste = j; zeigeStand(); zeigeListe(); melden(j.gesendet);
+  zeigeSicherungen();
+}
+
+$("#sicherungen").addEventListener("click", zeigeSicherungen);
+
 ladeListe();

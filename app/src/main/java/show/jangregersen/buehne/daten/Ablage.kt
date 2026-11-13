@@ -55,12 +55,25 @@ class Ablage(context: Context) {
     fun eingangUebernehmen(): String? {
         val f = File(datei.parentFile, "eingang.json")
         if (!f.exists()) return null
+        val o: JSONObject
         val songs = try {
-            BestandJson.eingangAus(JSONObject(f.readText()))
+            o = JSONObject(f.readText())
+            if (o.optBoolean("ganz")) BestandJson.ausJson(o.getJSONObject("bestand")).also { require(it.songs.isNotEmpty()) }
+            BestandJson.eingangAus(o)
         } catch (e: Exception) {
             Log.e(TAG, "eingang.json nicht lesbar", e)
             runCatching { f.renameTo(File(datei.parentFile, "eingang-defekt-${System.currentTimeMillis()}.json")) }
             return "Die Daten vom Laptop waren nicht lesbar. Bitte am Laptop noch einmal senden."
+        }
+        if (o.optBoolean("ganz")) {
+            // Wiederherstellen aus einer Laptop-Sicherung: Der ganze Bestand wird ersetzt. Der Stand
+            // davor bleibt als Datei liegen, falls das ein Irrtum war.
+            val alt = _stand.value
+            val neu = BestandJson.ausJson(o.getJSONObject("bestand")).let { it.copy(naechsteId = maxOf(it.naechsteId, alt.naechsteId)) }
+            runCatching { File(datei.parentFile, "bestand-vor-wiederherstellung-${System.currentTimeMillis()}.json").writeText(alsJson(alt).toString()) }
+            speicherJob?.cancel(); _stand.value = neu; schreiben(neu)
+            f.delete()
+            return "Vom Laptop wiederhergestellt: ${neu.songs.size} Songs, ${neu.gigs.size} Gigs."
         }
         val (neu, titel) = show.jangregersen.buehne.lyrics.Abgleich.eingang(_stand.value, songs)
         if (neu != _stand.value) { speicherJob?.cancel(); _stand.value = neu; schreiben(neu) }

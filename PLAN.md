@@ -522,6 +522,20 @@ Stufen 2 und 3:
 - [ ] B12 Stufe 3: neue Songs aus `Music\Backing Tracks\Nothingphone` aufs Gerät, Songdaten
   (Titel, Tonart, Kapo, BPM), Ansagen.
 
+Lücken, die Claude am 13.11. gefunden hat (Jan hat B13–B15 gewählt, Akku-Warnung abgelehnt):
+- [x] B13 (13.11.) Sicherheitsnetz: Werkstatt holt beim Start, wenn der Mudita dranhängt; jede
+  Änderung auf dem Mudita landet als `sicherungen/mudita-*.json` (60 bleiben); Knopf
+  "Sicherungen" spielt einen Stand ganz zurück (App hebt den Stand davor als
+  `bestand-vor-wiederherstellung-*.json` auf). Am Gerät mit gleichem Stand geprüft.
+  Grenze: Musikdateien selbst sichert das nicht (die liegen auf dem Mudita, Originale in
+  `Music\Backing Tracks\Nothingphone`). Nach Neuinstallation mit Datenverlust müssten die Dateien
+  neu verknüpft werden.
+- [ ] B14 Gig-Check am Laptop: pro Gig und Set eine Liste, welche Songs noch keinen Text haben,
+  nicht eingemessen sind oder deren Musikdatei fehlt.
+- [x] B15 (13.11.) Desktop-Symbol "TrikTrak Werkstatt" (startet die `.bat` mit kleinem Fenster).
+- [x] B16 (13.11.) Doppelstart der Werkstatt: Der zweite Start öffnet nur die laufende Seite,
+  statt eine zweite Werkstatt auf dieselben Dateien loszulassen.
+
 Reste der Liste A und Kleines:
 - [ ] A2-Rest: Jan schaut, ob das E-Ink beim Einmessen ruhig bleibt (kein Flackern).
 - [ ] A3-Rest: Bühne mit Offline+ an (Hardware-Schalter, Jan schaltet), "Texte holen" ohne Netz.

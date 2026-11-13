@@ -56,13 +56,30 @@ class Arbeit(private val ordner: File) {
         }.toString(1))
     }
 
+    private fun stempel() = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss"))
+
+    private fun aufraeumen(vorsilbe: String, behalten: Int) =
+        sicherungen.listFiles { f -> f.name.startsWith(vorsilbe) }?.sortedByDescending { it.name }?.drop(behalten)?.forEach { it.delete() }
+
     private fun sichern() {
         if (!datei.exists()) return
         sicherungen.mkdirs()
-        datei.copyTo(File(sicherungen, "bestand-" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss")) + ".json"), overwrite = true)
-        // Die letzten 40 Sicherungen bleiben.
-        sicherungen.listFiles()?.sortedByDescending { it.name }?.drop(40)?.forEach { it.delete() }
+        datei.copyTo(File(sicherungen, "bestand-" + stempel() + ".json"), overwrite = true)
+        aufraeumen("bestand-", 40)
     }
+
+    /** Genaue Kopie dessen, was auf dem Mudita lag (für "Mudita wiederherstellen"). Gleicher Stand wie zuletzt: keine neue Datei. */
+    private fun muditaSichern(json: String) {
+        sicherungen.mkdirs()
+        val letzte = muditaSicherungen().firstOrNull()
+        if (letzte != null && letzte.readText() == json) return
+        File(sicherungen, "mudita-" + stempel() + ".json").writeText(json)
+        aufraeumen("mudita-", 60)
+    }
+
+    /** Kopien vom Mudita, neueste zuerst. */
+    fun muditaSicherungen(): List<File> =
+        sicherungen.listFiles { f -> f.name.startsWith("mudita-") && f.name.endsWith(".json") }?.sortedByDescending { it.name } ?: emptyList()
 
     /**
      * Frischer Stand vom Kompakt. Was hier am Laptop an Text und Teilen geändert und noch nicht
@@ -71,7 +88,8 @@ class Arbeit(private val ordner: File) {
     @Synchronized
     fun vomGeraet(json: String) {
         var neu = try { BestandJson.ausJson(JSONObject(json)) } catch (e: Exception) { throw Fehler("Die Daten vom Mudita sind nicht lesbar. Es wurde nichts geändert.") }
-        if (neu.songs.isEmpty() && bestand.songs.isNotEmpty()) throw Fehler("Der Mudita meldet gar keine Songs. Das sieht falsch aus, es wurde nichts geändert.")
+        if (neu.songs.isEmpty() && bestand.songs.isNotEmpty()) throw Fehler("Der Mudita meldet gar keine Songs. Das sieht falsch aus, es wurde nichts geändert. Falls er wirklich Daten verloren hat: oben „Sicherungen“.")
+        muditaSichern(json)
         sichern()
         geaendert.retainAll(neu.songs.map { it.id }.toSet())
         // Hat der Mudita den Laptop-Stand schon (gesendet und übernommen), gilt der Song nicht mehr als offen.

@@ -37,6 +37,8 @@ object Geraet {
 
     /** Ab dieser App-Fassung (versionCode in app/build.gradle.kts) liest TrikTrak `eingang.json`. */
     private const val EINGANG_AB = 2
+    /** Ab dieser Fassung kann TrikTrak den ganzen Bestand übernehmen (Wiederherstellen). */
+    const val GANZ_AB = 3
     private const val ZWISCHEN = "/data/local/tmp/triktrak-eingang.json"
 
     private fun appFassung(s: String): Int =
@@ -50,11 +52,11 @@ object Geraet {
      * dann umbenennen: TrikTrak sieht nie eine halbe Datei). Die App übernimmt sie, sobald sie zu
      * sehen ist und nichts spielt. Ergebnis: true = schon übernommen, false = liegt noch bereit.
      */
-    fun senden(inhalt: String): Boolean {
+    fun senden(inhalt: String, abFassung: Int = EINGANG_AB): Boolean {
         val s = seriennummer() ?: throw Fehler("Kein Mudita gefunden. Bitte per USB-Kabel anschließen und entsperren.")
         when (appFassung(s)) {
             0 -> throw Fehler("Auf dem Mudita ist TrikTrak nicht zu finden.")
-            in 1 until EINGANG_AB -> throw Fehler("Die TrikTrak-Fassung auf dem Mudita kann noch nichts vom Laptop empfangen. Erst muss die neue Fassung aufs Gerät. Es wurde nichts gesendet.")
+            in 1 until abFassung ->throw Fehler("Die TrikTrak-Fassung auf dem Mudita ist dafür zu alt. Erst muss die neue Fassung aufs Gerät. Es wurde nichts gesendet.")
         }
         val tmp = File.createTempFile("triktrak-eingang", ".json")
         try {

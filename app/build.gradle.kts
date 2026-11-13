@@ -12,7 +12,8 @@ android {
         applicationId = "show.jangregersen.buehne"
         minSdk = 26
         targetSdk = 35
-        versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 2
+        // 2 = liest eingang.json (Zum Mudita senden), 3 = auch ganzer Bestand (Wiederherstellen).
+        versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 3
         versionName = "0.1"
     }
 

@@ -64,12 +64,18 @@ Ablauf-Code.
   teilen, an vorigen hängen, umbenennen, Text bearbeiten, Rückgängig, Rückfrage vor Zeitverlust.
   Studio One: Datei nach Namen finden oder wählen, Teile mit Zeiten zeigen, "Ablauf daraus
   vorschlagen", Text ein Fach weiter/zurück schieben.
-- **Kann noch NICHT zum Mudita senden.** Was Jan in der Werkstatt ändert, bleibt auf dem Laptop.
+- Seit 13.11. nachmittags auch: "Zum Mudita senden" (legt `files/eingang.json` ab, die App führt
+  selbst zusammen, `bestand.json` fasst der Laptop nie an), holt beim Start automatisch, wenn der
+  Mudita dranhängt, legt bei jedem Holen eine genaue Kopie `sicherungen/mudita-*.json` ab (nur bei
+  Änderung), Knopf "Sicherungen" spielt eine Kopie ganz zurück (`"ganz": true`, App ab Fassung 3).
+  Zweiter Start öffnet nur die laufende Seite (`/api/wer`). Desktop-Symbol "TrikTrak Werkstatt".
 - Selbst testen ohne Jans Daten anzufassen: Kopie einer Sicherung in einen Scratch-Ordner legen,
   dann `java -Dtriktrak.daten=<Ordner mit /> -Dfile.encoding=UTF-8 -cp "werkstatt/build/install/werkstatt/lib/*" show.jangregersen.werkstatt.MainKt --ohne-browser`
   im Hintergrund starten, im eingebauten Browser `http://127.0.0.1:47811` öffnen oder per `curl`
   die `/api/…`-Aufrufe testen (POST braucht den Kopf `X-TrikTrak: 1`). Danach den Prozess beenden
-  (PID über `netstat -ano | grep 47811`, dann `taskkill //PID … //F`).
+  (PowerShell: `Get-NetTCPConnection -State Listen | ? LocalPort -in 47811..47820 | % { Stop-Process -Id $_.OwningProcess -Force }`;
+  `netstat | grep LISTEN` findet hier nichts, Windows ist deutsch: "ABHÖREN"). Achtung: Hängt der
+  Mudita dran, holt die Werkstatt beim Start (nur lesen) und legt in ihrem Ordner Sicherungen an.
 
 **Studio One (an Jans Dateien geprüft, wichtig für alles Weitere):**
 - Songs: `C:\Users\HUAWEI\Documents\Studio One\Songs*\<Ordner>\<Name>.song`, ZIP, darin
@@ -90,8 +96,10 @@ Ablauf-Code.
 - **GERÄTE-REGEL:** Nichts installieren oder antippen, bevor Jan es im Chat freigibt. Vor JEDEM
   Tipp `sh werkzeug/geraet.sh fokus`. Läuft TrikTrak mit einem Song: Finger weg. Jan spielte am
   Abend des 13.11. den Gig "Bar Eriksson"; danach fragen, wie es lief (Lautstärke, Pausen).
-- Installiert: Bau vom 13.11. ca. 09:30 (Commit `c06ad51`, App-Code seitdem nur umsortiert:
-  `BestandJson.kt` ausgelagert, `Abgleich.kt` neu, beides noch nicht auf dem Gerät).
+- Installiert: App-Fassung 3 (versionCode, 13.11. ca. 15 Uhr, mit Jans OK vor dem Gig): kann
+  `eingang.json` (Senden und Wiederherstellen). Am Gerät beides geprüft, Daten danach unverändert.
+  Rückweg zur Gig-Fassung vom Vormittag: `.geraet/vor-b2-2026-11-13.apk`, Daten von 14:50:
+  `.geraet/bestand-2026-11-13-e.json`.
 - Rückweg: `.geraet/alt-2026-11-13.apk` (Bau vom 12.11.), `.geraet/bestand-2026-11-13.json` (vor
   allen Tests), `.geraet/bestand-2026-11-13-d.json` (09:27, nach Jans eigenem Einmessen).
 - Daten laut letzter Sicherung: 46 Songs, Gig "Bar Eriksson" (Set 1, 8 Songs), Test-Gig

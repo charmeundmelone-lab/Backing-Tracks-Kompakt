@@ -57,6 +57,11 @@ fun main(args: Array<String>) {
     server.createContext("/") { x -> bedienen(x) }
     server.start()
     println("TrikTrak Werkstatt läuft: http://127.0.0.1:$port  (Fenster offen lassen, Strg+C beendet)")
+    // Hängt der Mudita schon am Kabel: gleich frisch holen. Das legt nebenbei eine Sicherung an.
+    if (Geraet.seriennummer() != null) {
+        println("Hole die Daten vom Mudita …")
+        runCatching { arbeit.vomGeraet(Geraet.bestandLesen()) }.onFailure { println("Holen ging nicht: ${(it as? Fehler)?.meldung ?: it.message}") }
+    }
     if ("--ohne-browser" !in args) browser(port)
 }
 
@@ -103,6 +108,21 @@ private fun api(was: String, frage: Map<String, String>, k: JSONObject): JSONObj
     return when (was) {
         "liste" -> liste()
         "wer" -> JSONObject().put("daten", File(datenOrdner).absolutePath)
+        "sicherungen" -> JSONObject().put("liste", JSONArray(arbeit.muditaSicherungen().mapNotNull { f ->
+            runCatching {
+                val b = show.jangregersen.buehne.daten.BestandJson.ausJson(JSONObject(f.readText()))
+                JSONObject().put("datei", f.name).put("zeit", f.lastModified()).put("songs", b.songs.size).put("gigs", b.gigs.size)
+                    .put("mitText", b.songs.count { it.lyrics.isNotBlank() })
+            }.getOrNull()
+        }))
+        "wiederherstellen" -> {
+            val f = arbeit.muditaSicherungen().firstOrNull { it.name == k.optString("datei") } ?: throw Fehler("Diese Sicherung gibt es nicht.")
+            val inhalt = JSONObject().put("eingang", 1).put("ganz", true).put("bestand", JSONObject(f.readText()))
+            val angekommen = Geraet.senden(inhalt.toString(), Geraet.GANZ_AB)
+            if (angekommen) arbeit.vomGeraet(Geraet.bestandLesen())
+            liste().put("gesendet", if (angekommen) "Der Mudita ist wiederhergestellt. Falls Musikdateien nicht mehr gefunden werden, zeigt TrikTrak das beim Song an."
+                else "Gesendet. Die Sicherung liegt auf dem Mudita bereit und wird übernommen, sobald du TrikTrak öffnest (nicht während ein Song läuft). Danach hier einmal „Vom Mudita holen“.")
+        }
         "holen" -> { arbeit.vomGeraet(Geraet.bestandLesen()); liste() }
         "senden" -> {
             if (arbeit.geaendert.isEmpty()) throw Fehler("Es gibt nichts zu senden: Am Laptop ist nichts geändert, was der Mudita nicht schon hat.")

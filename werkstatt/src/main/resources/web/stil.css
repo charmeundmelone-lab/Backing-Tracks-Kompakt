@@ -88,3 +88,8 @@ dialog::backdrop { background: rgba(0, 0, 0, .45); }
 dialog ul { list-style: none; padding: 0; margin: 10px 0; max-height: 50vh; overflow-y: auto; }
 dialog li { padding: 6px 8px; border-radius: 8px; cursor: pointer; }
 dialog li:hover { background: var(--hell); }
+
+.sicherungen { list-style: none; margin: 0; padding: 0; max-width: 900px; }
+.sicherungen li { display: flex; align-items: center; gap: 16px; padding: 10px 12px; border-bottom: 2px solid var(--hell); }
+.sicherungen .weit { flex: 1; }
+.sicherungen .klein { font-size: 16px; color: var(--grau); }
