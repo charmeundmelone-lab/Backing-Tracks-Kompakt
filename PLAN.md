@@ -343,7 +343,7 @@ Arbeitsliste ab hier (für die nächste Session):
 - [ ] A2 (Lesbarkeit erledigt, Ergebnis unten; OFFEN: E-Ink-Ruhe muss Jan mit eigenen Augen sehen) Darstellung am Gerät prüfen: Einmessen-Kontext lesbar (21 sp), nichts abgeschnitten,
   langer Teilname auf dem großen Knopf, E-Ink ruhig (Einmessen zeichnet alle 200 ms neu → falls
   Flackern: Position nur bei Zeilenwechsel neu zeichnen, wie auf der Bühne mit derivedStateOf).
-- [ ] A3 L8-Rest: Bühne mit Offline+ an (Jan schaltet; Schalter ist Hardware), Texte holen
+- [ ] A3 (Code geprüft: Meldung "Kein Internet. Ist WLAN an und der Offline+-Schalter aus?" ist da, `netz/Lrclib.kt`; OFFEN: am Gerät mit Offline+) L8-Rest: Bühne mit Offline+ an (Jan schaltet; Schalter ist Hardware), Texte holen
   ohne Netz → verständliche Meldung.
 - [ ] A4 (Technik-Durchlauf erledigt, Ergebnis unten; OFFEN: Jans Test mit Gitarre am Mikroständer) L9 Gesamttest aus Jans Sicht (Gitarre um, Kompakt am Mikroständer 60–80 cm, kurze
   Blicke, Tipps zwischen zwei Akkorden): Set mit Test-Gig "Testlauf" (liegt schon an: Set 1 mit
@@ -351,7 +351,7 @@ Arbeitsliste ab hier (für die nächste Session):
   Bühne ↔ Setliste während der Wiedergabe. Danach Test-Gig mit Jans OK löschen.
 - [x] A5 (13.11., vorgezogen, braucht kein Gerät; entfernt) Aufräumen: `Abschnitte.markenLesen/markenSchreiben/markenNachZusammenlegen` und
   `Seitenlauf` sind Altlast (nur noch LogikTest) – entfernen oder auf Ablauf umstellen.
-- [ ] A6 Offene Idee (nicht umgesetzt, Jan fragen): In TrikTrak blättern die Lautstärketasten,
+- [ ] A6 (13.11. gefragt: Setliste / auch Bühne / nicht nötig; Antwort steht noch aus) Offene Idee (nicht umgesetzt, Jan fragen): In TrikTrak blättern die Lautstärketasten,
   Jan kann dort die Medienlautstärke nicht ändern → evtl. Lautstärke-Anzeige/-Regler in der App.
 - [ ] A7 Übergabe in CLAUDE.md + PLAN.md nachziehen.
 
