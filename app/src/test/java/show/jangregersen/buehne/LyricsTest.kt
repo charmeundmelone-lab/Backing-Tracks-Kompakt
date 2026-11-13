@@ -199,4 +199,22 @@ class LrclibTest {
         assertEquals("Karaoke Stars", o.last().interpret)
         assertEquals(1, o.count { it.interpret == "Gnarls Barkley" && it.titel == "Crazy" }) // doppelte zusammengefasst
     }
+
+    @Test fun seitenWerdenGleichmaessigGeteilt() {
+        val bis3 = { t: List<String> -> t.size <= 3 }
+        // Passt alles: eine Seite.
+        assertEquals(listOf(listOf("a", "b")), show.jangregersen.buehne.lyrics.seitenTeilen(listOf("a", "b"), bis3))
+        // 4 Zeilen, 3 passen: 2 + 2 statt 3 + 1.
+        assertEquals(listOf(listOf("a", "b"), listOf("c", "d")), show.jangregersen.buehne.lyrics.seitenTeilen(listOf("a", "b", "c", "d"), bis3))
+        // 7 Zeilen: 3 + 2 + 2.
+        assertEquals(listOf(3, 2, 2), show.jangregersen.buehne.lyrics.seitenTeilen(listOf("a", "b", "c", "d", "e", "f", "g"), bis3).map { it.size })
+        // Leerzeilen an der Schnittstelle fallen weg, mittendrin bleiben sie.
+        val mitLeer = show.jangregersen.buehne.lyrics.seitenTeilen(listOf("a", "", "b", "c", "", "d"), { t -> t.count { it.isNotBlank() } <= 2 })
+        assertEquals(listOf(listOf("a", "", "b"), listOf("c", "", "d")), mitLeer)
+        // Eine lange Zeile (zählt hier als 3) kann das gleichmäßige Teilen verhindern: Sie steht dann allein.
+        val gewicht = { t: List<String> -> t.sumOf { if (it == "LANG") 3L else 1L } <= 3L }
+        val lang = show.jangregersen.buehne.lyrics.seitenTeilen(listOf("a", "b", "LANG", "c"), gewicht)
+        assertTrue(lang.all(gewicht))
+        assertEquals(listOf("a", "b", "LANG", "c"), lang.flatten())
+    }
 }

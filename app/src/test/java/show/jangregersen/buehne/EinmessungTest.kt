@@ -153,6 +153,11 @@ class EinmessungTest {
         assertEquals(2, Zeitplan.seiteFuer(seiten, l, s, 13_999))
         assertEquals(3, Zeitplan.seiteFuer(seiten, l, s, 14_000))
         assertEquals(3, Zeitplan.seiteFuer(seiten, l, s, 29_000))
+        // Großer Vorlauf (1,5 s) nur beim Teilwechsel, mitten im Teil der kleine (0,3 s).
+        assertEquals(1, Zeitplan.seiteFuer(seiten, l, s, 4_500 + 1_500, 4_500 + 300))
+        assertEquals(2, Zeitplan.seiteFuer(seiten, l, s, 8_500 + 1_500, 8_500 + 300))
+        assertEquals(2, Zeitplan.seiteFuer(seiten, l, s, 12_600 + 1_500, 12_600 + 300))
+        assertEquals(3, Zeitplan.seiteFuer(seiten, l, s, 13_700 + 1_500, 13_700 + 300))
     }
 }
 

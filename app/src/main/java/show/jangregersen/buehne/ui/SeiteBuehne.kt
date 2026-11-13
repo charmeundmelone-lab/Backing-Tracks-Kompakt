@@ -221,7 +221,7 @@ private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boo
 // ── Lyrics: abschnittsweise Seiten ───────────────────────────────────────────
 
 /** Breite der Spalte links neben dem Text: Strich (Refrain/Bridge) und Zeilen-Keil. */
-private val RINNE = 26.dp
+private val RINNE = 30.dp
 
 /**
  * Eine Seite = ein Abschnitt (zu lange werden geteilt). Mit Einmess-Punkten blättert die Seite
@@ -241,8 +241,7 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
         val ablauf = remember(song.marken, abschnitte) { Ablauf.von(song.marken, abschnitte) }
         val seiten = remember(abschnitte, ablauf, textBreitePx, hoehePx) {
             seitenBauen(ablauf.map { t -> Abschnitt(Ablauf.name(abschnitte, t), if (t.abschnitt == Ablauf.INSTRUMENTAL) emptyList() else abschnitte[t.abschnitt].zeilen) }, textBreitePx, hoehePx,
-                messen = { zeilen, sp -> messer.measure(zeilen.joinToString("\n") { it.ifBlank { " " } }, lyricsStil(sp, true), constraints = Constraints(maxWidth = textBreitePx)).size.height },
-                breiteVon = { zeile, sp -> messer.measure(zeile, lyricsStil(sp, true)).size.width })
+                messen = { zeilen, sp -> messer.measure(zeilen.joinToString("\n") { it.ifBlank { " " } }, lyricsStil(sp, true), constraints = Constraints(maxWidth = textBreitePx)).size.height })
         }
         if (seiten.isEmpty()) return@BoxWithConstraints
         val mitZeiten = Ablauf.hatZeiten(ablauf)
@@ -253,7 +252,7 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
         // collectAsState: nur so merkt derivedStateOf, dass sich die Position ändert.
         val position = App.buehne.position.collectAsState()
         // Nur neu zeichnen, wenn Seite oder Zeile wechseln (nicht bei jedem 200-ms-Takt).
-        val auto by remember(seiten, starts) { derivedStateOf { Zeitplan.seiteFuer(seiten, ablauf, starts, position.value + Zeitplan.SEITE_VORLAUF_MS) } }
+        val auto by remember(seiten, starts) { derivedStateOf { Zeitplan.seiteFuer(seiten, ablauf, starts, position.value + Zeitplan.SEITE_VORLAUF_MS, position.value + Zeitplan.ZEILE_VORLAUF_MS) } }
         val zeile by remember(starts) { derivedStateOf { Zeitplan.aktiveZeile(ablauf, starts, position.value + Zeitplan.ZEILE_VORLAUF_MS) } }
         var hand by remember(song.id) { mutableStateOf<Pair<Int, Int>?>(null) } // (Hand-Seite, Auto-Seite beim Blättern)
         val vonHand = hand?.let { (h, a) -> if (a == auto && h != auto) h else null }
@@ -313,7 +312,7 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
                                         drawRoundRect(Schwarz, topLeft = androidx.compose.ui.geometry.Offset(-2.dp.toPx(), 0f), size = androidx.compose.ui.geometry.Size(size.width + 10.dp.toPx(), size.height),
                                             cornerRadius = androidx.compose.ui.geometry.CornerRadius(r, r), style = Stroke(width = 2.5.dp.toPx()))
                                     } else Modifier) {
-                                        Box(Modifier.width(RINNE - 6.dp).padding(end = 4.dp).height(with(dichte) { (seite.schriftSp * 1.26f).sp.toDp() }), contentAlignment = Alignment.Center) {
+                                        Box(Modifier.width(RINNE - 6.dp).padding(end = 4.dp).height(with(dichte) { (seite.schriftSp * ZEILEN_FAKTOR).sp.toDp() }), contentAlignment = Alignment.Center) {
                                             if (i == keil.first) Keil(keil.second)
                                         }
                                         T(zl, lyricsStil(seite.schriftSp, art == Abschnitte.Art.REFRAIN))
@@ -329,12 +328,12 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
                     val letzte = ohneGesang || (keil.second && keil.first == seite.textZeilen - 1)
                     val vorschau = naechste?.zeilen?.firstOrNull { it.isNotBlank() }
                     val platz = hoehePx - seite.hoehePx
-                    if (letzte && naechste != null && vorschau != null && platz > with(dichte) { 52.dp.roundToPx() }) {
+                    if (letzte && naechste != null && vorschau != null && platz > with(dichte) { 58.dp.roundToPx() }) {
                         Row(Modifier.fillMaxWidth().padding(start = 6.dp, bottom = 4.dp).border(2.dp, Schwarz, RoundedCornerShape(10.dp)).padding(horizontal = 10.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             T(if (naechste.abschnitt == seite.abschnitt) "weiter" else naechste.name.uppercase(), etikettStil(), zeilen = 1)
                             // Auf der Instrumental-Seite ist Platz: die nächste Zeile darf dort zweizeilig stehen.
-                            T(vorschau, textStil(19.sp, gewicht = FontWeight.SemiBold), Modifier.weight(1f), zeilen = if (ohneGesang) 2 else 1)
+                            T(vorschau, textStil(24.sp, gewicht = FontWeight.SemiBold), Modifier.weight(1f), zeilen = if (ohneGesang) 2 else 1)
                         }
                     }
                 }
@@ -349,7 +348,7 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
 
 @Composable
 private fun Keil(voll: Boolean) {
-    Canvas(Modifier.size(width = 15.dp, height = 21.dp)) {
+    Canvas(Modifier.size(width = 19.dp, height = 27.dp)) {
         val p = Path().apply { moveTo(0f, 0f); lineTo(size.width, size.height / 2); lineTo(0f, size.height); close() }
         if (voll) drawPath(p, Schwarz) else drawPath(p, Schwarz, style = Stroke(width = 2.5.dp.toPx()))
     }
@@ -364,39 +363,26 @@ private fun Modifier.strichelLinie(): Modifier = this.drawBehind {
     }
 }
 
-private fun lyricsStil(sp: Float, fett: Boolean = false) = TextStyle(fontFamily = Halbschmal, fontWeight = if (fett) FontWeight.Bold else FontWeight.SemiBold, fontSize = sp.sp, lineHeight = (sp * 1.26f).sp, color = Schwarz, textIndent = androidx.compose.ui.text.style.TextIndent(restLine = (sp * 0.8f).sp))
+private fun lyricsStil(sp: Float, fett: Boolean = false) = TextStyle(fontFamily = Halbschmal, fontWeight = if (fett) FontWeight.Bold else FontWeight.SemiBold, fontSize = sp.sp, lineHeight = (sp * ZEILEN_FAKTOR).sp, color = Schwarz, textIndent = androidx.compose.ui.text.style.TextIndent(restLine = (sp * 0.8f).sp))
+
+/** Schrift der Bühne. Jan hat am 13.11. am Mikroständer Probeseite B gewählt (40, vorher 24–31). */
+private const val BUEHNE_SP = 40f
+/** Zeilenabstand der Lyrics (mal Schriftgröße). */
+private const val ZEILEN_FAKTOR = 1.2f
 
 /**
- * Baut die Bildschirmseiten: eine Schriftgröße für den ganzen Song. Gesucht wird die größte
- * (31 bis 24), bei der keine Zeile umbricht und jeder Abschnitt auf eine Seite passt. Lange
- * Zeilen dürfen erst bei 24 umbrechen. Was dann noch nicht passt, wird geteilt, bevorzugt an
- * Leerzeilen.
+ * Baut die Bildschirmseiten: eine Schriftgröße für alle Songs (40, damit nichts springt). Lange
+ * Zeilen brechen um (Rest eingerückt). Ein Abschnitt, der nicht auf eine Seite passt, wird auf
+ * so wenige Seiten wie nötig verteilt, möglichst gleich voll. Nur wenn eine einzelne Zeile nicht
+ * einmal allein auf die Seite passt, wird die Schrift kleiner.
  */
-private fun seitenBauen(abschnitte: List<Abschnitt>, breite: Int, hoehe: Int, messen: (List<String>, Float) -> Int, breiteVon: (String, Float) -> Int): List<LyricsSeite> {
+private fun seitenBauen(abschnitte: List<Abschnitt>, breite: Int, hoehe: Int, messen: (List<String>, Float) -> Int): List<LyricsSeite> {
     if (abschnitte.isEmpty()) return emptyList()
-    val groessen = listOf(31f, 30f, 29f, 28f, 27f, 26f, 25f, 24f)
-    val breitesteBei31 = abschnitte.flatMap { it.zeilen }.filter { it.isNotBlank() }.maxOfOrNull { breiteVon(it, 31f) } ?: 0
-    fun ohneUmbruch(sp: Float) = breitesteBei31 * sp / 31f <= breite
-    fun passtHoch(sp: Float) = abschnitte.all { it.zeilen.isEmpty() || messen(it.zeilen, sp) <= hoehe }
-    val schrift = groessen.firstOrNull { sp -> (ohneUmbruch(sp) || sp == 24f) && passtHoch(sp) } ?: 24f
+    val alle = abschnitte.flatMap { it.zeilen }.filter { it.isNotBlank() }
+    val schrift = listOf(BUEHNE_SP, 36f, 32f, 28f).firstOrNull { sp -> alle.all { messen(listOf(it), sp) <= hoehe } } ?: 24f
     val seiten = mutableListOf<LyricsSeite>()
     abschnitte.forEachIndexed { ai, a ->
-        val teile = mutableListOf<List<String>>()
-        if (a.zeilen.isEmpty() || messen(a.zeilen, schrift) <= hoehe) teile.add(a.zeilen)
-        else {
-            var aktuell = mutableListOf<String>()
-            for (z in a.zeilen) {
-                val probe = aktuell + z
-                if (aktuell.isNotEmpty() && messen(probe, schrift) > hoehe) {
-                    val leer = aktuell.indexOfLast { it.isBlank() }
-                    if (leer > 0 && leer >= aktuell.size - 4) {
-                        teile.add(aktuell.subList(0, leer).toList()); aktuell = aktuell.subList(leer + 1, aktuell.size).toMutableList()
-                    } else { teile.add(aktuell); aktuell = mutableListOf() }
-                }
-                if (!(aktuell.isEmpty() && z.isBlank())) aktuell.add(z)
-            }
-            if (aktuell.isNotEmpty()) teile.add(aktuell)
-        }
+        val teile = show.jangregersen.buehne.lyrics.seitenTeilen(a.zeilen) { messen(it, schrift) <= hoehe }
         var vorher = 0
         teile.forEachIndexed { ti, t ->
             val zeilen = if (t.isEmpty()) listOf("— instrumental —") else t

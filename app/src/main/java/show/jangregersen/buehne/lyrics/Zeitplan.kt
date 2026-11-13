@@ -217,12 +217,16 @@ object Zeitplan {
     /**
      * Bühnenseite zur Position. [seiten] sind in Ablauf-Reihenfolge gebaut (`abschnitt` = Index
      * des Teils im Ablauf). Innerhalb eines Teils: die Seite mit der laufenden Zeile.
+     * [zeilePosMs]: Position für den Wechsel mitten im Teil. Dort läuft der Gesang durch, also
+     * erst blättern, wenn die nächste Zeile dran ist (kleiner Vorlauf), nicht schon mit dem großen
+     * Vorlauf für den Teilwechsel ([posMs]).
      */
-    fun seiteFuer(seiten: List<LyricsSeite>, ablauf: List<Teil>, starts: List<List<Long>?>, posMs: Long): Int {
+    fun seiteFuer(seiten: List<LyricsSeite>, ablauf: List<Teil>, starts: List<List<Long>?>, posMs: Long, zeilePosMs: Long = posMs): Int {
         val k = aktiverTeil(ablauf, posMs) ?: return 0
         val kandidaten = seiten.withIndex().filter { it.value.abschnitt == k }
         if (kandidaten.isEmpty()) return seiten.indexOfLast { it.abschnitt <= k }.coerceAtLeast(0)
-        val zeile = starts.getOrNull(k)?.indexOfLast { it <= posMs }?.coerceAtLeast(0) ?: 0
+        val bis = minOf(posMs, zeilePosMs)
+        val zeile = starts.getOrNull(k)?.indexOfLast { it <= bis }?.coerceAtLeast(0) ?: 0
         return kandidaten.lastOrNull { it.value.ersteZeile <= zeile }?.index ?: kandidaten.first().index
     }
 
