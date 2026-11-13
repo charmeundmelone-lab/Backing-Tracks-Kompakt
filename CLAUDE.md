@@ -50,19 +50,22 @@ Testdaten direkt ändern: `adb exec-out run-as show.jangregersen.buehne cat file
 **Stand:** `main`, committet und gepusht. Der Code baut, alle Unit-Tests sind grün
 (`./gradlew --no-daemon -q :app:testDebugUnitTest`). Aufgaben: `PLAN.md`, Abschnitt
 "Umbau 13.11. nachts" → Arbeitsliste **A1–A7**. Dort stehen auch Jans Wünsche dazu.
-Nachtrag 13.11. vormittags: Code ohne Gerät geprüft und korrigiert (Liste in `PLAN.md` unter
-"Prüfung 13.11. vormittags"), A5 erledigt. Offen: A1–A4 (Gerät, nur mit Jans OK), A6 (Jan
-fragen), A7.
+Nachtrag 13.11. früh: Code geprüft und korrigiert, am Kompakt getestet (Listen in `PLAN.md`
+unter "Prüfung 13.11. vormittags" und "Gerätetest 13.11. früh"). Erledigt: A1, A5. Offen:
+A2 (nur noch: Jan schaut, ob das E-Ink beim Einmessen ruhig bleibt), A3 (Offline+, Jan
+schaltet), A4 (Jans Test mit Gitarre), A6 (Jan fragen), A7, und Jans Bestätigung, dass das
+Einmessen für ihn passt.
 
 **GERÄTE-REGEL:** Am Kompakt nichts installieren oder antippen, bevor Jan es im Chat freigibt.
 Jan spielt am **Fr 13.11.** den Gig "Bar Eriksson" (Set 1, 8 Songs, keiner mit Lyrics) und hat
 den Kompakt zuletzt selbst benutzt (Set lief). Vor JEDEM Tipp: `sh werkzeug/geraet.sh fokus`.
 Läuft TrikTrak mit einem Song, sofort Finger weg.
 
-**Was installiert ist:** Bau vom 12.11. ca. 23:50 (Setliste zweizeilig, Danach-Zeile, Texte holen,
-altes Einmessen). Der Umbau "eigener Ablauf + Zeilen-Tipps" (PLAN.md) ist NICHT installiert.
-Testdaten auf dem Gerät: Gig "Testlauf" (Set 1 mit "Test Eins", nur mit Jans OK löschen),
-"Two Princes" hat Text + Einmess-Punkte (aus dem Original umgerechnet, nicht von Jan getippt).
+**Was installiert ist:** Bau vom 13.11. ca. 07:00 (Stand `main`): eigener Ablauf, Einmessen Zeile
+für Zeile, Rückfragen vor Zeitverlust, Rahmen um die laufende Zeile. Rückweg, falls nötig:
+`.geraet/alt-2026-11-13.apk` (Bau vom 12.11.) und `.geraet/bestand-2026-11-13.json`.
+Testdaten auf dem Gerät: Gig "Testlauf" (nur mit Jans OK löschen), "Two Princes" hat Text,
+11 Teile, 4 davon von Claude per adb eingemessen (Zufallszeiten, Jan misst selbst neu ein).
 Medienlautstärke: Jan nutzt 5/15. Für Tests leise stellen und **danach sofort zurück auf 5**
 (in TrikTrak blättern die Lautstärketasten, Jan kann dort nicht selbst lauter drehen).
 

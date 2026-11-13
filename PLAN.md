@@ -336,16 +336,16 @@ Prüfung 13.11. vormittags (ohne Gerät; baut, 49 Unit-Tests grün, am Gerät NO
 - Einmessen: Die Laufzeit im Kopf zeichnet allein neu (Vorgriff auf A2, E-Ink-Ruhe).
 
 Arbeitsliste ab hier (für die nächste Session):
-- [ ] A1 Neuen Bau am Kompakt testen (nur nach Jans OK; Gig "Bar Eriksson" am Fr 13.11.!):
+- [x] A1 (13.11. früh am Gerät, Ergebnis unten) Neuen Bau am Kompakt testen (nur nach Jans OK; Gig "Bar Eriksson" am Fr 13.11.!):
   Two Princes: Teile & Ablauf (verschieben, doppeln, Instrumental, Etikett, verbinden),
   Einmessen Zeile für Zeile mit Anderer Teil/Auslassen/Tipp weg/−10 s, danach "Auf der Bühne
   prüfen": Keil exakt, Wiederholung und Instrumental-Seite richtig, "dann …" stimmt.
-- [ ] A2 Darstellung am Gerät prüfen: Einmessen-Kontext lesbar (21 sp), nichts abgeschnitten,
+- [ ] A2 (Lesbarkeit erledigt, Ergebnis unten; OFFEN: E-Ink-Ruhe muss Jan mit eigenen Augen sehen) Darstellung am Gerät prüfen: Einmessen-Kontext lesbar (21 sp), nichts abgeschnitten,
   langer Teilname auf dem großen Knopf, E-Ink ruhig (Einmessen zeichnet alle 200 ms neu → falls
   Flackern: Position nur bei Zeilenwechsel neu zeichnen, wie auf der Bühne mit derivedStateOf).
 - [ ] A3 L8-Rest: Bühne mit Offline+ an (Jan schaltet; Schalter ist Hardware), Texte holen
   ohne Netz → verständliche Meldung.
-- [ ] A4 L9 Gesamttest aus Jans Sicht (Gitarre um, Kompakt am Mikroständer 60–80 cm, kurze
+- [ ] A4 (Technik-Durchlauf erledigt, Ergebnis unten; OFFEN: Jans Test mit Gitarre am Mikroständer) L9 Gesamttest aus Jans Sicht (Gitarre um, Kompakt am Mikroständer 60–80 cm, kurze
   Blicke, Tipps zwischen zwei Akkorden): Set mit Test-Gig "Testlauf" (liegt schon an: Set 1 mit
   Test Eins; Test Zwei hat Ansagen, Two Princes hat Text), Show-Automatik, Pause, Ansage,
   Bühne ↔ Setliste während der Wiedergabe. Danach Test-Gig mit Jans OK löschen.
@@ -354,3 +354,25 @@ Arbeitsliste ab hier (für die nächste Session):
 - [ ] A6 Offene Idee (nicht umgesetzt, Jan fragen): In TrikTrak blättern die Lautstärketasten,
   Jan kann dort die Medienlautstärke nicht ändern → evtl. Lautstärke-Anzeige/-Regler in der App.
 - [ ] A7 Übergabe in CLAUDE.md + PLAN.md nachziehen.
+
+Gerätetest 13.11. früh (Bau von ca. 07:00 installiert, Jan hatte freigegeben):
+- A1 an Two Princes: Verschieben fragt vor Zeitverlust (Abbrechen und Ja geprüft), Doppeln,
+  + Instrumental, Etikett (Instrumental gesperrt), Weg (fragt bei eingemessenem Teil).
+  Einmessen: Zeilen tippen, Letzter Tipp weg, 10 s zurück, Anderer Teil (nimmt den nächsten
+  Teil, ohne ihn zu doppeln), Teil auslassen, Neu einmessen fragt, Weiter einmessen löscht
+  nichts. Bühne: Keil + Rahmen auf der getippten Zeile, Seite blättert nach dem eigenen Ablauf,
+  "dann …" stimmt, Instrumental-Seite mit Vorschau. Nur per Unit-Test geprüft, nicht am Gerät:
+  "Mit vorigem verbinden" (ändert den Text) und der Doppeltipp-Schutz (adb tippt zu langsam).
+- A2, am Gerät gefunden und behoben: Liste in Teile & Ablauf sprang beim Antippen (gewählter
+  Teil rutschte nach oben, dadurch falscher Teil getroffen) → `Zeige.nurWennVerdeckt`; jetzt
+  5 Teile pro Seite. Einmessen: vier Knöpfe waren abgeschnitten → zwei Reihen ("Anderer Teil",
+  "Teil auslassen", "Letzter Tipp weg", "10 s zurück"); Kontext zeigt nur ganze Zeilen.
+  Bühne: Rahmen um die laufende Zeile (Keil allein war aus 60–80 cm zu klein).
+- A4 Technik: Test-Set gespielt, Bühne ↔ Liste während der Wiedergabe, Set-Ende, Song mit
+  Ansagen + "hält an" → nächster Song bereit. Pause-Ansicht heute nicht noch einmal gespielt;
+  ihr Code (spiel/Buehne.kt, AnsageAnsicht) ist gegenüber dem Bau vom 12.11. unverändert.
+- Stand der Testdaten: Two Princes hat jetzt 11 Teile (Teil 5 = Instrumental), 4 eingemessen
+  (von Claude per adb getippt, also Zufallszeiten: Jan misst neu ein). Section 5 heißt jetzt
+  "Strophe 3" (vorher zweites "Strophe 1", durch Umbenennen neu gezählt). Test-Gig "Testlauf":
+  Set 1 enthält andere Testsongs als vorher, alles gespielt. Sicherungen in `.geraet/`:
+  `bestand-2026-11-13.json` (vor allen Tests), `alt-2026-11-13.apk` (Bau vom 12.11.).

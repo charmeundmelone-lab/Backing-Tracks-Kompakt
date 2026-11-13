@@ -333,7 +333,8 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
                         Row(Modifier.fillMaxWidth().padding(start = 6.dp, bottom = 4.dp).border(2.dp, Schwarz, RoundedCornerShape(10.dp)).padding(horizontal = 10.dp, vertical = 6.dp),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             T(if (naechste.abschnitt == seite.abschnitt) "weiter" else naechste.name.uppercase(), etikettStil(), zeilen = 1)
-                            T(vorschau, textStil(19.sp, gewicht = FontWeight.SemiBold), zeilen = 1)
+                            // Auf der Instrumental-Seite ist Platz: die nächste Zeile darf dort zweizeilig stehen.
+                            T(vorschau, textStil(19.sp, gewicht = FontWeight.SemiBold), Modifier.weight(1f), zeilen = if (ohneGesang) 2 else 1)
                         }
                     }
                 }
