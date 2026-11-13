@@ -102,9 +102,10 @@ object Abschnitte {
 }
 
 /**
- * Teilt die Zeilen eines Abschnitts auf so wenige Seiten wie nötig, möglichst gleich voll
- * (4 Zeilen lieber 2 + 2 als 3 + 1). [passt] sagt, ob Zeilen auf eine Seite passen. Leerzeilen
- * an den Schnittstellen fallen weg. Passt eine einzelne Zeile nicht, steht sie allein.
+ * Teilt die Zeilen eines Abschnitts auf Seiten: jede Seite so voll wie möglich, dann die
+ * nächste (Jan, 13.11.: "da ist noch mehr Platz nach unten", gleichmäßiges Verteilen ließ
+ * Lücken). [passt] sagt, ob Zeilen auf eine Seite passen. Leerzeilen an den Schnittstellen
+ * fallen weg. Passt eine einzelne Zeile nicht, steht sie allein.
  */
 fun seitenTeilen(zeilen: List<String>, passt: (List<String>) -> Boolean): List<List<String>> {
     if (zeilen.isEmpty() || passt(zeilen)) return listOf(zeilen)
@@ -116,18 +117,6 @@ fun seitenTeilen(zeilen: List<String>, passt: (List<String>) -> Boolean): List<L
         aktuell.add(z)
     }
     putzen(aktuell).takeIf { it.isNotEmpty() }?.let { gierig.add(it) }
-    val text = zeilen.count { it.isNotBlank() }
-    for (n in gierig.size..text) {
-        val grenzen = List(n) { i -> text / n + if (i < text % n) 1 else 0 }.runningReduce(Int::plus)
-        val stuecke = List(n) { mutableListOf<String>() }
-        var nr = 0; var p = 0
-        for (z in zeilen) {
-            if (z.isNotBlank()) { while (nr >= grenzen[p]) p++; nr++ }
-            stuecke[p].add(z)
-        }
-        val fertig = stuecke.map { putzen(it) }
-        if (fertig.all(passt)) return fertig
-    }
     return gierig
 }
 

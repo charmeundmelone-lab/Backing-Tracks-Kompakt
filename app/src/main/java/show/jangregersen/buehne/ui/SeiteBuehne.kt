@@ -233,9 +233,9 @@ private val RINNE = 30.dp
 private fun LyricsBereich(song: Song, dauerMs: Long) {
     val messer = rememberTextMeasurer()
     val dichte = LocalDensity.current
-    BoxWithConstraints(Modifier.fillMaxSize().padding(start = 12.dp, end = 16.dp, top = 10.dp, bottom = 4.dp)) {
+    BoxWithConstraints(Modifier.fillMaxSize().padding(start = 8.dp, end = 12.dp, top = 6.dp, bottom = 4.dp)) {
         val textBreitePx = with(dichte) { (maxWidth - RINNE).roundToPx() }
-        val hoehePx = with(dichte) { (maxHeight - 44.dp).roundToPx() }
+        val hoehePx = with(dichte) { (maxHeight - 40.dp).roundToPx() }
         val abschnitte = remember(song.lyrics) { Abschnitte.zerlegen(song.lyrics) }
         // Seiten in Jans Ablauf (Teile weg, wiederholt, umgestellt, Instrumental).
         val ablauf = remember(song.marken, abschnitte) { Ablauf.von(song.marken, abschnitte) }
@@ -286,7 +286,7 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
                     }
                 }
             }
-            Abstand(4.dp)
+            // Kein Abstand unter der Etiketten-Zeile: jede Bildschirmzeile Text zählt (Jan: "zu wenig Text pro Seite").
             Box(Modifier.fillMaxSize()) {
                 Column(Modifier.fillMaxSize()) {
                     Row(Modifier.height(IntrinsicSize.Min)) {
@@ -363,12 +363,12 @@ private fun Modifier.strichelLinie(): Modifier = this.drawBehind {
     }
 }
 
-private fun lyricsStil(sp: Float, fett: Boolean = false) = TextStyle(fontFamily = Halbschmal, fontWeight = if (fett) FontWeight.Bold else FontWeight.SemiBold, fontSize = sp.sp, lineHeight = (sp * ZEILEN_FAKTOR).sp, color = Schwarz, textIndent = androidx.compose.ui.text.style.TextIndent(restLine = (sp * 0.8f).sp))
+private fun lyricsStil(sp: Float, fett: Boolean = false) = TextStyle(fontFamily = Schmal, fontWeight = if (fett) FontWeight.Bold else FontWeight.SemiBold, fontSize = sp.sp, lineHeight = (sp * ZEILEN_FAKTOR).sp, color = Schwarz, textIndent = androidx.compose.ui.text.style.TextIndent(restLine = (sp * 0.6f).sp))
 
 /** Schrift der Bühne. Jan wählte am 13.11. Probeseite B (40), am Ständer war ihm 40 dann zu groß für schnelle Songs: 34 "erstmal gut" (vorher 24–31). */
 private const val BUEHNE_SP = 34f
 /** Zeilenabstand der Lyrics (mal Schriftgröße). */
-private const val ZEILEN_FAKTOR = 1.2f
+private const val ZEILEN_FAKTOR = 1.12f
 
 /**
  * Baut die Bildschirmseiten: eine Schriftgröße für alle Songs (34, damit nichts springt). Lange
