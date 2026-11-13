@@ -38,6 +38,25 @@ class LyricsTest {
         assertTrue(e.zeiten.all { it == -1L })
     }
 
+    @Test fun vierZeilenStueckeWerdenPaareUndRefrainVarianteBleibtRefrain() {
+        // Wie "Bed of Roses" in der Datenbank: nach je 4 Zeilen eine Leerzeile, der letzte Refrain abgewandelt.
+        val kehr = "Take the last train home\ndon't wait for morning\nleave the door unlocked\nI'll be there by sunrise"
+        val schluss = "Take the last train home\ndon't wait for morning\nthe lights are going out\nI'm already gone"
+        val bloecke = listOf(
+            "Coffee in a paper cup\nthe station clock is slow\nthe window fogs again\nI let the coffee go",
+            "I counted every light\nand every one said go\nI wrote it on my hand\nso I would always know",
+            kehr,
+            "Platform four is empty\nthe rain is coming down\nthe porter waves goodbye\nhe's heading out of town",
+            "I hear the whistle calling\nall across the town\nthe signal's turning green\nthe gates are going down",
+            kehr,
+            schluss
+        )
+        val e = Erkennung.aufbereiten(bloecke.joinToString("\n\n"), null)!!
+        val ab = Abschnitte.zerlegen(e.text)
+        assertEquals(listOf("Strophe 1", "Refrain", "Strophe 2", "Refrain", "Refrain"), ab.map { it.name })
+        assertEquals(8, ab[0].zeilen.size)
+    }
+
     @Test fun ohneWiederholungNurStrophen() {
         val e = Erkennung.aufbereiten(listOf(strophe1 + "\n" + strophe1b, strophe2 + "\n" + strophe2b, bridge + "\n" + vor).joinToString("\n\n"), null)!!
         assertEquals(listOf("Strophe 1", "Strophe 2", "Strophe 3"), Abschnitte.zerlegen(e.text).map { it.name })

@@ -202,7 +202,12 @@ function karte(t, i) {
         const n = nr;
         return el("div", { class: "zeile" }, n > 0 ? el("span", { class: "schnitt", title: "Den Teil vor dieser Zeile in zwei Teile trennen", onclick: () => aendern("teilen", { abschnitt: a, zeile: n }) }) : null, z);
       }),
-      el("div", { class: "reihe", style: "margin-top:8px;align-items:center" }, waehler,
+      el("div", { class: "reihe", style: "margin-top:8px;align-items:center" },
+        // Jan, 13.11.: Teile waren zerstückelt, der Knopf dafür stand nur unten im Vorrat.
+        i > 0 && a !== INSTR && a > 0 && s.ablauf[i - 1].abschnitt === a - 1
+          ? el("button", { class: "knopf klein", title: "Diesen Text an die Karte darüber hängen: aus zwei Teilen wird einer.", onclick: () => aendern("verbinden", { abschnitt: a }) }, "↑ Mit Teil darüber zusammenfügen") : null,
+        a === INSTR ? null : el("button", { class: "knopf klein", onclick: () => { const n = prompt("Neuer Name für diesen Teil (z. B. Strophe, Refrain, Bridge, Solo):", s.abschnitte[a].name); if (n && n.trim()) aendern("etikett", { abschnitt: a, name: n.trim() }); } }, "Umbenennen")),
+      el("div", { class: "reihe", style: "margin-top:6px;align-items:center" }, waehler,
         el("button", { class: "knopf klein", title: "Hier ist kein Gesang: Der Text ab dieser Karte rückt einen Platz nach unten. Die Zeiten bleiben an ihren Plätzen.", onclick: () => aendern("ruecken", { pos: i, vor: false }) }, "Text ab hier ↓"),
         a === INSTR ? el("button", { class: "knopf klein", title: "Dieser Platz wird gesungen: Der Text von unten rückt einen Platz herauf.", onclick: () => aendern("ruecken", { pos: i, vor: true }) }, "Text heraufholen ↑") : null)));
   // Ziehen: Karte auf eine andere Karte fallen lassen (obere Hälfte = davor, untere = dahinter).

@@ -7,7 +7,8 @@ package show.jangregersen.buehne.lyrics
  * Erkennung (Vorschlag, Jan prüft danach): Was sich wiederholt, ist der Refrain; was mehrfach
  * direkt davor steht, der Vorrefrain; ein einmaliger Block nach dem zweiten Refrain die Bridge;
  * ein kurzer einmaliger Schluss nach dem letzten Refrain das Outro. Der Rest sind Strophen;
- * ein Bruchstück (bis 2 Zeilen) direkt neben einer Strophe wird an sie angehängt.
+ * ein Bruchstück (bis 2 Zeilen) direkt neben einer Strophe wird an sie angehängt, zwei kurze
+ * Stücke (je bis 5 Zeilen) ohne Refrain dazwischen werden ein Teil.
  */
 object Erkennung {
 
@@ -44,20 +45,27 @@ object Erkennung {
         val bloecke = bloeckeBilden(plain.orEmpty(), lrc)
         if (bloecke.isEmpty()) return null
         val namen = benennen(bloecke.map { it.zeilen })
-        // Zusammenlegen: Strophen-Bruchstück (bis 2 Zeilen) direkt neben einer anderen Strophe.
+        // Zusammenlegen, wenn kein Refrain dazwischen ist: ein Bruchstück (bis 2 Zeilen) neben einer
+        // Strophe, und zwei kurze Stücke (je bis 5 Zeilen) direkt hintereinander. Viele Texte der
+        // Datenbank haben nach je 4 Zeilen eine Leerzeile, ein Teil in Jans Arrangement sind aber
+        // meist 8 Zeilen (Jan, 13.11., "Bed of Roses": "die Verse sind aufgeteilt worden").
         val teile = mutableListOf<Pair<String, Block>>()
         for ((i, b) in bloecke.withIndex()) {
             val n = namen[i]
             val vorher = teile.lastOrNull()
-            if (vorher != null && n.startsWith("S") && vorher.first.startsWith("S") &&
-                minOf(vorher.second.zeilen.size, b.zeilen.size) <= 2 && vorher.second.zeilen.size + b.zeilen.size <= 8 &&
-                namen.subList(0, i).count { it == n } == 0
-            ) {
+            val a = vorher?.second?.zeilen?.size ?: 0
+            val bruchstueck = minOf(a, b.zeilen.size) <= 2 && a + b.zeilen.size <= 8
+            // Paare nur in Liedern mit Refrain; ohne Refrain ist jedes Stück meist eine ganze Strophe.
+            val paar = a <= 5 && b.zeilen.size <= 5 && "R" in namen
+            val beideStrophe = vorher != null && n.startsWith("S") && vorher.first.startsWith("S") && namen.subList(0, i).none { it == n }
+            val beideBridge = vorher != null && n == "B" && vorher.first == "B"
+            if ((beideStrophe && (bruchstueck || paar)) || (beideBridge && paar)) {
                 teile[teile.size - 1] = vorher.first to Block(vorher.second.zeilen + b.zeilen, vorher.second.zeiten + b.zeiten)
             } else teile.add(n to b)
         }
         // Strophen nach dem Zusammenlegen neu durchzählen (gleiche Strophe = gleiche Nummer).
         val nummer = mutableMapOf<String, Int>()
+        var bridges = 0
         val sb = StringBuilder()
         val zeiten = mutableListOf<Long>()
         for ((n, b) in teile) {
@@ -65,7 +73,7 @@ object Erkennung {
                 n.startsWith("S") -> "Strophe ${nummer.getOrPut(n) { nummer.size + 1 }}"
                 n == "R" -> "Refrain"
                 n == "V" -> "Vorrefrain"
-                n == "B" -> "Bridge"
+                n == "B" -> if (++bridges == 1) "Bridge" else "Bridge $bridges"
                 n == "O" -> "Outro"
                 else -> n
             }
@@ -129,16 +137,21 @@ object Erkennung {
         val anzahl = gruppe.toList().groupingBy { it }.eachCount()
         val wiederholt = anzahl.filter { it.value >= 2 }.keys
         val refrain = wiederholt.maxWithOrNull(compareBy<Int>({ anzahl[it]!! }, { gruppe.lastIndexOf(it) }))
-        val vor = wiederholt.filter { r -> r != refrain && (0 until n - 1).count { gruppe[it] == r && gruppe[it + 1] == refrain } >= 2 }.toSet()
+        // Abgewandelter Refrain (z. B. am Schluss mit anderer zweiter Hälfte): Wer mindestens die
+        // Hälfte der Zeilen mit einem Refrain teilt, ist auch Refrain.
+        val refrainBloecke = (0 until n).filter { gruppe[it] == refrain }
+        val istRefrain = BooleanArray(n) { i -> refrain != null && (gruppe[i] == refrain || refrainBloecke.any { aehnlich(bloecke[i], bloecke[it]) >= 0.5 }) }
+        val vor = wiederholt.filter { r -> r != refrain && (0 until n).none { gruppe[it] == r && istRefrain[it] } &&
+            (0 until n - 1).count { gruppe[it] == r && istRefrain[it + 1] } >= 2 }.toSet()
         val out = mutableListOf<String>()
         var refrainsBisher = 0
         var strophen = 0
         for (i in 0 until n) {
             val x = gruppe[i]
             val einmalig = anzahl[x] == 1
-            val kommtNochRefrain = (i + 1 until n).any { gruppe[it] == refrain }
+            val kommtNochRefrain = (i + 1 until n).any { istRefrain[it] }
             out.add(when {
-                x == refrain -> { refrainsBisher++; "R" }
+                istRefrain[i] -> { refrainsBisher++; "R" }
                 x in vor -> "V"
                 einmalig && refrainsBisher >= 2 && !kommtNochRefrain && i == n - 1 && bloecke[i].size <= 3 -> "O"
                 einmalig && refrainsBisher >= 2 && strophen >= 2 -> "B"
