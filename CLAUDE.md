@@ -29,7 +29,13 @@ Ablauf-Code.
   Dateien lesen, am Gerät meist `geraet.sh texte` statt Fotos.
 - Das Repo ist **öffentlich**: nie Songtexte, `bestand.json` oder Jans Daten einchecken.
 
-## Übergabe an die nächste Session (geschrieben 2026-11-13, ca. 15:15, vor Jans Gig am Abend)
+## Übergabe an die nächste Session (geschrieben 2026-11-13, ca. 15:15, ergänzt 15:35, vor Jans Gig)
+
+**Ganz kurz, wo es weitergeht (Stand 15:35):** Jan hat bei B5 Seite **B** gewählt ("halbe
+Seite", 40 sp, 3 Zeilen). B6 (Bühne danach umbauen) ist gebaut (Commit `8ab856d`), aber **nicht
+installiert**: Am Kompakt läuft für den Gig noch die Bühne mit der alten Schrift. Nach dem Gig:
+Jan nach dem Gig fragen, dann mit seinem ausdrücklichen Ja B6 aufspielen (vorher `bestand.json`
+sichern) und mit ihm am Mikroständer prüfen. Danach B7 (Werkstatt mit Jan ausprobieren).
 
 **Stand:** `main`, alles committet und gepusht. App und Werkstatt bauen, alle 68 Tests grün
 (`:app:testDebugUnitTest` + `:werkstatt:test`). Am Kompakt läuft der neueste Bau (B4 inklusive).
@@ -41,7 +47,7 @@ Ablauf-Code.
 - B3 Text aus dem Internet in der Werkstatt. B4 am Mudita: Text und Teile nur noch ansehen und
   einmessen (Jan: "Alles weg", also auch Texte holen, Text bearbeiten, Aus PDF). Installiert.
 - B5 vorbereitet: Probeseiten A (30 sp, 6 Zeilen), B (40 sp, 3 Zeilen), C (große Zeile 52 sp +
-  nächste Zeile 34 sp) liegen in der App "Entwürfe" ganz vorne. Jan hat sie noch NICHT angesehen.
+  nächste Zeile 34 sp) liegen in der App "Entwürfe" ganz vorne. Jan wählte um 15:30 **B**.
   Quelle: `entwuerfe/lesbarkeit/probe.html` (Text erfunden).
 - Jan hat die Werkstatt noch nie selbst bedient (B7). Seine echten Werkstatt-Daten sind geholt.
 
@@ -162,8 +168,8 @@ Ablauf-Code.
 **Als Nächstes (Reihenfolge und Details: `PLAN.md`, Arbeitsliste B am Ende):**
 1. Jan fragen, wie der Gig am 13.11. abends lief (Lautstärke voll ok? Pausen? Die Fassung mit
    B2/B4 lief zum ersten Mal live). Probleme gehen vor allem anderen.
-2. B5: Jan öffnet am Kompakt die App "Entwürfe" (Seiten A, B, C ganz vorne), stellt ihn an den
-   Mikroständer und sagt, was er lesen kann. Danach B6 Bühne umbauen.
+2. B6 aufspielen (gebaut, Commit `8ab856d`, Jans Wahl B) und mit Jan am Mikroständer prüfen:
+   Kann er die laufende Zeile sicher lesen, springt nichts, passt das Blättern?
 3. B7: Jan probiert die Werkstatt über das Desktop-Symbol aus (holen, Text aus dem Internet,
    Studio-One-Vorschlag, senden, Gig-Check). Dabei zuschauen, wo er hängt.
 4. Danach B8–B12 (siehe PLAN.md). B11 Gigs am Laptop ist der nächste große Brocken.
