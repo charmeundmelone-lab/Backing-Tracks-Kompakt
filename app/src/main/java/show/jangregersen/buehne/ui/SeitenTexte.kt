@@ -350,7 +350,7 @@ fun TeileUndAblauf(song: Song) {
     fun aendern(neu: List<Teil>, ab: Int, lyrics: String = aktuell.lyrics, neueWahl: Int = wahl) {
         val verloren = ablauf.drop(ab).count { it.eingemessen }
         if (verloren == 0) { schreiben(neu, lyrics); wahl = neueWahl; return }
-        frage = "Das löscht die Zeiten ab Teil ${ab + 1} ($verloren eingemessen). Dort musst du danach neu einmessen." to {
+        frage = "Das löscht die Zeiten ab Teil ${ab + 1} ($verloren eingemessen). Trotzdem ändern?" to {
             schreiben(Ablauf.abHierOhneZeit(neu, ab), lyrics); wahl = neueWahl
         }
     }
@@ -363,12 +363,13 @@ fun TeileUndAblauf(song: Song) {
             }
             return@Column
         }
-        T(if (modus == TeileModus.ETIKETT) "Etikett für den gewählten Teil. Danach springt die Auswahl weiter." else "So kommen die Teile auf der Bühne. Tipp auf einen Teil, dann unten, was damit passieren soll.",
+        T(if (modus == TeileModus.ETIKETT) "Etikett für den gewählten Teil. Danach springt die Auswahl weiter." else "Reihenfolge auf der Bühne. Teil antippen, dann unten wählen, was passieren soll.",
             textStil(16.sp, gewicht = FontWeight.Medium), Modifier.padding(start = 18.dp, end = 14.dp, top = 8.dp, bottom = 2.dp))
-        SeitenListe(ablauf, 56.dp, Modifier.weight(1f), schluessel = "teile${song.id}", zeige = remember(wahl) { Zeige(wahl) }, fussHoehe = if (modus == TeileModus.ETIKETT) 176.dp else 150.dp, oben = 2.dp,
+        SeitenListe(ablauf, 54.dp, Modifier.weight(1f), schluessel = "teile${song.id}", zeige = remember(wahl) { Zeige(wahl, nurWennVerdeckt = true) }, fussHoehe = if (modus == TeileModus.ETIKETT) 176.dp else 150.dp, oben = 2.dp,
             fuss = { s, n, _, z, v ->
                 Column(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, top = 4.dp, bottom = 14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    // Bei einer Rückfrage weicht diese Zeile, damit Frage und Knöpfe in den Fuß passen.
+                    if (frage == null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         Etikett(if (gewaehlt != null) "Teil ${wahl + 1}: ${Ablauf.name(abschnitte, gewaehlt)}" else "", Modifier.weight(1f))
                         if (n > 1) {
                             SymbolKnopf(Sym.LINKS, "Vorige Seite", Modifier.width(46.dp), hoehe = 34.dp, groesse = 15.dp, aktiv = s > 0, onClick = z)
@@ -438,7 +439,7 @@ fun TeileUndAblauf(song: Song) {
         ) { i, t ->
             val an = i == wahl
             Row(
-                Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(54.dp).clip(RoundedCornerShape(12.dp))
+                Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(52.dp).clip(RoundedCornerShape(12.dp))
                     .then(if (an) Modifier.border(3.dp, Schwarz, RoundedCornerShape(12.dp)) else Modifier)
                     .tipp(aktiv = frage == null) { wahl = i }.padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)

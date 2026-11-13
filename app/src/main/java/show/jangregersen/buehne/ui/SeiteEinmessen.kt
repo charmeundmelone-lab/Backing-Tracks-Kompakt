@@ -4,6 +4,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -103,17 +104,20 @@ fun EinmessenSeite(navi: Navi, songId: Long) {
                             Symbol(Sym.HAKEN, f, 24.dp); T("Alles getippt · Stopp", titelStil(26.sp, f))
                         }
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        TextKnopf("Anderer Teil", Modifier.weight(1.25f), hoehe = 52.dp, groesse = 15.sp) { wahlAb = App.buehne.positionJetzt() }
-                        TextKnopf("Auslassen", Modifier.weight(1.1f), hoehe = 52.dp, groesse = 15.sp, aktiv = Einmessung.kannAuslassen(abschnitte, ablauf)) {
+                    // Zwei Reihen: In einer Reihe waren die vier Beschriftungen am Gerät abgeschnitten.
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextKnopf("Anderer Teil", Modifier.weight(1f), hoehe = 46.dp, groesse = 17.sp) { wahlAb = App.buehne.positionJetzt() }
+                        TextKnopf("Teil auslassen", Modifier.weight(1f), hoehe = 46.dp, groesse = 17.sp, aktiv = Einmessung.kannAuslassen(abschnitte, ablauf)) {
                             val zi = ziel?.first ?: return@TextKnopf
                             setzen(Einmessung.auslassen(abschnitte, ablauf))
                             App.buehne.hinweis("„${Ablauf.name(abschnitte, ablauf[zi])}“ ausgelassen. Zurück geht es mit „Anderer Teil“.")
                         }
-                        TextKnopf("Tipp weg", Modifier.weight(1f), hoehe = 52.dp, groesse = 15.sp, aktiv = k != null) {
+                    }
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        TextKnopf("Letzter Tipp weg", Modifier.weight(1f), hoehe = 46.dp, groesse = 17.sp, aktiv = k != null) {
                             setzen(Einmessung.tippWeg(abschnitte, ablauf))
                         }
-                        TextKnopf("−10 s", Modifier.weight(0.85f), hoehe = 52.dp, groesse = 15.sp) {
+                        TextKnopf("10 s zurück", Modifier.weight(1f), hoehe = 46.dp, groesse = 17.sp) {
                             App.buehne.springen(-10_000)
                             val neu = Einmessung.zurueck(ablauf, App.buehne.positionJetzt())
                             if (neu != ablauf) setzen(neu)
@@ -177,36 +181,46 @@ private fun LaufZeit(dauer: Long) {
  */
 @Composable
 private fun KontextAnsicht(abschnitte: List<Abschnitt>, ablauf: List<Teil>, k: Int?, laufend: Int?, ziel: Pair<Int, Int>?, modifier: Modifier) {
-    Column(modifier.fillMaxWidth().padding(start = 10.dp, end = 14.dp, top = 8.dp).clipToBounds(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        val teil = k?.let { ablauf[it] }
-        Row(Modifier.padding(start = 8.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Etikett("Gerade")
-            if (teil != null) AbschnittPille(Ablauf.name(abschnitte, teil), hoehe = 32.dp, groesse = 16.sp) else T("Vorspiel", textStil(19.sp, gewicht = FontWeight.Bold))
-        }
-        if (teil != null) {
-            val zeilen = Zeitplan.zeilen(abschnitte, teil)
-            if (zeilen.isEmpty()) T("— instrumental —", textStil(21.sp, gewicht = FontWeight.Medium), Modifier.padding(start = 30.dp))
-            val von = ((laufend ?: 0) - 1).coerceAtLeast(0)
-            zeilen.forEachIndexed { i, s ->
-                if (i < von) return@forEachIndexed
-                val keil = when {
-                    i == laufend -> true
-                    ziel != null && ziel.first == k && ziel.second == i -> false
-                    else -> null
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        // Nur so viele Zeilen, wie ganz hineinpassen (eine halb abgeschnittene Zeile wäre nur Unruhe).
+        val zeilenHoehe = 33.dp
+        val fuerZeilen = maxHeight - 48.dp
+        val platz = (fuerZeilen / zeilenHoehe).toInt().coerceAtLeast(2)
+        val dannFolgt = ziel != null && ziel.first != k
+        Column(Modifier.fillMaxSize().padding(start = 10.dp, end = 14.dp, top = 8.dp).clipToBounds(), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            val teil = k?.let { ablauf[it] }
+            Row(Modifier.padding(start = 8.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Etikett("Gerade")
+                if (teil != null) AbschnittPille(Ablauf.name(abschnitte, teil), hoehe = 32.dp, groesse = 16.sp) else T("Vorspiel", textStil(19.sp, gewicht = FontWeight.Bold))
+            }
+            var gezeigt = 0
+            if (teil != null) {
+                val zeilen = Zeitplan.zeilen(abschnitte, teil)
+                if (zeilen.isEmpty()) { T("— instrumental —", textStil(21.sp, gewicht = FontWeight.Medium), Modifier.padding(start = 30.dp)); gezeigt = 1 }
+                val von = ((laufend ?: 0) - 1).coerceAtLeast(0)
+                zeilen.forEachIndexed { i, s ->
+                    if (i < von || gezeigt >= platz) return@forEachIndexed
+                    val keil = when {
+                        i == laufend -> true
+                        ziel != null && ziel.first == k && ziel.second == i -> false
+                        else -> null
+                    }
+                    KontextZeile(s, keil, fett = i == laufend)
+                    gezeigt++
                 }
-                KontextZeile(s, keil, fett = i == laufend)
             }
-        }
-        // Nächster Teil (wenn das Ziel dort liegt, oder noch nichts eingemessen ist).
-        if (ziel != null && ziel.first != k) {
-            val n = ablauf[ziel.first]
-            Row(Modifier.padding(start = 8.dp, top = 6.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Etikett(if (teil == null) "Zuerst" else "Dann")
-                AbschnittPille(Ablauf.name(abschnitte, n), hoehe = 30.dp, groesse = 15.sp)
+            // Nächster Teil (wenn das Ziel dort liegt, oder noch nichts eingemessen ist).
+            if (dannFolgt && ziel != null) {
+                val n = ablauf[ziel.first]
+                Row(Modifier.padding(start = 8.dp, top = 6.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Etikett(if (teil == null) "Zuerst" else "Dann")
+                    AbschnittPille(Ablauf.name(abschnitte, n), hoehe = 30.dp, groesse = 15.sp)
+                }
+                val zeilen = Zeitplan.zeilen(abschnitte, n)
+                if (zeilen.isEmpty()) KontextZeile("— instrumental —", false, fett = false)
+                val rest = ((fuerZeilen - zeilenHoehe * gezeigt - 44.dp) / zeilenHoehe).toInt().coerceIn(1, 3)
+                zeilen.take(rest).forEachIndexed { i, s -> KontextZeile(s, if (i == 0) false else null, fett = false) }
             }
-            val zeilen = Zeitplan.zeilen(abschnitte, n)
-            if (zeilen.isEmpty()) KontextZeile("— instrumental —", false, fett = false)
-            zeilen.take(3).forEachIndexed { i, s -> KontextZeile(s, if (i == 0) false else null, fett = false) }
         }
     }
 }

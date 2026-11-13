@@ -41,7 +41,15 @@ fun <T> SeitenListe(
         // Gemerkt wird der oberste sichtbare Eintrag (nicht die Seitennummer): ändert sich die
         // Zahl der Zeilen pro Seite (z. B. weil oben das Jetzt-Band erscheint), bleibt er sichtbar.
         var anker by remember(schluessel) { mutableIntStateOf(SeitenGedaechtnis.seiten[schluessel] ?: 0) }
-        LaunchedEffect(schluessel, zeige) { val i = zeige?.index; if (i != null && i >= 0) anker = i }
+        if (zeige?.nurWennVerdeckt == true) {
+            // Auswahl in der Liste: Die Seite bleibt stehen (nichts springt unter dem Finger weg).
+            // Geblättert wird nur, wenn der Eintrag sonst nicht zu sehen wäre, und dann seitenweise.
+            LaunchedEffect(schluessel, zeige, pro) {
+                val i = zeige.index
+                val s = anker.coerceIn(0, (eintraege.size - 1).coerceAtLeast(0))
+                if (i >= 0 && i !in s until s + pro) anker = (s + Math.floorDiv(i - s, pro) * pro).coerceAtLeast(0)
+            }
+        } else LaunchedEffect(schluessel, zeige) { val i = zeige?.index; if (i != null && i >= 0) anker = i }
         // Die Seite beginnt genau beim Anker (ein A–Z-Sprung landet oben auf der Seite).
         val start = anker.coerceIn(0, (eintraege.size - 1).coerceAtLeast(0))
         val seite = if (start + pro >= eintraege.size) seiten - 1 else ((start + pro - 1) / pro).coerceAtMost(seiten - 1)
@@ -65,7 +73,7 @@ fun <T> SeitenListe(
 object SeitenGedaechtnis { val seiten = mutableMapOf<Any?, Int>() }
 
 /** Sprungwunsch für [SeitenListe]; absichtlich keine data class, damit jeder Sprung neu ist. */
-class Zeige(val index: Int)
+class Zeige(val index: Int, val nurWennVerdeckt: Boolean = false)
 
 @Composable
 fun FussZeile(inhalt: @Composable () -> Unit) {

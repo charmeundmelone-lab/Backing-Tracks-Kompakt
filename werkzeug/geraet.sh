@@ -9,6 +9,8 @@
 ADB="$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe"
 D="-s LD20241004967"
 S="$(cd "$(dirname "$0")/.." && pwd)/.geraet"; mkdir -p "$S"
+# Die USB-Verbindung setzt manchmal kurz aus: bis zu 10 s auf das Gerät warten.
+timeout 10 "$ADB" $D wait-for-device 2>/dev/null || { echo "GERAET NICHT ERREICHBAR"; exit 2; }
 W=$(cd "$S" && pwd -W 2>/dev/null || pwd)
 dump() { MSYS_NO_PATHCONV=1 "$ADB" $D shell uiautomator dump /sdcard/ui.xml >/dev/null 2>&1; MSYS_NO_PATHCONV=1 "$ADB" $D exec-out cat /sdcard/ui.xml > "$S/ui.xml"; }
 case "$1" in

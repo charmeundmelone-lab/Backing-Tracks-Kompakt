@@ -305,7 +305,14 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
                                 if (zl.isBlank()) Spacer(Modifier.height(10.dp))
                                 else {
                                     val i = nr++
-                                    Row {
+                                    // Die laufende Zeile bekommt zusätzlich einen Rahmen (samt Umbruch): aus 60–80 cm
+                                    // ist der Keil allein zu klein. Der Rahmen wird nur gezeichnet, nichts verschiebt sich.
+                                    val laeuft = keil.second && i == keil.first
+                                    Row(if (laeuft) Modifier.drawBehind {
+                                        val r = 8.dp.toPx()
+                                        drawRoundRect(Schwarz, topLeft = androidx.compose.ui.geometry.Offset(-2.dp.toPx(), 0f), size = androidx.compose.ui.geometry.Size(size.width + 10.dp.toPx(), size.height),
+                                            cornerRadius = androidx.compose.ui.geometry.CornerRadius(r, r), style = Stroke(width = 2.5.dp.toPx()))
+                                    } else Modifier) {
                                         Box(Modifier.width(RINNE - 6.dp).padding(end = 4.dp).height(with(dichte) { (seite.schriftSp * 1.26f).sp.toDp() }), contentAlignment = Alignment.Center) {
                                             if (i == keil.first) Keil(keil.second)
                                         }
@@ -341,7 +348,7 @@ private fun LyricsBereich(song: Song, dauerMs: Long) {
 
 @Composable
 private fun Keil(voll: Boolean) {
-    Canvas(Modifier.size(width = 13.dp, height = 18.dp)) {
+    Canvas(Modifier.size(width = 15.dp, height = 21.dp)) {
         val p = Path().apply { moveTo(0f, 0f); lineTo(size.width, size.height / 2); lineTo(0f, size.height); close() }
         if (voll) drawPath(p, Schwarz) else drawPath(p, Schwarz, style = Stroke(width = 2.5.dp.toPx()))
     }
