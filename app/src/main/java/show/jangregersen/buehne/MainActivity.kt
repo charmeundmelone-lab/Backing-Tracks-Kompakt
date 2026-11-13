@@ -47,8 +47,15 @@ class MainActivity : ComponentActivity() {
         return true
     }
 
+    override fun onStart() {
+        super.onStart()
+        if (!show.jangregersen.buehne.audio.VolleLautstaerke.let { it.sichtbar(true); it.pruefen() })
+            App.buehne.hinweis("Die Lautstärke lässt sich nicht auf voll stellen. Bitte am Gerät prüfen.")
+    }
+
     override fun onStop() {
         super.onStop()
+        show.jangregersen.buehne.audio.VolleLautstaerke.sichtbar(false)
         App.ablage.sofortSichern()
     }
 }
