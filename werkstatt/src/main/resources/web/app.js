@@ -161,7 +161,7 @@ function textAnsicht() {
   const feld = el("textarea", { spellcheck: "false", placeholder: "Text hier einfügen. Teile beginnen mit einer Zeile wie [Strophe 1] oder [Refrain]. Ohne solche Zeilen trennt eine Leerzeile die Teile." });
   feld.value = s.text;
   return el("div", {},
-    el("p", { class: "hinweis" }, "Teile beginnen mit einer Zeile in eckigen Klammern, zum Beispiel [Strophe 1], [Refrain], [Bridge]."),
+    el("p", { class: "hinweis" }, "Teile beginnen mit einer Zeile in eckigen Klammern, zum Beispiel [Strophe 1], [Refrain], [Bridge]. Text aus einem PDF: PDF öffnen, Text markieren (Strg+A), kopieren (Strg+C), hier einfügen (Strg+V)."),
     feld,
     el("div", { class: "reihe", style: "margin-top:10px" },
       el("button", { class: "knopf voll", onclick: () => aendern("text", { text: feld.value }) }, "Text speichern")));

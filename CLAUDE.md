@@ -29,12 +29,23 @@ Ablauf-Code.
   Dateien lesen, am Gerät meist `geraet.sh texte` statt Fotos.
 - Das Repo ist **öffentlich**: nie Songtexte, `bestand.json` oder Jans Daten einchecken.
 
-## Übergabe an die nächste Session (geschrieben 2026-11-13, mittags)
+## Übergabe an die nächste Session (geschrieben 2026-11-13, ca. 15:15, vor Jans Gig am Abend)
 
-**Stand:** `main`, alles committet und gepusht. App und Werkstatt bauen, alle Tests grün
-(`:app:testDebugUnitTest` 55 Tests, `:werkstatt:test` 11 Tests).
+**Stand:** `main`, alles committet und gepusht. App und Werkstatt bauen, alle 68 Tests grün
+(`:app:testDebugUnitTest` + `:werkstatt:test`). Am Kompakt läuft der neueste Bau (B4 inklusive).
 
-**Was am 13.11. passiert ist (kurz):**
+**13.11. nachmittags (diese Session):**
+- B1 geprüft, B2 "Zum Mudita senden" gebaut und am Gerät hin und zurück getestet.
+- Lücken gesucht und mit Jan entschieden: B13 Sicherheitsnetz (Sicherungen + Wiederherstellen),
+  B14 Gig-Check, B15 Desktop-Symbol, B16 Doppelstart-Schutz. Akku-Warnung wollte Jan nicht.
+- B3 Text aus dem Internet in der Werkstatt. B4 am Mudita: Text und Teile nur noch ansehen und
+  einmessen (Jan: "Alles weg", also auch Texte holen, Text bearbeiten, Aus PDF). Installiert.
+- B5 vorbereitet: Probeseiten A (30 sp, 6 Zeilen), B (40 sp, 3 Zeilen), C (große Zeile 52 sp +
+  nächste Zeile 34 sp) liegen in der App "Entwürfe" ganz vorne. Jan hat sie noch NICHT angesehen.
+  Quelle: `entwuerfe/lesbarkeit/probe.html` (Text erfunden).
+- Jan hat die Werkstatt noch nie selbst bedient (B7). Seine echten Werkstatt-Daten sind geholt.
+
+**Was am 13.11. vormittags passiert ist (kurz):**
 1. Neuer Code "eigener Ablauf + Zeilen-Tipps" geprüft, Fehler behoben, Tests ergänzt, am Kompakt
    getestet (A1, A5, A6 erledigt). Jan: "Das Einmessen selbst hat gut geklappt."
 2. Jan kam beim **Ordnen der Teile am Kompakt durcheinander** (er sieht dort nur den ersten
@@ -52,13 +63,13 @@ Ablauf-Code.
   One, Stufe 2 Gigs & Setlisten, Stufe 3 neue Songs, Songdaten, Ansagen.
 
 **TrikTrak Werkstatt, Stand Stufe 1:**
-- Start für Jan: Doppelklick auf `TrikTrak-Werkstatt.bat` im Repo-Ordner. Es öffnet die Seite
-  `http://127.0.0.1:47811` im Browser (Anschluss weicht aus, wenn belegt). Fenster offen lassen.
+- Start für Jan: Desktop-Symbol "TrikTrak Werkstatt" (oder `TrikTrak-Werkstatt.bat` im Repo). Es
+  öffnet `http://127.0.0.1:47811` im Browser, das schwarze Fenster läuft klein unten mit.
 - Bauen: `JAVA_HOME="/c/Program Files/Android/Android Studio/jbr" ./gradlew --no-daemon -q :werkstatt:test :werkstatt:installDist`.
   Nach jeder Änderung an der Werkstatt `installDist` laufen lassen, sonst startet die `.bat` den
   alten Stand.
 - Arbeitsdaten AUSSERHALB des Repos: `C:\Users\HUAWEI\TrikTrak-Werkstatt\` (`bestand.json`,
-  `zustand.json`, `sicherungen/`). Am 13.11. noch leer: Jan muss einmal "Vom Mudita holen".
+  `zustand.json`, `sicherungen/`). Am 13.11. 15:12 vom Mudita geholt (46 Songs).
 - Kann: Daten vom Mudita holen (liest nur), Songliste, pro Song Karten in Ablauf-Reihenfolge mit
   vollem Text, Ziehen/▲▼/Doppeln/Weg, anderen Text auf einen Platz legen, Teil an einer Zeile
   teilen, an vorigen hängen, umbenennen, Text bearbeiten, Rückgängig, Rückfrage vor Zeitverlust.
@@ -96,8 +107,9 @@ Ablauf-Code.
 - **GERÄTE-REGEL:** Nichts installieren oder antippen, bevor Jan es im Chat freigibt. Vor JEDEM
   Tipp `sh werkzeug/geraet.sh fokus`. Läuft TrikTrak mit einem Song: Finger weg. Jan spielte am
   Abend des 13.11. den Gig "Bar Eriksson"; danach fragen, wie es lief (Lautstärke, Pausen).
-- Installiert: App-Fassung 3 (versionCode, 13.11. ca. 15 Uhr, mit Jans OK vor dem Gig): kann
-  `eingang.json` (Senden und Wiederherstellen). Am Gerät beides geprüft, Daten danach unverändert.
+- Installiert: Bau von Commit `25ef0f5` (versionCode 3, 13.11. ca. 15:10, mit Jans OK vor dem Gig):
+  kann `eingang.json` (Senden und Wiederherstellen) und B4 (Text/Teile nur ansehen). Am Gerät
+  geprüft, Daten danach Byte für Byte unverändert. App "Entwürfe" mit Lesbarkeits-Probe A/B/C.
   Rückweg zur Gig-Fassung vom Vormittag: `.geraet/vor-b2-2026-11-13.apk`, Daten von 14:50:
   `.geraet/bestand-2026-11-13-e.json`.
 - Rückweg: `.geraet/alt-2026-11-13.apk` (Bau vom 12.11.), `.geraet/bestand-2026-11-13.json` (vor
@@ -148,9 +160,13 @@ Ablauf-Code.
   `LogikTest.kt`; `werkstatt/src/test/…/WerkstattTest.kt`.
 
 **Als Nächstes (Reihenfolge und Details: `PLAN.md`, Arbeitsliste B am Ende):**
-1. Jan fragen, wie der Gig lief, und ob er die Werkstatt schon ausprobiert hat.
-2. B1 "Vom Mudita holen" mit angeschlossenem Gerät testen, B2 "Zum Mudita senden" bauen.
-3. B5 Lesbarkeit: Probeseiten in drei Größen auf den Kompakt, Jan wählt.
+1. Jan fragen, wie der Gig am 13.11. abends lief (Lautstärke voll ok? Pausen? Die Fassung mit
+   B2/B4 lief zum ersten Mal live). Probleme gehen vor allem anderen.
+2. B5: Jan öffnet am Kompakt die App "Entwürfe" (Seiten A, B, C ganz vorne), stellt ihn an den
+   Mikroständer und sagt, was er lesen kann. Danach B6 Bühne umbauen.
+3. B7: Jan probiert die Werkstatt über das Desktop-Symbol aus (holen, Text aus dem Internet,
+   Studio-One-Vorschlag, senden, Gig-Check). Dabei zuschauen, wo er hängt.
+4. Danach B8–B12 (siehe PLAN.md). B11 Gigs am Laptop ist der nächste große Brocken.
 
 ## Gerät: Grundwissen
 

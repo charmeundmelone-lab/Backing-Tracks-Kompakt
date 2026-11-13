@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de"><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* Lesbarkeits-Probe B5: 360x600 CSS-px = 480x800 Pixel auf dem Kompakt (Faktor 1,333). Text erfunden. */
+body { margin: 0; width: 360px; height: 600px; overflow: hidden; background: #fff; color: #000; font-family: "Barlow Semi Condensed", sans-serif; }
+.band { background: #000; color: #fff; height: 96px; padding: 12px 16px 0; box-sizing: border-box; position: relative; }
+.ober { font: 700 14px "Barlow Condensed"; letter-spacing: 1.6px; }
+.titel { font: 800 36px/1.1 "Barlow Condensed"; margin-top: 6px; }
+.zeit { position: absolute; right: 16px; top: 34px; font: 800 36px "Barlow Condensed"; }
+.buchstabe { position: absolute; right: 16px; top: 8px; font: 800 18px "Barlow Condensed"; background: #fff; color: #000; border-radius: 6px; padding: 0 8px; }
+.kopf { display: flex; justify-content: space-between; align-items: center; padding: 10px 16px 6px; }
+.pille { font: 700 16px "Barlow Condensed"; letter-spacing: 1.4px; border: 2.5px solid #000; border-radius: 20px; padding: 3px 14px; }
+.dann { font: 600 15px "Barlow Condensed"; }
+.text { padding: 0 16px; }
+.z { font-weight: 600; margin: 0; }
+.jetzt { border: 3px solid #000; border-radius: 10px; margin: 0 -10px; padding: 0 7px; position: relative; }
+.jetzt::before { content: ""; position: absolute; left: -9px; top: 50%; transform: translateY(-50%); border: 8px solid transparent; border-left: 9px solid #000; }
+.leise { color: #555; }
+.leiste { position: absolute; bottom: 0; left: 0; right: 0; height: 72px; display: flex; gap: 8px; padding: 0 12px 12px; box-sizing: border-box; }
+.leiste div { flex: 1; border: 2.5px solid #000; border-radius: 14px; }
+.leiste div.voll { background: #000; }
+.a .z { font-size: 30px; line-height: 1.22; }
+.b .z { font-size: 40px; line-height: 1.18; }
+.c .vorher { font-size: 24px; line-height: 1.2; margin-bottom: 8px; }
+.c .jetzt { font-size: 52px; line-height: 1.1; font-weight: 700; padding: 4px 7px; }
+.c .naechste { font-size: 34px; line-height: 1.15; margin-top: 12px; }
+.c .klein { font: 600 14px "Barlow Condensed"; letter-spacing: 1.4px; color: #555; margin-top: 14px; }
+</style></head>
+<body>
+<div class="band">
+  <div class="ober">JETZT · 4 / 12</div>
+  <div class="titel">Letzter Zug</div>
+  <div class="zeit">3:41</div>
+  <div class="buchstabe" id="b">A</div>
+</div>
+<div class="kopf"><span class="pille">STROPHE 1</span><span class="dann">dann REFRAIN</span></div>
+<div class="text" id="t"></div>
+<div class="leiste"><div></div><div></div><div class="voll"></div><div></div></div>
+<script>
+const v = location.hash.slice(1) || "a";
+document.body.className = v;
+document.getElementById("b").textContent = v.toUpperCase();
+const zeilen = ["Coffee in a paper cup", "the station clock runs slow", "I counted every light in town", "and every one said go", "your letter's in my coat", "I read it twice, I know"];
+const t = document.getElementById("t");
+if (v === "c") {
+  t.innerHTML = `<p class="z vorher leise">${zeilen[0]}</p><p class="z jetzt">${zeilen[1]}</p><p class="z naechste">${zeilen[2]}</p><div class="klein">DANACH: ${zeilen[3].toUpperCase()}</div>`;
+} else {
+  const n = v === "a" ? 6 : 3;
+  t.innerHTML = zeilen.slice(0, n).map((z, i) => `<p class="z${i === 1 ? " jetzt" : ""}">${z}</p>`).join("");
+}
+</script>
+</body></html>

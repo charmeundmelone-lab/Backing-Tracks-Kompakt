@@ -6,4 +6,5 @@ set "JAVA_HOME=C:\Program Files\Android\Android Studio\jbr"
 cd /d "%~dp0"
 if not exist "werkstatt\build\install\werkstatt\lib" call gradlew.bat --no-daemon -q :werkstatt:installDist
 "%JAVA_HOME%\bin\java.exe" -Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -cp "werkstatt\build\install\werkstatt\lib\*" show.jangregersen.werkstatt.MainKt %*
-pause
+rem Fenster nur bei einem Fehler offen lassen, damit man ihn lesen kann.
+if errorlevel 1 pause

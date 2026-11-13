@@ -492,11 +492,11 @@ Laptop-Programm, Stufe 1 fertig machen:
 - [x] B3 (13.11.: Reiter "Text aus dem Internet", bis 8 Treffer, Rückfrage, wenn eingemessene Zeiten verloren gingen; mit der Testkopie geprüft) Text aus dem Internet in der Werkstatt holen (LRCLIB). `netz/Lrclib.kt`,
   `lyrics/Erkennung.kt` und `Uebernahme.kt` sind schon eingebunden; es fehlen der Aufruf in
   `Main.kt` und die Seite (Treffer zeigen, wählen, übernehmen). Bis dahin: Text von Hand einfügen.
-- [ ] B4 (13.11.: CODE FERTIG, noch NICHT installiert: nach dem Gig mit Jans OK aufspielen und per Foto prüfen. Jan wählte "Alles weg": auch Texte holen, Text bearbeiten und "Aus PDF" am Mudita entfernt; Teile-Seite zeigt vollen Text, Lautstärketasten blättern. Seite TexteHolen und TeileUndAblauf sind jetzt unerreichbar, später löschen) Am Mudita "Teile & Ablauf" zurückbauen auf Ansehen mit vollem Text (Jans Wunsch: Text und
+- [x] B4 (13.11. ca. 15:10 mit Jans OK installiert, am Gerät mit Foto geprüft. Jan wählte "Alles weg": auch Texte holen, Text bearbeiten und "Aus PDF" am Mudita entfernt; Teile-Seite zeigt vollen Text, Lautstärketasten blättern. Seite TexteHolen und TeileUndAblauf sind jetzt unerreichbar, später löschen) Am Mudita "Teile & Ablauf" zurückbauen auf Ansehen mit vollem Text (Jans Wunsch: Text und
   Teile nur am Laptop). Erst wenn B2 läuft, sonst kann er nirgends mehr ordnen.
 
 Lesbarkeit (Jan ist kurzsichtig, Bühnentext 24–31 sp ist ihm zu klein):
-- [ ] B5 Drei Probeseiten in verschiedenen Schriftgrößen als Bilder in die App "Entwürfe" legen
+- [ ] B5 (13.11.: VORBEREITET. Seiten A 30 sp/6 Zeilen, B 40 sp/3 Zeilen, C große Zeile 52 sp + nächste 34 sp stehen in der App "Entwürfe" ganz vorne, installiert. Fehlt nur: Jan schaut am Mikroständer) Drei Probeseiten in verschiedenen Schriftgrößen als Bilder in die App "Entwürfe" legen
   (`entwuerfe/werkzeug/render.sh`, `bau.sh betrachter`), Jan stellt den Kompakt an den
   Mikroständer und sagt, welche er lesen kann. TrikTrak dafür nicht anfassen.
 - [ ] B6 Danach die Bühne umbauen. Claudes Favorit "halbe Seite": deutlich größere Schrift, 4–5
