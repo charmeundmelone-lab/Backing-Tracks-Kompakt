@@ -1,4 +1,4 @@
-﻿# Backing-Track-App für den Mudita Kompakt — Plan (Entwurf, 2026-11-09)
+# Backing-Track-App für den Mudita Kompakt — Plan (Entwurf, 2026-11-09)
 
 Stand: GrillMe Welle 1 mit Jan, noch kein Code.
 
