@@ -24,6 +24,15 @@ object BestandJson {
         return Bestand(songs, gigs, maxOf(o.optLong("naechsteId", 1), maxId + 1))
     }
 
+    /** Datei `eingang.json`: am Laptop geänderte Songs, die der Kompakt übernehmen soll. */
+    fun eingangJson(songs: List<Song>): JSONObject = JSONObject().apply {
+        put("eingang", 1)
+        put("songs", JSONArray().apply { songs.forEach { put(songJson(it)) } })
+    }
+
+    fun eingangAus(o: JSONObject): List<Song> =
+        o.optJSONArray("songs")?.let { a -> (0 until a.length()).map { songAus(a.getJSONObject(it)) } } ?: emptyList()
+
     private fun songJson(s: Song) = JSONObject().apply {
         put("id", s.id); put("titel", s.titel); put("interpret", s.interpret); put("bpm", s.bpm)
         put("tonart", s.tonart); put("kapo", s.kapo); put("tempo", s.tempo); put("pfad", s.pfad)

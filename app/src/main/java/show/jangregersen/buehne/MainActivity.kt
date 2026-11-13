@@ -12,6 +12,10 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Density
+import androidx.lifecycle.Lifecycle
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.withContext
 import show.jangregersen.buehne.ui.Navi
 import show.jangregersen.buehne.ui.Seite
 import show.jangregersen.buehne.ui.Tasten
@@ -23,6 +27,20 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navi = remember { Navi() }
             val z by App.buehne.zustand.collectAsState()
+            // Post vom Laptop (Werkstatt "Zum Mudita senden"): alle 2 s nachsehen, aber nur, wenn die
+            // App zu sehen ist, nichts spielt und Jan gerade nicht an einem Text oder Song arbeitet.
+            LaunchedEffect(Unit) {
+                while (true) {
+                    val zz = App.buehne.zustand.value
+                    val ruhig = navi.stapel.none {
+                        it is Seite.Einmessen || it is Seite.Editor || it is Seite.TexteHolen || it is Seite.Pruefen ||
+                            it is Seite.ProbeBuehne || it is Seite.Eingabe || it is Seite.Frage
+                    }
+                    if (lifecycle.currentState.isAtLeast(Lifecycle.State.STARTED) && !zz.spielt && zz.pause == null && ruhig)
+                        withContext(Dispatchers.IO) { App.ablage.eingangUebernehmen() }?.let { App.buehne.hinweis(it) }
+                    delay(2000)
+                }
+            }
             val bildschirmAn = z.spielt || z.pause != null || navi.oben == Seite.Buehne
             LaunchedEffect(bildschirmAn) {
                 if (bildschirmAn) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)

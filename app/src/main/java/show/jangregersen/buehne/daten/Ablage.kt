@@ -46,6 +46,32 @@ class Ablage(context: Context) {
         return id
     }
 
+    /**
+     * Hat die Werkstatt am Laptop `eingang.json` abgelegt, kommen Text und Teile dieser Songs in
+     * den Bestand (getippte Zeiten bleiben, wo sie noch passen). Erst speichern, dann die Datei
+     * löschen. Ergebnis: Hinweis für Jan, oder null, wenn nichts da war.
+     */
+    @Synchronized
+    fun eingangUebernehmen(): String? {
+        val f = File(datei.parentFile, "eingang.json")
+        if (!f.exists()) return null
+        val songs = try {
+            BestandJson.eingangAus(JSONObject(f.readText()))
+        } catch (e: Exception) {
+            Log.e(TAG, "eingang.json nicht lesbar", e)
+            runCatching { f.renameTo(File(datei.parentFile, "eingang-defekt-${System.currentTimeMillis()}.json")) }
+            return "Die Daten vom Laptop waren nicht lesbar. Bitte am Laptop noch einmal senden."
+        }
+        val (neu, titel) = show.jangregersen.buehne.lyrics.Abgleich.eingang(_stand.value, songs)
+        if (neu != _stand.value) { speicherJob?.cancel(); _stand.value = neu; schreiben(neu) }
+        f.delete()
+        return when (titel.size) {
+            0 -> "Vom Laptop: alles war schon auf dem neuesten Stand."
+            1 -> "Vom Laptop übernommen: ${titel[0]}"
+            else -> "Vom Laptop übernommen (${titel.size} Songs): " + titel.take(4).joinToString(", ") + if (titel.size > 4) " …" else ""
+        }
+    }
+
     fun sofortSichern() { speicherJob?.cancel(); schreiben(_stand.value) }
 
     private fun laden(): Bestand = try {

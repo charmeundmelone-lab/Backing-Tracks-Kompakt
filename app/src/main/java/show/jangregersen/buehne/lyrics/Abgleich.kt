@@ -1,5 +1,6 @@
 package show.jangregersen.buehne.lyrics
 
+import show.jangregersen.buehne.daten.Bestand
 import show.jangregersen.buehne.daten.Song
 
 /**
@@ -56,5 +57,21 @@ object Abgleich {
             marken = if (unveraendert) geraet.marken else Ablauf.schreiben(neu),
             markenVorlaeufig = if (unveraendert) geraet.markenVorlaeufig else laptop.markenVorlaeufig && Ablauf.hatZeiten(neu)
         )
+    }
+
+    /**
+     * Songs vom Laptop ([laptop], aus `eingang.json`) in den Bestand des Kompakts übernehmen.
+     * Ergebnis: neuer Bestand und die Titel der Songs, die sich dadurch geändert haben. Songs, die
+     * es auf dem Kompakt nicht mehr gibt, fallen weg.
+     */
+    fun eingang(b: Bestand, laptop: List<Song>): Pair<Bestand, List<String>> {
+        var neu = b
+        val titel = mutableListOf<String>()
+        for (l in laptop) {
+            val g = neu.song(l.id) ?: continue
+            val m = textUndTeile(g, l)
+            if (m != g) { neu = neu.copy(songs = neu.songs.map { if (it.id == l.id) m else it }); titel += m.titel }
+        }
+        return neu to titel
     }
 }

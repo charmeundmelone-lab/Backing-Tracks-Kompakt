@@ -2,7 +2,12 @@ package show.jangregersen.werkstatt
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.json.JSONObject
 import org.junit.Test
+import show.jangregersen.buehne.daten.Bestand
+import show.jangregersen.buehne.daten.BestandJson
+import show.jangregersen.buehne.daten.Song
+import show.jangregersen.buehne.lyrics.Abgleich
 import show.jangregersen.buehne.lyrics.Ablauf
 import show.jangregersen.buehne.lyrics.Abschnitte
 import show.jangregersen.buehne.lyrics.Teil
@@ -111,5 +116,58 @@ class WerkstattTest {
         assertEquals(listOf("c", "d"), neu[1].zeilen)
         assertEquals(text, Texte.teilen(text, 0, 0))   // vor der ersten Zeile gibt es nichts zu teilen
         assertEquals(text, Texte.teilen(text, 0, 9))
+    }
+
+    /** Ganzer Weg: holen, am Laptop ändern, senden, Kompakt übernimmt, wieder holen. */
+    @Test fun sendenUndWiederHolen() {
+        val text = "[Strophe 1]\na\nb\n\n[Refrain]\nc\nd\n\n[Strophe 2]\ne\nf"
+        // Auf dem Kompakt eingemessen: alle drei Teile mit Zeiten.
+        val geraet = Bestand(listOf(
+            Song(1, "Eins", pfad = "x", lyrics = text, marken = "0:1000:1000|2000,1:5000:5000|6000,2:9000:9000|10000"),
+            Song(2, "Zwei", pfad = "y", mix = mapOf("Gitarre" to 7))
+        ), naechsteId = 3)
+        val ordner = java.nio.file.Files.createTempDirectory("werkstatt-test").toFile()
+        try {
+            val arbeit = Arbeit(ordner)
+            arbeit.vomGeraet(BestandJson.alsJson(geraet).toString())
+            // Am Laptop: Tippfehler in Strophe 2 verbessert.
+            val neuText = text.replace("\ne\nf", "\ne\nF")
+            arbeit.aendern(1) { it.copy(lyrics = neuText, marken = Ablauf.markenNachText(it.marken, it.lyrics, neuText)) }
+            assertEquals(setOf(1L), arbeit.geaendert.toSet())
+
+            // Der Kompakt liest eingang.json und führt zusammen.
+            val post = BestandJson.eingangAus(JSONObject(arbeit.zumSenden()))
+            val (dort, titel) = Abgleich.eingang(geraet, post)
+            assertEquals(listOf("Eins"), titel)
+            val eins = dort.song(1)!!
+            assertEquals(neuText, eins.lyrics)
+            val teile = Ablauf.von(eins.marken, Abschnitte.zerlegen(eins.lyrics))
+            assertTrue("Strophe 1 und Refrain behalten ihre Zeiten", teile[0].eingemessen && teile[1].eingemessen)
+            assertEquals(geraet.song(2), dort.song(2))   // anderer Song unberührt
+
+            // Zweites Senden derselben Daten ändert nichts mehr.
+            assertEquals(dort to emptyList<String>(), Abgleich.eingang(dort, post))
+
+            // Wieder holen: Der Song gilt als angekommen.
+            arbeit.vomGeraet(BestandJson.alsJson(dort).toString())
+            assertTrue(arbeit.geaendert.isEmpty())
+            assertEquals(eins, arbeit.bestand.song(1))
+        } finally { ordner.deleteRecursively() }
+    }
+
+    /** Holen, bevor der Kompakt übernommen hat: Die Laptop-Änderung bleibt offen und erhalten. */
+    @Test fun holenVorDerUebernahme() {
+        val geraet = Bestand(listOf(Song(1, "Eins", pfad = "x", lyrics = "[Strophe 1]\na")), naechsteId = 2)
+        val ordner = java.nio.file.Files.createTempDirectory("werkstatt-test").toFile()
+        try {
+            val arbeit = Arbeit(ordner)
+            arbeit.vomGeraet(BestandJson.alsJson(geraet).toString())
+            arbeit.aendern(1) { it.copy(lyrics = "[Strophe 1]\nA") }
+            arbeit.vomGeraet(BestandJson.alsJson(geraet).toString())
+            assertEquals(setOf(1L), arbeit.geaendert.toSet())
+            assertEquals("[Strophe 1]\nA", arbeit.bestand.song(1)!!.lyrics)
+            // Auch nach Neustart der Werkstatt noch offen.
+            assertEquals(setOf(1L), Arbeit(ordner).geaendert.toSet())
+        } finally { ordner.deleteRecursively() }
     }
 }

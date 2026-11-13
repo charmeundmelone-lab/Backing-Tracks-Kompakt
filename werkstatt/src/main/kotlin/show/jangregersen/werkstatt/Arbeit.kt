@@ -74,7 +74,15 @@ class Arbeit(private val ordner: File) {
         if (neu.songs.isEmpty() && bestand.songs.isNotEmpty()) throw Fehler("Der Mudita meldet gar keine Songs. Das sieht falsch aus, es wurde nichts geändert.")
         sichern()
         geaendert.retainAll(neu.songs.map { it.id }.toSet())
-        for (id in geaendert) bestand.song(id)?.let { hier -> neu = neu.songAendern(id) { Abgleich.textUndTeile(it, hier) } }
+        // Hat der Mudita den Laptop-Stand schon (gesendet und übernommen), gilt der Song nicht mehr als offen.
+        val angekommen = mutableSetOf<Long>()
+        for (id in geaendert) {
+            val hier = bestand.song(id) ?: continue
+            val dort = neu.song(id) ?: continue
+            val zusammen = Abgleich.textUndTeile(dort, hier)
+            if (zusammen == dort) angekommen += id else neu = neu.songAendern(id) { zusammen }
+        }
+        geaendert.removeAll(angekommen)
         bestand = neu
         verlauf.clear()
         geholtAm = System.currentTimeMillis()
@@ -93,6 +101,10 @@ class Arbeit(private val ordner: File) {
         speichern()
         return true
     }
+
+    /** Inhalt für `eingang.json`: alle hier geänderten, noch nicht angekommenen Songs. */
+    @Synchronized
+    fun zumSenden(): String = BestandJson.eingangJson(geaendert.mapNotNull { bestand.song(it) }).toString()
 
     fun kannZurueck(id: Long) = verlauf[id]?.isNotEmpty() == true
 

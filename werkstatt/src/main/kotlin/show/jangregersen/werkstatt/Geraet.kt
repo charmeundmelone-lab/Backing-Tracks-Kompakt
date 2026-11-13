@@ -3,7 +3,10 @@ package show.jangregersen.werkstatt
 import java.io.File
 import java.util.concurrent.TimeUnit
 
-/** Der Mudita Kompakt am USB-Kabel (über adb). Diese Fassung liest nur, sie schreibt nichts aufs Gerät. */
+/**
+ * Der Mudita Kompakt am USB-Kabel (über adb). Liest `bestand.json`; geschrieben wird nur
+ * `eingang.json` (die App führt sie selbst zusammen, `bestand.json` fasst der Laptop nie an).
+ */
 object Geraet {
     private const val PAKET = "show.jangregersen.buehne"
     private val adb = File(System.getenv("LOCALAPPDATA") ?: "", "Android/Sdk/platform-tools/adb.exe")
@@ -31,4 +34,42 @@ object Geraet {
         if (code != 0 || !text.trimStart().startsWith("{")) throw Fehler("Die TrikTrak-Daten auf dem Mudita konnten nicht gelesen werden.")
         return text
     }
+
+    /** Ab dieser App-Fassung (versionCode in app/build.gradle.kts) liest TrikTrak `eingang.json`. */
+    private const val EINGANG_AB = 2
+    private const val ZWISCHEN = "/data/local/tmp/triktrak-eingang.json"
+
+    private fun appFassung(s: String): Int =
+        Regex("versionCode=(\\d+)").find(String(lauf("-s", s, "shell", "dumpsys", "package", PAKET).second))?.groupValues?.get(1)?.toInt() ?: 0
+
+    private fun liegtNochDa(s: String) =
+        String(lauf("-s", s, "shell", "run-as $PAKET ls files").second).lines().any { it.trim() == "eingang.json" }
+
+    /**
+     * Legt die geänderten Songs als `files/eingang.json` auf den Mudita (erst unter anderem Namen,
+     * dann umbenennen: TrikTrak sieht nie eine halbe Datei). Die App übernimmt sie, sobald sie zu
+     * sehen ist und nichts spielt. Ergebnis: true = schon übernommen, false = liegt noch bereit.
+     */
+    fun senden(inhalt: String): Boolean {
+        val s = seriennummer() ?: throw Fehler("Kein Mudita gefunden. Bitte per USB-Kabel anschließen und entsperren.")
+        when (appFassung(s)) {
+            0 -> throw Fehler("Auf dem Mudita ist TrikTrak nicht zu finden.")
+            in 1 until EINGANG_AB -> throw Fehler("Die TrikTrak-Fassung auf dem Mudita kann noch nichts vom Laptop empfangen. Erst muss die neue Fassung aufs Gerät. Es wurde nichts gesendet.")
+        }
+        val tmp = File.createTempFile("triktrak-eingang", ".json")
+        try {
+            tmp.writeText(inhalt, Charsets.UTF_8)
+            if (lauf("-s", s, "push", tmp.path, ZWISCHEN, sek = 30).first != 0) throw Fehler("Senden hat nicht geklappt: Die Datei kam nicht auf den Mudita. Ist er entsperrt?")
+            val ok = lauf("-s", s, "shell", "run-as $PAKET cp $ZWISCHEN files/eingang.neu && run-as $PAKET mv files/eingang.neu files/eingang.json").first == 0
+            lauf("-s", s, "shell", "rm -f $ZWISCHEN")
+            if (!ok) throw Fehler("Senden hat nicht geklappt: TrikTrak auf dem Mudita hat die Datei nicht angenommen.")
+        } finally {
+            tmp.delete()
+        }
+        repeat(10) { Thread.sleep(1000); if (!liegtNochDa(s)) return true }
+        return false
+    }
+
+    /** Liegt noch eine gesendete Datei auf dem Mudita, die TrikTrak nicht übernommen hat? null = kein Mudita da. */
+    fun wartetNoch(): Boolean? = seriennummer()?.let { runCatching { liegtNochDa(it) }.getOrNull() }
 }

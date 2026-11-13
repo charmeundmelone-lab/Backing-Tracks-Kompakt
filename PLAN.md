@@ -478,10 +478,10 @@ OFFEN in Stufe 1:
 Reihenfolge ist Empfehlung. Was Jan zuerst will, geht vor. Reste der alten Liste A stehen unten.
 
 Laptop-Programm, Stufe 1 fertig machen:
-- [ ] B1 "Vom Mudita holen" mit angeschlossenem, entsperrtem Kompakt testen (liest nur). Prüfen:
+- [x] B1 (13.11. nachmittags: 46 Songs geholt, Sicherung beim zweiten Holen da, Laptop-Änderung übersteht Holen per Test `holenVorDerUebernahme`) "Vom Mudita holen" mit angeschlossenem, entsperrtem Kompakt testen (liest nur). Prüfen:
   Songs erscheinen, Sicherung liegt in `TrikTrak-Werkstatt\sicherungen\`, eine Laptop-Änderung an
   Text/Teilen übersteht ein zweites Holen (`Arbeit.vomGeraet` + `Abgleich.textUndTeile`).
-- [ ] B2 "Zum Mudita senden". Entwurf: Laptop schreibt die geänderten Songs als
+- [x] B2 (13.11. nachmittags gebaut, App-Fassung 2 installiert, am Gerät mit "Test Eins" hin und zurück geprüft, Daten danach Byte für Byte wie vorher. App sieht alle 2 s nach, nur wenn sie zu sehen ist, nichts spielt und keine Text-/Einmess-Seite offen ist; Werkstatt wartet 10 s auf die Übernahme) "Zum Mudita senden". Entwurf: Laptop schreibt die geänderten Songs als
   `files/eingang.json` aufs Gerät (per adb: `push` nach `/data/local/tmp`, dann `run-as … cp`;
   `run-as` geht, weil Debug-Bau). Die App liest die Datei beim Start/Wiederkehren, führt pro Song
   mit `Abgleich.textUndTeile(geraet, laptop)` zusammen, löscht die Datei und zeigt einen Hinweis.

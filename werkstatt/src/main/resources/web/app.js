@@ -53,7 +53,7 @@ async function ladeListe(mitStand = true) {
   const j = await ruf("liste");
   if (!j) return;
   Z.liste = j;
-  if (mitStand) zeigeStand();
+  zeigeStand();
   zeigeListe();
 }
 
@@ -61,7 +61,11 @@ function zeigeStand() {
   const l = Z.liste;
   const wann = l.geholtAm ? "Stand vom Mudita: " + new Date(l.geholtAm).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "Noch keine Daten vom Mudita geholt.";
   const offen = l.songs.filter((s) => s.geaendert).length;
-  $("#stand").textContent = wann + (offen ? `  ·  ${offen} ${offen === 1 ? "Song" : "Songs"} hier geändert, noch nicht gesendet` : "") + (l.mudita ? "  ·  Mudita ist angeschlossen" : "  ·  Mudita nicht angeschlossen");
+  $("#stand").textContent = wann + (offen ? `  ·  ${offen} ${offen === 1 ? "Song" : "Songs"} hier geändert, noch nicht auf dem Mudita` : "") + (l.mudita ? "  ·  Mudita ist angeschlossen" : "  ·  Mudita nicht angeschlossen");
+  const b = $("#senden");
+  b.disabled = !offen;
+  b.textContent = offen ? `Zum Mudita senden (${offen})` : "Zum Mudita senden";
+  b.title = offen ? "Schickt Text und Teile der geänderten Songs an TrikTrak. Deine Zeiten vom Einmessen bleiben, wo der Text gleich bleibt." : "Nichts zu senden: Am Laptop ist nichts geändert.";
 }
 
 function zeigeListe() {
@@ -86,6 +90,15 @@ $("#holen").addEventListener("click", async () => {
   $("#holen").disabled = false; $("#holen").textContent = "Vom Mudita holen";
   if (!j) return;
   Z.liste = j; melden(""); zeigeStand(); zeigeListe();
+  if (Z.song) waehle(Z.song.id);
+});
+$("#senden").addEventListener("click", async () => {
+  const b = $("#senden");
+  b.disabled = true; b.textContent = "Sende …";
+  const j = await ruf("senden", {});
+  if (!j) { zeigeStand(); return; }
+  Z.liste = j; zeigeStand(); zeigeListe();
+  melden(j.gesendet);
   if (Z.song) waehle(Z.song.id);
 });
 

@@ -85,6 +85,15 @@ private fun api(was: String, frage: Map<String, String>, k: JSONObject): JSONObj
     return when (was) {
         "liste" -> liste()
         "holen" -> { arbeit.vomGeraet(Geraet.bestandLesen()); liste() }
+        "senden" -> {
+            if (arbeit.geaendert.isEmpty()) throw Fehler("Es gibt nichts zu senden: Am Laptop ist nichts geändert, was der Mudita nicht schon hat.")
+            val n = arbeit.geaendert.size
+            val angekommen = Geraet.senden(arbeit.zumSenden())
+            // Angekommen: frisch holen, dabei fallen die übernommenen Songs aus "geändert" heraus.
+            if (angekommen) arbeit.vomGeraet(Geraet.bestandLesen())
+            liste().put("gesendet", if (angekommen) "TrikTrak auf dem Mudita hat $n ${if (n == 1) "Song" else "Songs"} übernommen. Deine Zeiten vom Einmessen sind geblieben, wo der Text gleich blieb."
+                else "Gesendet. Die Änderungen liegen auf dem Mudita bereit und kommen in TrikTrak an, sobald du die App öffnest (nicht während ein Song läuft oder du einmisst). Danach hier einmal „Vom Mudita holen“.")
+        }
         "song" -> songJson(id())
         "text" -> id().let { i -> arbeit.aendern(i) { s -> s.copy(lyrics = k.getString("text"), marken = Ablauf.markenNachText(s.marken, s.lyrics, k.getString("text"))) }; songJson(i) }
         "folge" -> folge(id(), k)
