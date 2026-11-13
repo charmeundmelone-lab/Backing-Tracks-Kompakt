@@ -351,7 +351,7 @@ Arbeitsliste ab hier (für die nächste Session):
   Bühne ↔ Setliste während der Wiedergabe. Danach Test-Gig mit Jans OK löschen.
 - [x] A5 (13.11., vorgezogen, braucht kein Gerät; entfernt) Aufräumen: `Abschnitte.markenLesen/markenSchreiben/markenNachZusammenlegen` und
   `Seitenlauf` sind Altlast (nur noch LogikTest) – entfernen oder auf Ablauf umstellen.
-- [ ] A6 (13.11. gefragt: Setliste / auch Bühne / nicht nötig; Antwort steht noch aus) Offene Idee (nicht umgesetzt, Jan fragen): In TrikTrak blättern die Lautstärketasten,
+- [ ] A6 (Jan, 13.11.: kein Regler nötig, die App soll IMMER auf voller Medienlautstärke stehen; noch nicht umgesetzt) Offene Idee (nicht umgesetzt, Jan fragen): In TrikTrak blättern die Lautstärketasten,
   Jan kann dort die Medienlautstärke nicht ändern → evtl. Lautstärke-Anzeige/-Regler in der App.
 - [ ] A7 Übergabe in CLAUDE.md + PLAN.md nachziehen.
 
@@ -376,3 +376,30 @@ Gerätetest 13.11. früh (Bau von ca. 07:00 installiert, Jan hatte freigegeben):
   "Strophe 3" (vorher zweites "Strophe 1", durch Umbenennen neu gezählt). Test-Gig "Testlauf":
   Set 1 enthält andere Testsongs als vorher, alles gespielt. Sicherungen in `.geraet/`:
   `bestand-2026-11-13.json` (vor allen Tests), `alt-2026-11-13.apk` (Bau vom 12.11.).
+
+### Jans Rückmeldung 13.11. vormittags (nach eigenem Test) – NICHTS umsetzen, erst vorschlagen
+
+Jan wörtlich sinngemäß: "Ich möchte nicht, dass du irgendetwas änderst. Schlag mir sinnvoll vor,
+wie es weitergeht." Stand: nur Vorschläge, Entscheidung offen.
+1. Einmessen selbst "hat gut geklappt", der Keil läuft am Text entlang.
+2. Teile neu ordnen am Kompakt: Jan kommt durcheinander. Er sieht pro Teil nur den ersten
+   Textschnipsel, nicht den ganzen Text. Muss ausgeschlossen sein, dass er irgendwo
+   durcheinandergerät.
+3. Jan ist kurzsichtig: Der Bühnentext ist für ihn schwer lesbar (trotz Stufe 24–31 sp).
+4. Lautstärke: in der App immer volle Medienlautstärke, von vornherein (früher aus Versehen
+   halbe Lautstärke gehabt). Achtung: Am Gerät standen am 13.11. 5/15, CLAUDE.md nannte das
+   bisher "Jan nutzt 5/15". Mit Jan klären.
+5. Jans Idee: den "Editor" (Text, Teile, Reihenfolge) auf den Laptop auslagern. Und: seine
+   Songteil-Labels aus Studio One übernehmen.
+
+Geprüft (nur gelesen, 13.11.): Studio-One-Songs liegen in `Documents/Studio One/Songs*/*/*.song`.
+Eine `.song` ist ein ZIP; in `Song/song.xml` steht der Arranger-Track:
+`<ArrangerEvent start="140" length="32" name="Vers" …/>` (Start und Länge in Viertelnoten),
+dazu `TempoMapSegment tempo="0.526…"` (Sekunden pro Viertel) und der Marker-Track
+(`<MarkerEvent name="Chorus" start="…"/>`). 108 von 145 Songs haben Arranger-Teile mit Namen
+(Intro, Vers, Chorus, Bridge, Instr, Tag, Outro, END), 11 haben benannte Marker (z. B.
+ENGISHMAN), keiner nutzt die Lyrics-Spur. Damit lassen sich Jans Teile samt Reihenfolge UND
+Startzeit auf dem Track auslesen. Vorbehalte: Das Format ist nicht offiziell beschrieben (aus
+Jans Dateien abgelesen, Studio One 7); der Versatz zwischen Song-Anfang und exportierter Datei
+muss an einem echten Song geprüft werden; welche `.song` zu welchem Track gehört, muss Jan
+einmal zuordnen (Ordner heißen oft nur nach Datum).
