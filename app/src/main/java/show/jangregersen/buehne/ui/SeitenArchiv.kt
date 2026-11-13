@@ -107,12 +107,8 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?) {
             Sprung(songs) { i -> if (i >= 0) zeige = Zeige(i); sprung = false }
             return@Rahmen
         }
-        val ohneText = if (zielSet == null) alle.filter { it.lyrics.isBlank() } else emptyList()
-        if (zielSet == null) Row(Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Segmente(listOf("Gigs", "Archiv"), 1, Modifier.weight(1f)) { if (it == 0) navi.ersetzen(Seite.Gigs) }
-            // Texte für alle Songs ohne Text holen (verschwindet, sobald alle einen haben).
-            if (ohneText.isNotEmpty()) TextKnopf("Texte holen", Modifier.width(132.dp), Art.VOLL, 44.dp, 16.sp) { navi.zu(Seite.TexteHolen(ohneText.map { it.id })) }
-        }
+        // Texte holen gibt es seit 13.11. nur noch in der Werkstatt am Laptop.
+        if (zielSet == null) Segmente(listOf("Gigs", "Archiv"), 1, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp)) { if (it == 0) navi.ersetzen(Seite.Gigs) }
         else Segmente(listOf("Als Nächstes", "Ans Ende"), if (alsNaechstes) 0 else 1, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp)) { alsNaechstes = it == 0; zuletzt = null }
         Segmente(listOf("Alle", "Langsam", "Mittel", "Schnell"), tempo, Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp), hoehe = 40.dp, groesse = 15.sp) { tempo = it }
         SeitenListe(

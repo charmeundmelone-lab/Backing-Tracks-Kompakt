@@ -286,38 +286,24 @@ private fun KleinStufen(wert: String, minus: () -> Unit, plus: () -> Unit) {
 
 @Composable
 private fun LyricsReiter(navi: Navi, song: Song) {
-    val ctx = LocalContext.current
-    val scope = rememberCoroutineScope()
+    // Seit 13.11. (Jans Entscheidung): Text und Teile entstehen nur in der Werkstatt am Laptop.
+    // Hier: ansehen, einmessen, auf der Bühne testen.
     val abschnitte = remember(song.lyrics) { Abschnitte.zerlegen(song.lyrics) }
     val ablauf = remember(song.marken, abschnitte) { show.jangregersen.buehne.lyrics.Ablauf.von(song.marken, abschnitte) }
     val eingemessen = ablauf.count { it.eingemessen }
-    val pdf = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-        if (uri != null) scope.launch {
-            val text = withContext(Dispatchers.IO) { runCatching { PdfLyrics.lesen(ctx, uri) }.getOrDefault("") }
-            if (text.isBlank()) App.buehne.hinweis("In diesem PDF steht kein lesbarer Text (eingescannt?).")
-            else {
-                val neu = if (song.lyrics.isBlank()) text else song.lyrics.trimEnd() + "\n\n" + text
-                songAendern(song.id) { it.copy(lyrics = neu, marken = show.jangregersen.buehne.lyrics.Ablauf.markenNachText(it.marken, it.lyrics, neu)) }
-                App.buehne.hinweis(if (song.lyrics.isBlank()) "Text aus dem PDF übernommen. Bitte kurz prüfen." else "Text aus dem PDF unten angehängt.")
-            }
-        }
-    }
-    Column(Modifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+    Column(Modifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         T(if (abschnitte.isEmpty()) "Noch kein Text." else "${ablauf.size} Teile · " + (if (eingemessen == 0) "noch nicht eingemessen" else "$eingemessen eingemessen") + if (song.markenVorlaeufig && eingemessen > 0) " (vorläufig)" else "", textStil(15.sp))
-        TextKnopf(if (song.lyrics.isBlank()) "Text suchen" else "Anderen Text suchen", Modifier.fillMaxWidth(), if (song.lyrics.isBlank()) Art.VOLL else Art.UMRISS, 52.dp, 18.sp) { navi.zu(Seite.TexteHolen(listOf(song.id), einzeln = true)) }
+        if (abschnitte.isEmpty()) Column(Modifier.fillMaxWidth().border(2.5.dp, Schwarz, RoundedCornerShape(12.dp)).padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Etikett("Text kommt vom Laptop")
+            T("In der TrikTrak Werkstatt den Song wählen, „Text aus dem Internet“ holen, dann „Zum Mudita senden“.", textStil(18.sp))
+        }
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextKnopf("Aus PDF", Modifier.weight(1f), hoehe = 48.dp, groesse = 16.sp) { pdf.launch(arrayOf("application/pdf")) }
-            TextKnopf("Teile", Modifier.weight(1f), hoehe = 48.dp, groesse = 16.sp, aktiv = abschnitte.isNotEmpty()) { navi.zu(Seite.Pruefen(song.id)) }
-            TextKnopf("Einmessen", Modifier.weight(1f), if (song.lyrics.isBlank()) Art.UMRISS else Art.VOLL, 48.dp, 16.sp, aktiv = abschnitte.isNotEmpty()) { navi.zu(Seite.Einmessen(song.id)) }
+            TextKnopf("Teile ansehen", Modifier.weight(1f), hoehe = 52.dp, groesse = 17.sp, aktiv = abschnitte.isNotEmpty()) { navi.zu(Seite.Pruefen(song.id)) }
+            TextKnopf("Einmessen", Modifier.weight(1f), Art.VOLL, 52.dp, 17.sp, aktiv = abschnitte.isNotEmpty()) { navi.zu(Seite.Einmessen(song.id)) }
         }
         val setLaeuft = App.buehne.zustand.collectAsState().value.let { (it.spielt || it.pause != null) && !it.probe }
-        TextKnopf("Auf der Bühne testen", Modifier.fillMaxWidth(), Art.GESTRICHELT, 46.dp, 16.sp, symbol = Sym.PLAY, aktiv = abschnitte.isNotEmpty() && !setLaeuft) { navi.zu(Seite.ProbeBuehne(song.id)) }
-        BasicTextField(
-            value = song.lyrics, onValueChange = { t -> songAendern(song.id) { it.copy(lyrics = t, marken = show.jangregersen.buehne.lyrics.Ablauf.markenNachText(it.marken, it.lyrics, t)) } },
-            textStyle = textStil(18.sp, gewicht = FontWeight.Medium),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-            modifier = Modifier.fillMaxWidth().weight(1f).border(2.5.dp, Schwarz, RoundedCornerShape(12.dp)).padding(12.dp)
-        )
+        TextKnopf("Auf der Bühne testen", Modifier.fillMaxWidth(), Art.GESTRICHELT, 48.dp, 16.sp, symbol = Sym.PLAY, aktiv = abschnitte.isNotEmpty() && !setLaeuft) { navi.zu(Seite.ProbeBuehne(song.id)) }
+        if (abschnitte.isNotEmpty()) T("Text und Teile änderst du in der Werkstatt am Laptop.", textStil(15.sp))
     }
 }
 

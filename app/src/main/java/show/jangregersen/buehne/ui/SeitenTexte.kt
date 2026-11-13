@@ -1,6 +1,8 @@
 package show.jangregersen.buehne.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.verticalScroll
+import kotlinx.coroutines.launch
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -456,14 +458,41 @@ fun TeileUndAblauf(song: Song) {
     }
 }
 
-/** "Teile & Ablauf" für einen Song aus dem Song-Editor. */
+/**
+ * "Teile & Ablauf" am Mudita: nur ansehen, mit vollem Text, in Bühnen-Reihenfolge (Jans
+ * Entscheidung 13.11.: Text und Teile entstehen nur noch in der Werkstatt am Laptop).
+ * Die Lautstärketasten blättern.
+ */
 @Composable
 fun PruefenSeite(navi: Navi, songId: Long) {
     val b by App.ablage.stand.collectAsState()
     val song = b.song(songId) ?: run { LaunchedEffect(Unit) { navi.zurueck() }; return }
-    Lautstaerketasten { }
+    val abschnitte = remember(song.lyrics) { Abschnitte.zerlegen(song.lyrics) }
+    val ablauf = remember(song.marken, abschnitte) { Ablauf.von(song.marken, abschnitte) }
+    val scroll = androidx.compose.foundation.rememberScrollState()
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
+    Lautstaerketasten { vor -> scope.launch { scroll.scrollTo((scroll.value + (if (vor) 1 else -1) * (scroll.viewportSize * 0.85f).toInt()).coerceIn(0, scroll.maxValue)) } }
     Column(Modifier.fillMaxSize()) {
         KopfBand("Teile & Ablauf", song.titel, rechts = { WeisserKnopfImBand("Fertig") { navi.zurueck() } })
-        TeileUndAblauf(song)
+        Column(Modifier.weight(1f).verticalScroll(scroll).padding(horizontal = 14.dp, vertical = 10.dp)) {
+            T("Ändern geht in der TrikTrak Werkstatt am Laptop, danach dort „Zum Mudita senden“.", textStil(15.sp))
+            Abstand(8.dp)
+            if (abschnitte.isEmpty()) T("Noch kein Text.", textStil(20.sp))
+            ablauf.forEachIndexed { i, t ->
+                Row(Modifier.fillMaxWidth().padding(top = 10.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    T("${i + 1}", titelStil(19.sp), Modifier.width(26.dp), zeilen = 1)
+                    AbschnittPille(Ablauf.name(abschnitte, t), hoehe = 36.dp, groesse = 16.sp)
+                    Spacer(Modifier.weight(1f))
+                    T(if (t.eingemessen) "eingemessen · ${zeit(t.startMs)}" else "nicht eingemessen", textStil(14.sp, gewicht = FontWeight.Medium), zeilen = 1)
+                }
+                if (t.abschnitt == Ablauf.INSTRUMENTAL) T("ohne Gesang", textStil(19.sp, gewicht = FontWeight.Medium), Modifier.padding(start = 34.dp))
+                else abschnitte[t.abschnitt].zeilen.filter { it.isNotBlank() }.forEach { z ->
+                    T(z, textStil(19.sp, gewicht = FontWeight.Medium), Modifier.padding(start = 34.dp))
+                }
+                Abstand(6.dp)
+                Box(Modifier.fillMaxWidth().height(1.5.dp).background(Schwarz))
+            }
+            Abstand(40.dp)
+        }
     }
 }

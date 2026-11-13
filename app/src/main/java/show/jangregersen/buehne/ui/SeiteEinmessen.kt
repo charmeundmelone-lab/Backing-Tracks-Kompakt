@@ -148,7 +148,7 @@ fun EinmessenSeite(navi: Navi, songId: Long) {
                     Knopf(Modifier.fillMaxWidth(), Art.VOLL, 80.dp, 16.dp, onClick = { App.buehne.probe(songId) }) { f ->
                         Symbol(Sym.PLAY, f, 26.dp); T("Song starten", titelStil(30.sp, f))
                     }
-                    TextKnopf("Teile & Ablauf ordnen", Modifier.fillMaxWidth(), hoehe = 50.dp, groesse = 17.sp) { navi.zu(Seite.Pruefen(songId)) }
+                    TextKnopf("Teile & Ablauf ansehen", Modifier.fillMaxWidth(), hoehe = 50.dp, groesse = 17.sp) { navi.zu(Seite.Pruefen(songId)) }
                 } else {
                     if (vorlaeufig) Knopf(Modifier.fillMaxWidth(), Art.VOLL, 58.dp, 16.dp, onClick = { App.ablage.aendern { it.songAendern(songId) { s -> s.copy(markenVorlaeufig = false) } }; navi.zurueck() }) { f ->
                         Symbol(Sym.HAKEN, f, 22.dp); T("Passt so", titelStil(26.sp, f))
