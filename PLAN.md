@@ -496,10 +496,10 @@ Laptop-Programm, Stufe 1 fertig machen:
   Teile nur am Laptop). Erst wenn B2 läuft, sonst kann er nirgends mehr ordnen.
 
 Lesbarkeit (Jan ist kurzsichtig, Bühnentext 24–31 sp ist ihm zu klein):
-- [ ] B5 (13.11.: VORBEREITET. Seiten A 30 sp/6 Zeilen, B 40 sp/3 Zeilen, C große Zeile 52 sp + nächste 34 sp stehen in der App "Entwürfe" ganz vorne, installiert. Fehlt nur: Jan schaut am Mikroständer) Drei Probeseiten in verschiedenen Schriftgrößen als Bilder in die App "Entwürfe" legen
+- [x] B5 (13.11. ca. 15:30: JAN WÄHLT B, also "halbe Seite" mit 40 sp und 3 Zeilen. Seiten A 30 sp/6 Zeilen, B 40 sp/3 Zeilen, C große Zeile 52 sp + nächste 34 sp stehen in der App "Entwürfe" ganz vorne, installiert. Fehlt nur: Jan schaut am Mikroständer) Drei Probeseiten in verschiedenen Schriftgrößen als Bilder in die App "Entwürfe" legen
   (`entwuerfe/werkzeug/render.sh`, `bau.sh betrachter`), Jan stellt den Kompakt an den
   Mikroständer und sagt, welche er lesen kann. TrikTrak dafür nicht anfassen.
-- [ ] B6 Danach die Bühne umbauen. Claudes Favorit "halbe Seite": deutlich größere Schrift, 4–5
+- [ ] B6 (Jan hat am 13.11. Seite B gewählt = Claudes Favorit "halbe Seite", Vorlage `entwuerfe/lesbarkeit/probe.html#b`) Danach die Bühne umbauen. Claudes Favorit "halbe Seite": deutlich größere Schrift, 4–5
   Zeilen pro Seite, Text steht ruhig, nur Rahmen/Keil wandern, es wird öfter geblättert.
   Alternative "große Zeile": laufende Zeile riesig, darunter die nächste (wechselt bei jeder
   Zeile). Jan hat noch nicht gewählt.
