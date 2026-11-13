@@ -24,11 +24,29 @@ const val ERSTER_PORT = 47811
 private var port = ERSTER_PORT
 
 private val heim = File(System.getProperty("user.home"))
-private val arbeit = Arbeit(File(System.getProperty("triktrak.daten") ?: File(heim, "TrikTrak-Werkstatt").path))
+private val arbeit by lazy { Arbeit(File(datenOrdner)) }
 private val s1Wurzel = File(heim, "Documents/Studio One")
 private var s1Dateien: List<File> = emptyList()
 
+private val datenOrdner = System.getProperty("triktrak.daten") ?: File(heim, "TrikTrak-Werkstatt").path
+
+/** Läuft schon eine Werkstatt mit denselben Daten? Dann deren Anschluss (zweiter Doppelklick öffnet nur die Seite). */
+private fun laeuftSchon(): Int? = (ERSTER_PORT until ERSTER_PORT + 10).firstOrNull { p ->
+    runCatching {
+        val c = java.net.URL("http://127.0.0.1:$p/api/wer").openConnection() as java.net.HttpURLConnection
+        c.connectTimeout = 300; c.readTimeout = 1000
+        JSONObject(c.inputStream.readBytes().toString(Charsets.UTF_8)).optString("daten") == File(datenOrdner).absolutePath
+    }.getOrDefault(false)
+}
+
+private fun browser(p: Int) = runCatching { ProcessBuilder("cmd", "/c", "start", "", "http://127.0.0.1:$p").start() }
+
 fun main(args: Array<String>) {
+    laeuftSchon()?.let { p ->
+        println("Die Werkstatt läuft schon (http://127.0.0.1:$p). Ich öffne nur die Seite. Dieses Fenster kannst du schließen.")
+        if ("--ohne-browser" !in args) browser(p)
+        return
+    }
     s1Dateien = StudioOne.alle(s1Wurzel)
     var server: HttpServer? = null
     for (p in ERSTER_PORT until ERSTER_PORT + 10) {
@@ -39,7 +57,7 @@ fun main(args: Array<String>) {
     server.createContext("/") { x -> bedienen(x) }
     server.start()
     println("TrikTrak Werkstatt läuft: http://127.0.0.1:$port  (Fenster offen lassen, Strg+C beendet)")
-    if ("--ohne-browser" !in args) runCatching { ProcessBuilder("cmd", "/c", "start", "", "http://127.0.0.1:$port").start() }
+    if ("--ohne-browser" !in args) browser(port)
 }
 
 private fun bedienen(x: HttpExchange) {
@@ -84,6 +102,7 @@ private fun api(was: String, frage: Map<String, String>, k: JSONObject): JSONObj
     fun id() = (frage["id"]?.toLongOrNull() ?: k.optLong("id", -1)).also { if (arbeit.bestand.song(it) == null) throw Fehler("Diesen Song gibt es nicht (mehr).") }
     return when (was) {
         "liste" -> liste()
+        "wer" -> JSONObject().put("daten", File(datenOrdner).absolutePath)
         "holen" -> { arbeit.vomGeraet(Geraet.bestandLesen()); liste() }
         "senden" -> {
             if (arbeit.geaendert.isEmpty()) throw Fehler("Es gibt nichts zu senden: Am Laptop ist nichts geändert, was der Mudita nicht schon hat.")
