@@ -60,12 +60,12 @@ async function ladeListe(mitStand = true) {
 function zeigeStand() {
   const l = Z.liste;
   const wann = l.geholtAm ? "Stand vom Mudita: " + new Date(l.geholtAm).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "Noch keine Daten vom Mudita geholt.";
-  const offen = l.songs.filter((s) => s.geaendert).length;
-  $("#stand").textContent = wann + (offen ? `  ·  ${offen} ${offen === 1 ? "Song" : "Songs"} hier geändert, noch nicht auf dem Mudita` : "") + (l.mudita ? "  ·  Mudita ist angeschlossen" : "  ·  Mudita nicht angeschlossen");
+  const offen = l.offen ?? l.songs.filter((s) => s.geaendert).length;
+  $("#stand").textContent = wann + (offen ? `  ·  ${offen} ${offen === 1 ? "Änderung" : "Änderungen"} hier, noch nicht auf dem Mudita` : "") + (l.mudita ? "  ·  Mudita ist angeschlossen" : "  ·  Mudita nicht angeschlossen");
   const b = $("#senden");
   b.disabled = !offen;
   b.textContent = offen ? `Zum Mudita senden (${offen})` : "Zum Mudita senden";
-  b.title = offen ? "Schickt Text, Teile, Tonart und Kapo der geänderten Songs an TrikTrak. Deine Zeiten vom Einmessen bleiben, wo der Text gleich bleibt." : "Nichts zu senden: Am Laptop ist nichts geändert.";
+  b.title = offen ? "Schickt geänderte Songs (Text, Teile, Tonart, Kapo) und Gigs an TrikTrak. Deine Zeiten vom Einmessen bleiben, wo der Text gleich bleibt." : "Nichts zu senden: Am Laptop ist nichts geändert.";
 }
 
 function zeigeListe() {
@@ -415,5 +415,121 @@ async function zeigeSongdaten() {
 }
 
 $("#songdaten").addEventListener("click", zeigeSongdaten);
+
+
+// ── Gigs und Setlisten (B11) ─────────────────────────────────────────────────
+//
+// Regel (Jans Wahl 14.11.): Der Mudita wird geschützt. Hat er einen Gig seit dem letzten Holen
+// selbst geändert, bleibt seiner, und die Werkstatt sagt Bescheid.
+
+const tagAus = (d) => (d ? new Date(d * 86400000).toISOString().slice(0, 10) : "");
+const tagEin = (v) => (v ? Math.round(Date.parse(v) / 86400000) : 0);
+const tagLang = (d) => (d ? new Date(d * 86400000).toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric", timeZone: "UTC" }) : "ohne Datum");
+
+async function gigTun(daten) {
+  const j = await ruf("gig", daten);
+  if (!j) return;
+  Z.plan = j; Z.liste = j; zeigeStand(); zeigeListe(); melden(""); zeigeGigs();
+}
+
+async function zeigeGigplan() {
+  const j = await ruf("gigplan");
+  if (!j) return;
+  Z.song = null; Z.plan = j; Z.liste = j; zeigeStand(); zeigeListe();
+  if (Z.gig !== undefined && !j.gigs.some((g) => g.id === Z.gig)) Z.gig = undefined;
+  if (Z.gig === undefined && j.gigs.length) Z.gig = j.gigs[0].id;
+  zeigeGigs();
+}
+
+function zeigeGigs() {
+  const p = Z.plan;
+  const g = p.gigs.find((x) => x.id === Z.gig);
+  const neuerGig = async () => {
+    const name = prompt("Name des neuen Gigs:");
+    if (!name || !name.trim()) return;
+    const datum = prompt("Datum (TT.MM.JJJJ), leer lassen = ohne Datum:", "");
+    let tag = 0;
+    if (datum && datum.trim()) {
+      const m = datum.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+      if (!m) { melden("Das Datum bitte so: 21.11.2026"); return; }
+      const jahr = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]);
+      tag = Math.round(Date.UTC(jahr, Number(m[2]) - 1, Number(m[1])) / 86400000);
+    }
+    const vorher = new Set(p.gigs.map((x) => x.id));
+    await gigTun({ tun: "neu", name: name.trim(), datum: tag });
+    const neu = Z.plan.gigs.find((x) => !vorher.has(x.id));
+    if (neu) { Z.gig = neu.id; zeigeGigs(); }
+  };
+  $("#werkbank").replaceChildren(
+    el("div", { class: "kopf" },
+      el("div", { class: "weit" }, el("h2", {}, "Gigs"),
+        el("p", { class: "unterzeile" }, "Gigs und Setlisten bearbeiten. Danach oben „Zum Mudita senden“. Hast du denselben Gig inzwischen am Mudita geändert, bleibt der Mudita-Stand, und du bekommst Bescheid.")),
+      el("button", { class: "knopf", onclick: neuerGig }, "+ Neuer Gig")),
+    el("div", { class: "reihe", style: "margin-bottom:14px" }, ...p.gigs.map((x) =>
+      el("span", { class: "chip" + (x.id === Z.gig ? " an" : ""), onclick: () => { Z.gig = x.id; zeigeGigs(); } }, x.name + (x.geaendert ? " •" : "")))),
+    g ? gigKasten(g) : el("p", { class: "leer" }, p.gigs.length ? "Oben einen Gig wählen." : "Noch keine Gigs. Oben „+ Neuer Gig“."));
+}
+
+function gigKasten(g) {
+  const auto = el("input", { type: "checkbox" });
+  auto.checked = g.autoWeiter;
+  auto.addEventListener("change", () => gigTun({ tun: "aendern", gig: g.id, autoWeiter: auto.checked }));
+  const datum = el("input", { type: "date", value: tagAus(g.datum) });
+  datum.addEventListener("change", () => gigTun({ tun: "aendern", gig: g.id, datum: tagEin(datum.value) }));
+  return el("div", { class: "gigplan" },
+    el("div", { class: "kopf" },
+      el("div", { class: "weit" },
+        el("h3", {}, g.name, el("span", { class: "klein" }, "  ·  " + tagLang(g.datum) + (g.geaendert ? "  ·  hier geändert, noch nicht gesendet" : ""))),
+        el("div", { class: "reihe", style: "align-items:center;margin-top:6px" },
+          el("button", { class: "knopf klein", onclick: () => { const n = prompt("Neuer Name:", g.name); if (n && n.trim()) gigTun({ tun: "aendern", gig: g.id, name: n.trim() }); } }, "Umbenennen"),
+          el("label", { class: "klein" }, "Datum: ", datum),
+          el("label", { class: "klein" }, auto, " Nach einem Set automatisch ins nächste"))),
+      el("button", { class: "knopf klein strich", onclick: () => { if (confirm(`Gig „${g.name}“ mit allen Sets löschen?\nDie Songs bleiben im Archiv. Auf dem Mudita verschwindet er erst nach „Zum Mudita senden“.`)) gigTun({ tun: "loeschen", gig: g.id }); } }, "Gig löschen")),
+    ...g.sets.map((s, i) => setKasten(g, s, i)),
+    el("button", { class: "knopf", style: "margin-top:12px", onclick: () => gigTun({ tun: "setNeu", gig: g.id }) }, "+ Set hinzufügen"));
+}
+
+function setKasten(g, s, i) {
+  const dauer = s.songs.reduce((n, x) => n + x.dauerMs, 0);
+  const drin = new Set(s.songs.map((x) => x.id));
+  const wahl = el("select", {}, el("option", { value: "" }, "Song hinzufügen …"),
+    ...Z.plan.alleSongs.filter((x) => !drin.has(x.id)).map((x) => el("option", { value: String(x.id) }, x.titel)));
+  wahl.addEventListener("change", () => { if (wahl.value) gigTun({ tun: "songHinzu", gig: g.id, set: s.id, song: Number(wahl.value) }); });
+  const zeilen = s.songs.map((x, k) => {
+    const weiter = el("input", { type: "checkbox", title: "Danach startet der nächste Song von selbst (mit Ansage/Pause)" });
+    weiter.checked = x.weiter;
+    weiter.addEventListener("change", () => gigTun({ tun: "songEnde", gig: g.id, set: s.id, song: x.id, weiter: weiter.checked }));
+    const li = el("li", { class: x.gespielt ? "gespielt" : "", draggable: "true" },
+      el("span", { class: "nr" }, String(k + 1)),
+      el("span", { class: "weit" }, x.titel, x.gespielt ? el("span", { class: "klein" }, "  · gespielt") : null),
+      el("span", { class: "klein" }, zeit(x.dauerMs)),
+      el("label", { class: "klein" }, weiter, " danach weiter"),
+      el("button", { class: "knopf klein", disabled: k === 0, title: "Nach oben", onclick: () => gigTun({ tun: "songSchieben", gig: g.id, set: s.id, song: x.id, richtung: -1 }) }, "▲"),
+      el("button", { class: "knopf klein", disabled: k === s.songs.length - 1, title: "Nach unten", onclick: () => gigTun({ tun: "songSchieben", gig: g.id, set: s.id, song: x.id, richtung: 1 }) }, "▼"),
+      el("button", { class: "knopf klein strich", title: "Aus diesem Set nehmen (bleibt im Archiv)", onclick: () => gigTun({ tun: "songWeg", gig: g.id, set: s.id, song: x.id }) }, "Weg"));
+    // Ziehen und auf einen anderen Song fallen lassen: landet an dessen Platz.
+    li.addEventListener("dragstart", (e) => e.dataTransfer.setData("text/plain", `${s.id}:${x.id}`));
+    li.addEventListener("dragover", (e) => { e.preventDefault(); li.classList.add("ziel-oben"); });
+    li.addEventListener("dragleave", () => li.classList.remove("ziel-oben"));
+    li.addEventListener("drop", (e) => {
+      e.preventDefault(); li.classList.remove("ziel-oben");
+      const [setId, songId] = e.dataTransfer.getData("text/plain").split(":").map(Number);
+      if (setId !== s.id || songId === x.id) return;
+      gigTun({ tun: "songSchieben", gig: g.id, set: s.id, song: songId, nach: k });
+    });
+    return li;
+  });
+  return el("div", { class: "set" },
+    el("div", { class: "setkopf reihe", style: "align-items:center" },
+      el("b", {}, s.name), el("span", { class: "klein" }, `${s.songs.length} Songs · ca. ${zeit(dauer)} Min.`),
+      el("button", { class: "knopf klein", onclick: () => { const n = prompt("Name des Sets:", s.name); if (n && n.trim()) gigTun({ tun: "setName", gig: g.id, set: s.id, name: n.trim() }); } }, "Umbenennen"),
+      el("button", { class: "knopf klein", disabled: i === 0, onclick: () => gigTun({ tun: "setSchieben", gig: g.id, set: s.id, richtung: -1 }) }, "▲"),
+      el("button", { class: "knopf klein", disabled: i === g.sets.length - 1, onclick: () => gigTun({ tun: "setSchieben", gig: g.id, set: s.id, richtung: 1 }) }, "▼"),
+      el("button", { class: "knopf klein strich", onclick: () => { if (confirm(`Set „${s.name}“ löschen? Die Songs bleiben im Archiv.`)) gigTun({ tun: "setLoeschen", gig: g.id, set: s.id }); } }, "Set löschen")),
+    s.songs.length ? el("ol", { class: "setliste" }, ...zeilen) : el("p", { class: "klein" }, "Noch leer."),
+    el("div", { class: "reihe", style: "margin-top:6px" }, wahl));
+}
+
+$("#gigplan").addEventListener("click", zeigeGigplan);
 
 ladeListe();

@@ -31,6 +31,8 @@ Ablauf-Code.
 
 ## Übergabe an die nächste Session (geschrieben 2026-11-13, ca. 15:15, ergänzt 19:30, vor Jans Gig)
 
+**Neu 14.11. vormittags (Jan unterwegs, Mudita nicht da):** B8 (Namen für Plätze ohne Gesang, Werkstatt eingespielt), B10 als erledigt erkannt, B11 Gigs am Laptop gebaut (Werkstatt eingespielt; App-Fassung 4 gebaut, NICHT installiert – ohne sie verweigert die Werkstatt das Senden von Gigs). Nächster Schritt mit Mudita: Daten sichern, App installieren, Gig-Senden einmal hin und zurück testen (Konflikt-Fall auch). Details am Ende von PLAN.md.
+
 **Neu 14.11. morgens:** B23 Show-Ruhe ("Bitte nicht stören" nur Medien, solange TrikTrak hält; Jan hat den Zugriff erlaubt, am Gerät geprüft) und B24 Hinweis "Ton gedrosselt" mit Knopf "Ton freigeben" bei Androids Gehörschutz-Sperre (nur simuliert geprüft). Installiert, Details am Ende von PLAN.md.
 
 **Neu 14.11. nachts (2):** B18–B22 gebaut und mit Jans Ja installiert + am Gerät geprüft (02:30, siehe PLAN.md "Gerätetest 14.11."; Zurück fester Weg, Auswahlseite "Jetzt spielen / Danach spielen", Beschriftungen, Kapo+Tonart groß, Werkstatt-Seite "Songdaten"). Werkstatt-Neufassung mit "Songdaten" am 14.11. 09:02 eingespielt (`installDist`), Jan hat sie noch nicht benutzt. Details am Ende von PLAN.md.

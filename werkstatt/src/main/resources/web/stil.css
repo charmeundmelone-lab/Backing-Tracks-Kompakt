@@ -122,3 +122,18 @@ table.songdaten input.tonart, table.songdaten select.kapo { font: 700 22px "Barl
 table.songdaten input.tonart { width: 110px; }
 table.songdaten select.kapo { width: 96px; }
 table.songdaten input:focus, table.songdaten select:focus { outline: 3px solid #000; outline-offset: 2px; }
+
+/* Gigs am Laptop (B11) */
+.gigplan input[type="date"] { font: inherit; font-size: 17px; padding: 3px 8px; border: 1.5px solid #000; border-radius: 8px; }
+.gigplan input[type="checkbox"] { width: 18px; height: 18px; vertical-align: -3px; }
+ol.setliste { list-style: none; margin: 6px 0; padding: 0; }
+ol.setliste li { display: flex; align-items: center; gap: 10px; padding: 6px 8px; border-bottom: 1px solid #000; }
+ol.setliste li .nr { font: 800 22px "Barlow Condensed", sans-serif; width: 28px; text-align: right; }
+ol.setliste li .weit { flex: 1; font: 700 22px "Barlow Condensed", sans-serif; }
+ol.setliste li.gespielt .weit { color: var(--grau); }
+ol.setliste li.ziel-oben { box-shadow: inset 0 3px 0 #000; }
+.gigplan select { font: inherit; font-size: 17px; padding: 6px 10px; border: 2.5px solid #000; border-radius: 10px; }
+ol.setliste li .klein { width: auto; white-space: nowrap; font: 500 16px "Barlow Semi", sans-serif; color: var(--grau); }
+.gigplan { max-width: 980px; }
+.gigplan .klein { font: 500 17px "Barlow Semi", sans-serif; color: var(--grau); }
+.gigplan .set { margin-top: 16px; }

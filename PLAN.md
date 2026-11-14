@@ -516,7 +516,7 @@ Werkstatt verbessern (nach Jans erstem Ausprobieren):
   Songs") die Datei von Hand wählen lassen; für Songs mit Markern statt Arranger-Teilen prüfen.
 
 Stufen 2 und 3:
-- [ ] B11 Stufe 2: Gigs und Setlisten am Laptop (bleiben auch am Mudita). Braucht eine Regel für
+- [x] B11 (14.11. gebaut, NICHT am Gerät geprüft: Jans Regel "Mudita schützen" in `daten/GigAbgleich.kt` (Abdruck ohne gespielt, Laptop-Neues mit negativen Nummern, Mudita vergibt echte); App-Fassung 4 übernimmt `gigs` aus eingang.json; Werkstatt merkt Basis je Gig (`Arbeit.gigsGeaendert`), holt vor dem Senden, Konflikte → Mudita-Stand bleibt, Laptop-Fassung in `sicherungen/laptop-gig-*`; Seite "Gigs" mit Gigs, Sets, Songs, Ziehen, "danach weiter", Datum, Auto-Weiter. Tests: GigAbgleichTest + 6 Werkstatt-Tests; Seite mit Testkopie durchgeklickt. Senden von Gigs geht erst, wenn App-Fassung 4 auf dem Mudita ist) Stufe 2: Gigs und Setlisten am Laptop (bleiben auch am Mudita). Braucht eine Regel für
   beidseitige Änderungen (Vorschlag: pro Set gewinnt die neuere Änderung, Zeitstempel fehlen noch
   im Modell).
 - [ ] B12 Stufe 3: neue Songs aus `Music\Backing Tracks\Nothingphone` aufs Gerät, Songdaten
