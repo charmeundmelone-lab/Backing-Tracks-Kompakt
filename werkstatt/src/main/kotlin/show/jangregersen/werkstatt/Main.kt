@@ -181,6 +181,16 @@ private fun api(was: String, frage: Map<String, String>, k: JSONObject): JSONObj
             }
             songJson(i)
         }
+        // B8: Platz ohne Gesang bekommt einen Namen (Intro, Solo …), die Bühne zeigt ihn statt "Instrumental".
+        "ohnegesang" -> id().let { i ->
+            arbeit.aendern(i) { s ->
+                val alt = Ablauf.von(s.marken, Abschnitte.zerlegen(s.lyrics))
+                val (text, neu) = Abgleich.ohneGesangBenennen(s.lyrics, alt, k.getInt("pos"), k.optString("name"))
+                    ?: throw Fehler("An diesem Platz wird gesungen. Namen ohne Gesang gibt es nur für Instrumental-Plätze.")
+                s.copy(lyrics = text, marken = Ablauf.schreiben(neu))
+            }
+            songJson(i)
+        }
         "etikett" -> id().let { i -> arbeit.aendern(i) { s -> s.copy(lyrics = Abschnitte.umbenennen(s.lyrics, k.getInt("abschnitt"), k.getString("name").trim().ifBlank { throw Fehler("Das Etikett braucht einen Namen.") })) }; songJson(i) }
         "verbinden" -> umbau(id(), k) { s, ab, l ->
             val a = k.getInt("abschnitt")

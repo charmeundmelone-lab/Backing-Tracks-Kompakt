@@ -39,9 +39,6 @@ import show.jangregersen.buehne.App
 import show.jangregersen.buehne.audio.Import
 import show.jangregersen.buehne.daten.Song
 import show.jangregersen.buehne.daten.Tempo
-import show.jangregersen.buehne.daten.ausSetNehmen
-import show.jangregersen.buehne.daten.einfuegenNach
-import show.jangregersen.buehne.daten.songsHinzufuegen
 import java.text.Normalizer
 
 fun buchstabe(titel: String): Char {

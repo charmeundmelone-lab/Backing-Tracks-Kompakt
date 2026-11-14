@@ -507,7 +507,7 @@ Lesbarkeit (Jan ist kurzsichtig, Bühnentext 24–31 sp ist ihm zu klein):
 Werkstatt verbessern (nach Jans erstem Ausprobieren):
 - [ ] B7 Jan probiert die Werkstatt aus (Doppelklick `TrikTrak-Werkstatt.bat`) und sagt, wo er
   hängen bleibt. Noch nicht mit ihm zusammen angesehen.
-- [ ] B8 Jans eigene Labels für Teile ohne Gesang auf der Bühne zeigen (Intro, Solo, Outro statt
+- [x] B8 (14.11.: Werkstatt-Karte ohne Gesang hat "Auf der Bühne: Instrumental | Intro | Solo | Zwischenspiel | Outro | Eigener Name"; `Abgleich.ohneGesangBenennen` legt einen leeren Abschnitt "[Name]" hinten an, Zeiten bleiben; mit Testkopie geprüft. Kompakt zeigt den Namen schon mit der installierten App, weil die Bühne `Ablauf.name` nutzt; am Gerät noch nicht gesehen. Grenze: "Text ab hier ↓" schiebt benannte Plätze wie Text mit, siehe B9) Jans eigene Labels für Teile ohne Gesang auf der Bühne zeigen (Intro, Solo, Outro statt
   "Instrumental"). Weg: leerer Textabschnitt mit diesem Namen (`[Intro]` ohne Zeilen), ein Teil
   ohne Zeilen gilt überall schon als Instrumental.
 - [ ] B9 "Text ab hier ↓" schiebt bisher die ganze Folge samt leerer Fächer. Mit Jan klären, ob

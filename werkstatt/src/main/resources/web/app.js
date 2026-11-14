@@ -175,10 +175,27 @@ function teileAnsicht() {
     el("div", {}, s1Kasten(), vorratKasten()));
 }
 
+/** B8: Name eines Platzes ohne Gesang, so steht er auf der Bühne (statt "Instrumental"). */
+function nameOhneGesang(pos, a) {
+  const jetzt = a === INSTR ? "Instrumental" : Z.song.abschnitte[a].name;
+  const namen = ["Instrumental", "Intro", "Solo", "Zwischenspiel", "Outro"];
+  if (!namen.includes(jetzt)) namen.push(jetzt);
+  return el("label", { class: "klein", title: "So heißt dieser Platz auf der Bühne" }, "Auf der Bühne: ",
+    el("select", {
+      onchange: (e) => {
+        let n = e.target.value;
+        if (n === "?") { n = prompt("Name für diesen Platz ohne Gesang (z. B. Intro, Solo, Outro):", jetzt); if (!n || !n.trim()) { e.target.value = jetzt; return; } }
+        aendern("ohnegesang", { pos, name: n.trim() });
+      },
+    }, ...namen.map((n) => { const o = el("option", { value: n }, n); if (n === jetzt) o.selected = true; return o; }),
+    el("option", { value: "?" }, "Eigener Name …")));
+}
+
 function karte(t, i) {
   const s = Z.song;
   const a = t.abschnitt;
   const zeilen = a === INSTR ? [] : s.abschnitte[a].zeilen;
+  const leer = !zeilen.some((z) => z.trim());
   const s1 = s1TeilBei(t.startMs);
   let nr = -1;
   const waehler = el("select", { title: "Anderen Text auf diesen Platz legen", onchange: (e) => aendern("tauschen", { pos: i, abschnitt: Number(e.target.value) }) },
@@ -195,7 +212,7 @@ function karte(t, i) {
         el("button", { class: "knopf klein", onclick: () => { const f = folge(); f.splice(i + 1, 0, a); aendern("folge", { folge: f }); } }, "Doppeln"),
         el("button", { class: "knopf klein strich", disabled: s.ablauf.length < 2, onclick: () => { const f = folge(); f.splice(i, 1); aendern("folge", { folge: f }); } }, "Weg"))),
     el("div", { class: "zeilen" },
-      a === INSTR ? el("div", { class: "hinweis" }, "ohne Gesang") : null,
+      leer ? el("div", { class: "hinweis" }, "ohne Gesang") : null,
       ...zeilen.map((z) => {
         if (!z.trim()) return el("div", { class: "zeile luecke" });
         nr++;
@@ -206,7 +223,7 @@ function karte(t, i) {
         // Jan, 13.11.: Teile waren zerstückelt, der Knopf dafür stand nur unten im Vorrat.
         i > 0 && a !== INSTR && a > 0 && s.ablauf[i - 1].abschnitt === a - 1
           ? el("button", { class: "knopf klein", title: "Diesen Text an die Karte darüber hängen: aus zwei Teilen wird einer.", onclick: () => aendern("verbinden", { abschnitt: a }) }, "↑ Mit Teil darüber zusammenfügen") : null,
-        a === INSTR ? null : el("button", { class: "knopf klein", onclick: () => { const n = prompt("Neuer Name für diesen Teil (z. B. Strophe, Refrain, Bridge, Solo):", s.abschnitte[a].name); if (n && n.trim()) aendern("etikett", { abschnitt: a, name: n.trim() }); } }, "Umbenennen")),
+        leer ? nameOhneGesang(i, a) : el("button", { class: "knopf klein", onclick: () => { const n = prompt("Neuer Name für diesen Teil (z. B. Strophe, Refrain, Bridge, Solo):", s.abschnitte[a].name); if (n && n.trim()) aendern("etikett", { abschnitt: a, name: n.trim() }); } }, "Umbenennen")),
       el("div", { class: "reihe", style: "margin-top:6px;align-items:center" }, waehler,
         el("button", { class: "knopf klein", title: "Hier ist kein Gesang: Der Text ab dieser Karte rückt einen Platz nach unten. Die Zeiten bleiben an ihren Plätzen.", onclick: () => aendern("ruecken", { pos: i, vor: false }) }, "Text ab hier ↓"),
         a === INSTR ? el("button", { class: "knopf klein", title: "Dieser Platz wird gesungen: Der Text von unten rückt einen Platz herauf.", onclick: () => aendern("ruecken", { pos: i, vor: true }) }, "Text heraufholen ↑") : null)));

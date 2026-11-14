@@ -275,6 +275,29 @@ class AbgleichTest {
         assertTrue(r.markenVorlaeufig)
     }
 
+    @Test fun teilOhneGesangBekommtEigenenNamen() {
+        // B8: Platz 1 ist Instrumental mit Zeit. Er soll "Intro" heißen.
+        val l = listOf(Teil(Ablauf.INSTRUMENTAL, 1_000), Teil(0, 9_000), Teil(1, 20_000), Teil(2, 30_000))
+        val (t, neu) = A.ohneGesangBenennen(text, l, 0, " Intro ")!!
+        val ab = show.jangregersen.buehne.lyrics.Abschnitte.zerlegen(t)
+        // Die alten Abschnitte behalten ihre Nummern und Zeilen, "Intro" kommt leer dazu.
+        assertEquals(show.jangregersen.buehne.lyrics.Abschnitte.zerlegen(text).map { it.zeilen }, ab.dropLast(1).map { it.zeilen })
+        assertEquals("Intro", ab.last().name)
+        assertTrue(ab.last().zeilen.isEmpty())
+        assertEquals(Teil(ab.size - 1, 1_000), neu[0])
+        assertEquals(l.drop(1), neu.drop(1))
+        assertEquals("Intro", Ablauf.name(ab, neu[0]))
+        // Zweiter Platz mit demselben Namen nutzt denselben leeren Abschnitt, legt keinen neuen an.
+        val (t2, neu2) = A.ohneGesangBenennen(t, neu + Teil(Ablauf.INSTRUMENTAL, 40_000), 4, "Intro")!!
+        assertEquals(t, t2)
+        assertEquals(ab.size - 1, neu2[4].abschnitt)
+        // Zurück auf Instrumental, Zeit bleibt.
+        val (_, zurueck) = A.ohneGesangBenennen(t, neu, 0, "Instrumental")!!
+        assertEquals(Teil(Ablauf.INSTRUMENTAL, 1_000), zurueck[0])
+        // Gesungene Plätze lassen sich so nicht umbenennen.
+        assertEquals(null, A.ohneGesangBenennen(text, l, 1, "Intro"))
+    }
+
     @Test fun tonartUndKapoVomLaptopGelten() {
         // B22: Tabelle "Songdaten" am Laptop. Getippte Zeiten bleiben, Tonart und Kapo kommen an.
         val geraet = song(text, getippt)

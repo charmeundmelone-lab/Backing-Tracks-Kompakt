@@ -62,7 +62,7 @@ fun SongWahlSeite(navi: Navi, setId: Long, songId: Long) {
             when {
                 istAktuell -> {
                     T(if (z.spielt) "Dieser Song läuft gerade." else "Dieser Song liegt schon auf der Bühne bereit.", textStil(18.sp, gewicht = FontWeight.Bold))
-                    WahlKnopf("Zur Bühne", "Zeigt den Song mit Text.", Art.VOLL, Sym.ZEILEN) { navi.zurBuehne() }
+                    WahlKnopf("Zur Bühne", "Dort startest du ihn mit Play.", Art.VOLL, Sym.ZEILEN) { navi.zurBuehne() }
                 }
                 z.spielt -> {
                     WahlKnopf("Danach spielen", "Kommt direkt nach dem laufenden Song.", Art.VOLL, Sym.WEITER) { danach(navi, setId, song, imSet) }

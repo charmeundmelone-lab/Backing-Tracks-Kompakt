@@ -77,4 +77,32 @@ object Abgleich {
         }
         return neu to titel
     }
+
+    /** Ein Teil ohne Gesang: Instrumental oder ein Textabschnitt ganz ohne Zeilen (z. B. "[Intro]"). */
+    fun ohneGesang(abschnitte: List<Abschnitt>, a: Int): Boolean =
+        a == Ablauf.INSTRUMENTAL || abschnitte.getOrNull(a)?.zeilen?.none { it.isNotBlank() } == true
+
+    /**
+     * B8: Der Platz [pos] (ohne Gesang) bekommt den Namen [name], damit die Bühne "Intro", "Solo"
+     * oder "Outro" zeigt statt "Instrumental". Weg: ein leerer Textabschnitt "[name]" (wird hinten
+     * angelegt, falls es ihn noch nicht gibt; vorhandene Nummern bleiben so gleich). Die Zeit des
+     * Platzes bleibt. Leerer Name oder "Instrumental" = zurück auf Instrumental.
+     * Ergebnis: neuer Text und neuer Ablauf, oder null, wenn der Platz gesungen wird.
+     */
+    fun ohneGesangBenennen(text: String, ablauf: List<Teil>, pos: Int, name: String): Pair<String, List<Teil>>? {
+        val ab = Abschnitte.zerlegen(text)
+        val t = ablauf.getOrNull(pos) ?: return null
+        if (!ohneGesang(ab, t.abschnitt)) return null
+        val n = name.trim()
+        if (n.isEmpty() || n.equals("Instrumental", ignoreCase = true)) {
+            return text to ablauf.mapIndexed { i, x -> if (i == pos) x.copy(abschnitt = Ablauf.INSTRUMENTAL, zeilenMs = emptyList()) else x }
+        }
+        var idx = ab.indexOfFirst { it.name == n && it.zeilen.none { z -> z.isNotBlank() } }
+        var neuerText = text
+        if (idx < 0) {
+            neuerText = Abschnitte.zusammensetzen(ab + Abschnitt(n, emptyList()))
+            idx = ab.size
+        }
+        return neuerText to ablauf.mapIndexed { i, x -> if (i == pos) x.copy(abschnitt = idx, zeilenMs = emptyList()) else x }
+    }
 }
