@@ -187,8 +187,11 @@ private fun api(was: String, frage: Map<String, String>, k: JSONObject): JSONObj
         "ruecken" -> id().let { i ->
             val pos = k.getInt("pos")
             arbeit.aendern(i) { s ->
-                val alt = Ablauf.von(s.marken, Abschnitte.zerlegen(s.lyrics))
-                val neu = if (k.optBoolean("vor")) Vorschlag.nachVorn(alt, pos) else Vorschlag.nachHinten(alt, pos)
+                val ab = Abschnitte.zerlegen(s.lyrics)
+                val alt = Ablauf.von(s.marken, ab)
+                // B9: Plätze ohne Gesang (auch benannte wie "Solo") bleiben stehen, nur Text rückt.
+                val leer = { a: Int -> Abgleich.ohneGesang(ab, a) }
+                val neu = if (k.optBoolean("vor")) Vorschlag.nachVorn(alt, pos, leer) else Vorschlag.nachHinten(alt, pos, leer)
                 s.copy(marken = Ablauf.schreiben(neu))
             }
             songJson(i)

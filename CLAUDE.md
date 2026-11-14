@@ -31,7 +31,7 @@ Ablauf-Code.
 
 ## Übergabe an die nächste Session (geschrieben 2026-11-13, ca. 15:15, ergänzt 19:30, vor Jans Gig)
 
-**Neu 14.11. vormittags (Jan unterwegs, Mudita nicht da):** B8 (Namen für Plätze ohne Gesang), B10 als erledigt erkannt, B11 Gigs am Laptop (Seite "Gigs"), B12 teilweise (Seite "Neue Songs": WAVs vergleichen und kopieren). Werkstatt eingespielt; App-Fassung 4 am 14.11. 14:14 installiert und Gig-Senden (auch Konflikt) sowie Song-Kopieren am Gerät geprüft, siehe PLAN.md "Gerätetest 14.11. 14:14". Offen: ein wirklich neuer Song (Perfect nach Neu-Export), B9 und Ansagen am Laptop mit Jan klären. Details am Ende von PLAN.md.
+**Neu 14.11. vormittags (Jan unterwegs, Mudita nicht da):** B8 (Namen für Plätze ohne Gesang), B10 als erledigt erkannt, B11 Gigs am Laptop (Seite "Gigs"), B12 teilweise (Seite "Neue Songs": WAVs vergleichen und kopieren). Werkstatt eingespielt; App-Fassung 4 am 14.11. 14:14 installiert und Gig-Senden (auch Konflikt) sowie Song-Kopieren am Gerät geprüft, siehe PLAN.md "Gerätetest 14.11. 14:14". B9 gebaut (Karten ohne Gesang bleiben stehen), Ansagen nur am Mudita (Jans Wahl). Offen: ein wirklich neuer Song (Perfect nach Neu-Export), B7 (Jan bedient die Werkstatt selbst). Details am Ende von PLAN.md.
 
 **Neu 14.11. morgens:** B23 Show-Ruhe ("Bitte nicht stören" nur Medien, solange TrikTrak hält; Jan hat den Zugriff erlaubt, am Gerät geprüft) und B24 Hinweis "Ton gedrosselt" mit Knopf "Ton freigeben" bei Androids Gehörschutz-Sperre (nur simuliert geprüft). Installiert, Details am Ende von PLAN.md.
 

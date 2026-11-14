@@ -141,18 +141,36 @@ object Vorschlag {
      * Am Platz [pos] ist doch kein Gesang: Der Text ab hier rückt ein Fach nach hinten. Die Zeiten
      * bleiben an den Fächern. Fällt hinten ein Textteil heraus, hängt er ohne Zeit am Ende.
      */
-    fun nachHinten(l: List<Teil>, pos: Int): List<Teil> {
-        if (pos !in l.indices) return l
-        val texte = l.map { it.abschnitt }.toMutableList().apply { add(pos, Ablauf.INSTRUMENTAL) }
-        val raus = texte.removeAt(texte.size - 1)
-        val neu = l.mapIndexed { i, t -> if (texte[i] == t.abschnitt) t else Teil(texte[i], t.startMs) }
-        return if (raus == Ablauf.INSTRUMENTAL) neu else neu + Teil(raus)
+    fun nachHinten(l: List<Teil>, pos: Int, ohneGesang: (Int) -> Boolean = { it == Ablauf.INSTRUMENTAL }): List<Teil> {
+        if (pos !in l.indices || ohneGesang(l[pos].abschnitt)) return l
+        // B9 (Jans Wahl 14.11.): Nur gesungener Text rückt. Plätze ohne Gesang (Intro, Solo …)
+        // bleiben an ihrer Zeit. Unbenannte Instrumental-Fächer hinter dem letzten Text sind frei
+        // und nehmen Text auf (ein "Outro" ist oft doch gesungen).
+        val textPlaetze = l.indices.filter { it >= pos && !ohneGesang(l[it].abschnitt) }
+        val texte = textPlaetze.map { l[it].abschnitt }
+        val frei = l.indices.filter { it > textPlaetze.last() && l[it].abschnitt == Ablauf.INSTRUMENTAL }
+        val ziele = textPlaetze.drop(1) + frei
+        val neu = l.toMutableList()
+        neu[pos] = Teil(Ablauf.INSTRUMENTAL, l[pos].startMs)
+        texte.forEachIndexed { k, a -> ziele.getOrNull(k)?.let { i -> if (neu[i].abschnitt != a || i == pos) neu[i] = Teil(a, l[i].startMs) } }
+        // Kein Platz mehr: Der letzte Textteil hängt ohne Zeit hinten an, nichts geht verloren.
+        return if (texte.size > ziele.size) neu + texte.drop(ziele.size).map { Teil(it) } else neu
     }
 
-    /** Das leere Fach [pos] wird gebraucht: Der Text dahinter rückt ein Fach nach vorn, hinten wird eins frei. */
-    fun nachVorn(l: List<Teil>, pos: Int): List<Teil> {
+    /**
+     * Das leere Fach [pos] wird gebraucht: Der gesungene Text dahinter rückt einen Textplatz nach
+     * vorn, der letzte Textplatz wird frei. Plätze ohne Gesang bleiben stehen (B9).
+     */
+    fun nachVorn(l: List<Teil>, pos: Int, ohneGesang: (Int) -> Boolean = { it == Ablauf.INSTRUMENTAL }): List<Teil> {
         if (l.getOrNull(pos)?.abschnitt != Ablauf.INSTRUMENTAL) return l
-        val texte = l.map { it.abschnitt }.toMutableList().apply { removeAt(pos); add(Ablauf.INSTRUMENTAL) }
-        return l.mapIndexed { i, t -> if (texte[i] == t.abschnitt) t else Teil(texte[i], t.startMs) }
+        val textPlaetze = l.indices.filter { it > pos && !ohneGesang(l[it].abschnitt) }
+        if (textPlaetze.isEmpty()) return l
+        val ziele = listOf(pos) + textPlaetze
+        val neu = l.toMutableList()
+        textPlaetze.forEachIndexed { k, i -> neu[ziele[k]] = Teil(l[i].abschnitt, l[ziele[k]].startMs) }
+        neu[textPlaetze.last()] = Teil(Ablauf.INSTRUMENTAL, l[textPlaetze.last()].startMs)
+        // Ein frei gewordener Platz ganz hinten ohne Zeit (war nur angehängt) fällt weg.
+        if (textPlaetze.last() == neu.lastIndex && neu.last().startMs < 0) neu.removeAt(neu.lastIndex)
+        return neu
     }
 }

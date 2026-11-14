@@ -225,7 +225,7 @@ function karte(t, i) {
           ? el("button", { class: "knopf klein", title: "Diesen Text an die Karte darüber hängen: aus zwei Teilen wird einer.", onclick: () => aendern("verbinden", { abschnitt: a }) }, "↑ Mit Teil darüber zusammenfügen") : null,
         leer ? nameOhneGesang(i, a) : el("button", { class: "knopf klein", onclick: () => { const n = prompt("Neuer Name für diesen Teil (z. B. Strophe, Refrain, Bridge, Solo):", s.abschnitte[a].name); if (n && n.trim()) aendern("etikett", { abschnitt: a, name: n.trim() }); } }, "Umbenennen")),
       el("div", { class: "reihe", style: "margin-top:6px;align-items:center" }, waehler,
-        el("button", { class: "knopf klein", title: "Hier ist kein Gesang: Der Text ab dieser Karte rückt einen Platz nach unten. Die Zeiten bleiben an ihren Plätzen.", onclick: () => aendern("ruecken", { pos: i, vor: false }) }, "Text ab hier ↓"),
+        leer ? null : el("button", { class: "knopf klein", title: "Hier ist kein Gesang: Der gesungene Text ab dieser Karte rückt einen Platz weiter. Karten ohne Gesang (Intro, Solo …) und alle Zeiten bleiben stehen.", onclick: () => aendern("ruecken", { pos: i, vor: false }) }, "Text ab hier ↓"),
         a === INSTR ? el("button", { class: "knopf klein", title: "Dieser Platz wird gesungen: Der Text von unten rückt einen Platz herauf.", onclick: () => aendern("ruecken", { pos: i, vor: true }) }, "Text heraufholen ↑") : null)));
   // Ziehen: Karte auf eine andere Karte fallen lassen (obere Hälfte = davor, untere = dahinter).
   k.addEventListener("dragstart", (e) => { e.dataTransfer.setData("text/plain", "karte:" + i); k.classList.add("zieht"); });

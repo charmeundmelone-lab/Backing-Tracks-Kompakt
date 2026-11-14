@@ -116,6 +116,21 @@ class WerkstattTest {
         assertEquals(l, Vorschlag.nachVorn(l, 1))
     }
 
+    @Test fun soloBleibtStehenNurTextRueckt() {
+        // B9, Jans Beispiel: Intro, Strophe 1, Refrain, Solo, Strophe 2, Refrain. Abschnitte im
+        // Text: 0 Strophe 1, 1 Refrain, 2 Strophe 2, 3 Intro (leer), 4 Solo (leer).
+        val ab = Abschnitte.zerlegen("[Strophe 1]\na\n\n[Refrain]\nr\n\n[Strophe 2]\nb\n\n[Intro]\n\n[Solo]")
+        val leer = { a: Int -> show.jangregersen.buehne.lyrics.Abgleich.ohneGesang(ab, a) }
+        val l = listOf(Teil(3, 0), Teil(0, 10_000), Teil(1, 20_000), Teil(4, 30_000), Teil(2, 40_000), Teil(1, 50_000))
+        // Karte 2 ist doch ohne Gesang.
+        val hinten = Vorschlag.nachHinten(l, 1, leer)
+        assertEquals(listOf(Teil(3, 0), Teil(I, 10_000), Teil(0, 20_000), Teil(4, 30_000), Teil(1, 40_000), Teil(2, 50_000), Teil(1)), hinten)
+        // "Text heraufholen" an Karte 2: alles wieder genau wie vorher, das Solo hat sich nie bewegt.
+        assertEquals(l, Vorschlag.nachVorn(hinten, 1, leer))
+        // Auf einem Platz ohne Gesang tut "Text ab hier" nichts.
+        assertEquals(l, Vorschlag.nachHinten(l, 3, leer))
+    }
+
     @Test fun labelsOhneGesang() {
         listOf("Intro", "Intrs", "Instr.", "INST", "INSTR,", "Instrumental", "Solo", "Outro", "END", "EN>D", "ENDING").forEach { assertTrue(it, Vorschlag.ohneGesang(it)) }
         listOf("Vers", "VERS", "Chorus", "Bridge", "Tag", "OURTO").forEach { assertTrue(it, !Vorschlag.ohneGesang(it)) }
