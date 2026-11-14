@@ -580,3 +580,20 @@ Reste der Liste A und Kleines:
     haben einen Kapo, 8 eine Tonart, der Rest müsste eingetragen werden (Werkstatt Stufe 3 oder Kompakt).
   - Jans Wahl: Kapo und Tonart für alle Songs am Laptop in der Werkstatt eintragen (Tabelle mit
     allen Songs, dann "Zum Mudita senden").
+
+Jans Entscheidungen 14.11. nachts (Vorschläge mit Favorit, jeweils "so bauen"):
+- [ ] B18 Zurück-Taste fester Weg: Bühne → Setliste → Sets des Gigs → Gigs, egal wie man kam.
+  Song-Karte, Mixer, Archiv → Seite, von der sie geöffnet wurden. Auf der Gig-Übersicht schließt
+  Zurück die App NICHT (passiert nichts). Setliste ↔ Sets darf den Stapel nicht wachsen lassen.
+- [ ] B19 Anderen Song wählen: Tipp auf Song in der Setliste zeigt zuerst zwei große Knöpfe
+  "Jetzt spielen" (legt auf der Bühne bereit, Play drückt Jan selbst; geht auch in der Pause, die
+  Pause endet) und "Danach spielen" (hinter den laufenden). Einstellungen dahinter unter kleinem
+  Knopf "Einstellungen". Setliste bekommt "Aus dem Archiv" (A–Z) mit denselben zwei Knöpfen, Song
+  wird ins Set eingefügt. Solange ein Song läuft: nur "Danach spielen".
+- [ ] B20 Beschriftungen: "Jetzt spielen", "Danach spielen", "Wieder offen" → "Nochmal einplanen";
+  Pause: "Stopp" → "Timer anhalten", "Liste" → "Anderer Song", "Starten" → "Jetzt starten".
+- [ ] B21 Kapo/Tonart groß: Pausen-Bildschirm mit kleinerer Restzeit und zwei großen Kästen
+  (Kapo, Tonart; Kapo 0 = "ohne", Tonart leer = "–"), dieselben Kästen auf der Bühne, solange ein
+  Song bereitliegt und nicht läuft.
+- [ ] B22 Werkstatt-Seite "Songdaten": Tabelle aller Songs (Titel, Tonart, Kapo), durchtippen,
+  dann "Zum Mudita senden". OHNE Vorschläge aus Dateinamen (Jans Wahl).
