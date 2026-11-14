@@ -184,7 +184,7 @@ class Mischpult(context: Context, private val quellen: List<Quelle>, val pegel: 
                     }
                     if (maxGelesen == 0) { quellenLeer = true; stillSeit = SystemClock.elapsedRealtime(); continue }
                     for (i in 0 until maxGelesen * 2) {
-                        val v = aus[i]; aus[i] = if (v > 1f) 1f else if (v < -1f) -1f else v
+                        val v = aus[i] * AUSGANG; aus[i] = if (v > 1f) 1f else if (v < -1f) -1f else v
                     }
                     mitschnitt?.schreiben(aus, maxGelesen * 2)
                     offen = maxGelesen * 2; offenAb = 0
@@ -207,7 +207,18 @@ class Mischpult(context: Context, private val quellen: List<Quelle>, val pegel: 
 
     private fun warten(ms: Long) { synchronized(lock) { if (!beendet && sprungZiel < 0) lock.wait(ms) } }
 
-    companion object { private const val TAG = "Mischpult" }
+    companion object {
+        private const val TAG = "Mischpult"
+
+        /**
+         * Ausgangspegel der ganzen App in dB. Jan fand den Kompakt am Gig lauter als sein altes
+         * Nothing Phone 3a (gleicher USB-Adapter, beide auf voll). Ausgelesen am 14.11.: Die
+         * Lautstärkekurve des Nothing endet bei −2 dB, die des Kompakt bei 0 dB. Die
+         * Medienlautstärke bleibt auf voll (VolleLautstaerke), nur die App gibt 2 dB weniger aus.
+         */
+        const val AUSGANG_DB = -2f
+        val AUSGANG: Float = Math.pow(10.0, AUSGANG_DB / 20.0).toFloat()
+    }
 }
 
 /** Fehlersuche: liegt files/mitschnitt.an, schreibt jedes Mischpult seine ersten 20 s Ausgabe (float32 LE, stereo) mit. */

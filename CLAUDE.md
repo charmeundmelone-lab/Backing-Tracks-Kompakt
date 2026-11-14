@@ -31,6 +31,8 @@ Ablauf-Code.
 
 ## Übergabe an die nächste Session (geschrieben 2026-11-13, ca. 15:15, ergänzt 19:30, vor Jans Gig)
 
+**Neu 14.11. nachts:** B17 Ausgangspegel −2 dB gebaut (nicht installiert), offene Gig-Fragen am Ende von PLAN.md ("Gig 13.11. abends"). Der Punkt "Jan fragen, wie der Gig lief" ist damit zum Teil erledigt.
+
 **Ganz kurz, wo es weitergeht (Stand 19:30):**
 - B5 erledigt (Jan wählte Seite B). **B6 ist installiert, auf Jans Wunsch noch VOR dem Gig**
   (Commit `f66cadf`, 17:40): Bühne fest 34 sp in Barlow Condensed (Schmal), Zeilenabstand 1,12,

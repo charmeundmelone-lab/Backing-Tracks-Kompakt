@@ -546,3 +546,15 @@ Reste der Liste A und Kleines:
 - [ ] Ordner `Nothingphone` in "Mudita" umbenennen (Jan erlaubt es). Vorher prüfen, was den Pfad
   benutzt (Werkstatt noch nicht, alte Skripte im Ordner, Jans Gewohnheit).
 - [ ] Nicht am Gerät geprüft, nur per Unit-Test: "Mit vorigem verbinden", Doppeltipp-Schutz.
+
+### Gig 13.11. abends (Bar Eriksson) – Rückmeldung 14.11.
+- [x] B17 (14.11.) Ausgangspegel: Jan fand den Kompakt lauter als das Nothing Phone (gleicher
+  USB-Adapter "USB PnP Audio Device", beide auf voll). Ausgelesen per `dumpsys audio` /
+  `media.audio_policy`: Kompakt 15/15 = 0 dB, Nothing 3a 16/16 = −2 dB (seine Kurve endet dort),
+  keine Schutzsperre an beiden, alte App schwächt nichts ab. TrikTrak gibt jetzt 2 dB weniger aus
+  (`Mischpult.AUSGANG_DB`, gilt auch für Ansagen), Medienlautstärke bleibt voll. Gebaut, Tests
+  grün, Installation wartet auf Jans Ja.
+- [ ] Laut Protokoll steckte der Adapter am Gig nur 20:04–20:22 am Kompakt, ab 20:23 am Nothing
+  Phone. Jan fragen, warum er gewechselt hat (er nannte "Bedienung zwischen den Songs").
+- [ ] "Perfect K1.wav": Band-Kanal (links) ist stumm (−108 dB), nur Click drauf. Auf Laptop und
+  Kompakt dieselbe Datei. Jan muss neu exportieren. War nicht im Gig-Set.

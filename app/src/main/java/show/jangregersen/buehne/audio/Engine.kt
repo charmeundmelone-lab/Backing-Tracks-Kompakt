@@ -111,7 +111,7 @@ class Engine(private val context: Context) {
         val mp = MediaPlayer()
         try {
             mp.setDataSource(pfad)
-            @Suppress("DEPRECATION") mp.setVolume(0f, lautstaerke.coerceIn(0f, 1f))
+            @Suppress("DEPRECATION") mp.setVolume(0f, lautstaerke.coerceIn(0f, 1f) * Mischpult.AUSGANG)
             mp.setOnCompletionListener { notizStoppen(); fertig() }
             mp.setOnErrorListener { _, _, _ -> notizStoppen(); fertig(); true }
             mp.prepare()
