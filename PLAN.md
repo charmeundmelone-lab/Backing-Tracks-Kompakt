@@ -578,3 +578,5 @@ Reste der Liste A und Kleines:
   - Wunsch: In der Pause groß sehen, welcher Kapo und welche Tonart der nächste Song hat, zum
     Vorbereiten. Heute nur klein in der Infozeile (`songInfo`, 16 sp). Daten: nur 10 von 46 Songs
     haben einen Kapo, 8 eine Tonart, der Rest müsste eingetragen werden (Werkstatt Stufe 3 oder Kompakt).
+  - Jans Wahl: Kapo und Tonart für alle Songs am Laptop in der Werkstatt eintragen (Tabelle mit
+    allen Songs, dann "Zum Mudita senden").
