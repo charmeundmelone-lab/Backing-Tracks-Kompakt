@@ -74,6 +74,29 @@ object Geraet {
         return false
     }
 
+    /** B12: Dateien im Musikordner auf dem Mudita (Name → Größe). null = kein Mudita da. */
+    fun musikDateien(ordner: String): Map<String, Long>? {
+        val s = seriennummer() ?: return null
+        val (_, aus) = lauf("-s", s, "shell", "cd ${shText(ordner)} && stat -c '%s|%n' *")
+        return NeueSongs.statLesen(String(aus, Charsets.UTF_8))
+    }
+
+    /**
+     * B12: Eine Musikdatei in den Ordner auf dem Mudita kopieren. Erst unter einem Namen, den
+     * TrikTrak nicht als Musik erkennt, dann umbenennen: So sieht die App nie eine halbe Datei.
+     */
+    fun musikKopieren(datei: File, ordner: String) {
+        val s = seriennummer() ?: throw Fehler("Kein Mudita gefunden. Bitte per USB-Kabel anschließen und entsperren.")
+        val ziel = "$ordner/${datei.name}"
+        val halb = "$ziel.kommt"
+        // push nimmt den Zielpfad als ein Argument (keine Shell); mv läuft in der Shell, daher maskiert.
+        if (lauf("-s", s, "push", datei.path, halb, sek = 300).first != 0) throw Fehler("„${datei.name}“ kam nicht auf den Mudita. Ist er entsperrt und das Kabel fest?")
+        if (lauf("-s", s, "shell", "mv -f ${shText(halb)} ${shText(ziel)}").first != 0) throw Fehler("„${datei.name}“ ließ sich auf dem Mudita nicht ablegen.")
+    }
+
+    /** Text sicher für die Shell auf dem Mudita (Leerzeichen, Apostroph wie in „Can't judge a book“). */
+    fun shText(t: String): String = "\"" + t.replace("\\", "\\\\").replace("\"", "\\\"").replace("$", "\\$").replace("`", "\\`") + "\""
+
     /** Liegt noch eine gesendete Datei auf dem Mudita, die TrikTrak nicht übernommen hat? null = kein Mudita da. */
     fun wartetNoch(): Boolean? = seriennummer()?.let { runCatching { liegtNochDa(it) }.getOrNull() }
 }

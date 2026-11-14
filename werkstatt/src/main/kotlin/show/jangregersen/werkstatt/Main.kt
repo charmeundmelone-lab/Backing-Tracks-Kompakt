@@ -149,24 +149,21 @@ private fun api(was: String, frage: Map<String, String>, k: JSONObject): JSONObj
                 else "Gesendet. Die Sicherung liegt auf dem Mudita bereit und wird übernommen, sobald du TrikTrak öffnest (nicht während ein Song läuft). Danach hier einmal „Vom Mudita holen“.")
         }
         "holen" -> { arbeit.vomGeraet(Geraet.bestandLesen(), Geraet.wartetNoch() == true); liste().also { l -> konfliktMeldung()?.let { l.put("gesendet", it) } } }
-        "senden" -> {
-            if (arbeit.offen() == 0) throw Fehler("Es gibt nichts zu senden: Am Laptop ist nichts geändert, was der Mudita nicht schon hat.")
-            // B11: Erst frisch holen. Gigs, die inzwischen am Mudita geändert wurden, bleiben dort
-            // (Regel "Mudita schützen") und gehen gar nicht erst mit.
-            val warten = Geraet.wartetNoch() == true
-            arbeit.vomGeraet(Geraet.bestandLesen(), warten)
-            val konflikt = konfliktMeldung()
-            if (arbeit.offen() == 0) return liste().put("gesendet", konflikt ?: "Der Mudita hat schon alles.")
-            val n = arbeit.geaendert.size
-            val g = arbeit.gigsGeaendert.size
-            val angekommen = Geraet.senden(arbeit.zumSenden(), if (g > 0) Geraet.GIGS_AB else Geraet.EINGANG_AB)
-            arbeit.gigsGesendet(angekommen)
-            // Angekommen: frisch holen, dabei fallen die übernommenen Songs aus "geändert" heraus.
-            if (angekommen) arbeit.vomGeraet(Geraet.bestandLesen())
-            val was = listOfNotNull(n.takeIf { it > 0 }?.let { "$it ${if (it == 1) "Song" else "Songs"}" }, g.takeIf { it > 0 }?.let { "$it ${if (it == 1) "Gig" else "Gigs"}" }).joinToString(" und ")
-            liste().put("gesendet", listOfNotNull(konflikt,
-                if (angekommen) "TrikTrak auf dem Mudita hat $was übernommen. Deine Zeiten vom Einmessen sind geblieben, wo der Text gleich blieb."
-                else "Gesendet. Die Änderungen liegen auf dem Mudita bereit und kommen in TrikTrak an, sobald du die App öffnest (nicht während ein Song läuft oder du einmisst). Danach hier einmal „Vom Mudita holen“.").joinToString(" "))
+        "senden" -> sendenAlles(neuSuchen = false)
+        // B12: neue oder neu exportierte Songs. Ohne Inhalt = Vergleich, mit "dateien" = kopieren und senden.
+        "neuesongs" -> {
+            if (k.has("dateien")) {
+                val namen = k.getJSONArray("dateien").let { a -> (0 until a.length()).map { a.getString(it) } }
+                if (namen.isEmpty()) throw Fehler("Bitte mindestens einen Song ankreuzen.")
+                val ordner = NeueSongs.muditaOrdner(arbeit.bestand)
+                if (Geraet.wartetNoch() == true) throw Fehler("Auf dem Mudita liegt noch eine Sendung, die TrikTrak nicht übernommen hat. Bitte erst TrikTrak öffnen, dann noch einmal.")
+                for (n in namen) {
+                    val f = File(NeueSongs.laptopOrdner, n)
+                    if (!f.isFile || !NeueSongs.istAudio(n)) throw Fehler("„$n“ gibt es im Laptop-Ordner nicht.")
+                    Geraet.musikKopieren(f, ordner)
+                }
+                sendenAlles(neuSuchen = true).put("neueSongs", neueSongs())
+            } else neueSongs()
         }
         // B11: Gigs und Setlisten am Laptop.
         "gigplan" -> gigplan()
@@ -242,6 +239,44 @@ private fun liste(): JSONObject = JSONObject().apply {
 private fun songdaten(): JSONObject = liste().put("daten", JSONArray(arbeit.bestand.songs.sortedBy { it.titel.lowercase() }.map { s ->
     JSONObject().put("id", s.id).put("titel", s.titel).put("tonart", s.tonart).put("kapo", s.kapo).put("geaendert", s.id in arbeit.geaendert)
 }))
+
+/**
+ * "Zum Mudita senden": geänderte Songs und Gigs, bei [neuSuchen] dazu der Auftrag, den
+ * Musikordner neu zu lesen (B12). B11: Erst frisch holen. Gigs, die inzwischen am Mudita
+ * geändert wurden, bleiben dort (Regel "Mudita schützen") und gehen gar nicht erst mit.
+ */
+private fun sendenAlles(neuSuchen: Boolean): JSONObject {
+    if (arbeit.offen() == 0 && !neuSuchen) throw Fehler("Es gibt nichts zu senden: Am Laptop ist nichts geändert, was der Mudita nicht schon hat.")
+    arbeit.vomGeraet(Geraet.bestandLesen(), Geraet.wartetNoch() == true)
+    val konflikt = konfliktMeldung()
+    if (arbeit.offen() == 0 && !neuSuchen) return liste().put("gesendet", konflikt ?: "Der Mudita hat schon alles.")
+    val n = arbeit.geaendert.size
+    val g = arbeit.gigsGeaendert.size
+    val inhalt = JSONObject(arbeit.zumSenden()).apply { if (neuSuchen) put("neuSuchen", true) }.toString()
+    val angekommen = Geraet.senden(inhalt, if (g > 0 || neuSuchen) Geraet.GIGS_AB else Geraet.EINGANG_AB)
+    arbeit.gigsGesendet(angekommen)
+    // Angekommen: frisch holen, dabei fallen die übernommenen Songs aus "geändert" heraus.
+    if (angekommen) arbeit.vomGeraet(Geraet.bestandLesen())
+    val was = listOfNotNull(
+        n.takeIf { it > 0 }?.let { "$it ${if (it == 1) "Song" else "Songs"}" },
+        g.takeIf { it > 0 }?.let { "$it ${if (it == 1) "Gig" else "Gigs"}" },
+        if (neuSuchen) "die neuen Musikdateien" else null
+    ).joinToString(" und ")
+    return liste().put("gesendet", listOfNotNull(konflikt,
+        if (angekommen) "TrikTrak auf dem Mudita hat $was übernommen. Deine Zeiten vom Einmessen sind geblieben, wo der Text gleich blieb."
+        else "Gesendet. Die Änderungen liegen auf dem Mudita bereit und kommen in TrikTrak an, sobald du die App öffnest (nicht während ein Song läuft oder du einmisst). Danach hier einmal „Vom Mudita holen“.").joinToString(" "))
+}
+
+/** B12: Laptop-Ordner gegen Mudita-Ordner. */
+private fun neueSongs(): JSONObject {
+    val laptop = NeueSongs.laptopOrdner.listFiles()?.filter { it.isFile }?.map { it.name to it.length() } ?: emptyList()
+    val ordner = NeueSongs.muditaOrdner(arbeit.bestand)
+    val mudita = runCatching { Geraet.musikDateien(ordner) }.getOrNull()
+    return liste().put("laptopOrdner", NeueSongs.laptopOrdner.path).put("muditaOrdner", ordner).put("verglichen", mudita != null)
+        .put("dateien", JSONArray(NeueSongs.vergleichen(laptop, arbeit.bestand, mudita).map { d ->
+            JSONObject().put("name", d.name).put("groesse", d.groesse).put("stand", d.stand.name).put("titel", d.titel ?: JSONObject.NULL)
+        }))
+}
 
 private fun konfliktMeldung(): String? = arbeit.gigKonflikte.takeIf { it.isNotEmpty() }?.let {
     "Nicht übernommen, weil am Mudita inzwischen geändert: ${it.joinToString(", ")}. Dort gilt der Mudita-Stand; " +

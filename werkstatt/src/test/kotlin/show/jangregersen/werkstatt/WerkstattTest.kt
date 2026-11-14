@@ -251,4 +251,37 @@ class WerkstattTest {
         assertEquals(listOf("Bar", "Hochzeit"), a.bestand.gigs.map { it.name })
         assertTrue(a.gigsGeaendert.isEmpty() && a.gigsGesendet.isEmpty())
     }
+
+    // ── B12: neue Songs vom Laptop ────────────────────────────────────────────
+    private val pfadPerfect = "content://com.android.externalstorage.documents/tree/primary%3AMusic%2FBacking%20Tracks%2FNothingphone/document/primary%3AMusic%2FBacking%20Tracks%2FNothingphone%2FPerfect%20K1.wav"
+
+    @Test fun muditaOrdnerUndDateinameAusDemSongPfad() {
+        val b = Bestand(listOf(Song(1, "Perfect", pfad = pfadPerfect), Song(2, "Spuren", pfad = "content://x/tree/abc||Country Roads")))
+        assertEquals("/sdcard/Music/Backing Tracks/Nothingphone", NeueSongs.muditaOrdner(b))
+        assertEquals("Perfect K1.wav", NeueSongs.dateiname(pfadPerfect))
+        assertNull(NeueSongs.dateiname("content://x/tree/abc||Country Roads"))
+        assertEquals(NeueSongs.STANDARD_ORDNER, NeueSongs.muditaOrdner(Bestand()))
+    }
+
+    @Test fun laptopGegenMuditaVergleichen() {
+        val b = Bestand(listOf(Song(1, "Perfect", pfad = pfadPerfect)))
+        val laptop = listOf("Perfect K1.wav" to 100L, "Neu.wav" to 50L, "Gleich.wav" to 7L, "notizen.txt" to 1L)
+        val mudita = NeueSongs.statLesen("120|Perfect K1.wav\n7|./Gleich.wav\nkaputt\n")
+        val r = NeueSongs.vergleichen(laptop, b, mudita).associateBy { it.name }
+        assertEquals(setOf("Perfect K1.wav", "Neu.wav", "Gleich.wav"), r.keys)
+        // Perfect wurde neu exportiert (andere Größe), das zeigt die Werkstatt als "anders".
+        assertEquals(NeueSongs.Stand.ANDERS, r["Perfect K1.wav"]!!.stand)
+        assertEquals("Perfect", r["Perfect K1.wav"]!!.titel)
+        assertEquals(NeueSongs.Stand.NEU, r["Neu.wav"]!!.stand)
+        assertEquals(NeueSongs.Stand.GLEICH, r["Gleich.wav"]!!.stand)
+        // Ohne Mudita: bekannt oder neu, mehr lässt sich nicht sagen.
+        val ohne = NeueSongs.vergleichen(laptop, b, null).associateBy { it.name }
+        assertEquals(NeueSongs.Stand.UNBEKANNT, ohne["Perfect K1.wav"]!!.stand)
+        assertEquals(NeueSongs.Stand.NEU, ohne["Neu.wav"]!!.stand)
+    }
+
+    @Test fun shellTextHaeltApostrophUndLeerzeichen() {
+        assertEquals("\"/sdcard/Music/Can't judge a book K0.wav\"", Geraet.shText("/sdcard/Music/Can't judge a book K0.wav"))
+        assertEquals("\"a\\\"b\\\$c\\`d\"", Geraet.shText("a\"b\$c`d"))
+    }
 }

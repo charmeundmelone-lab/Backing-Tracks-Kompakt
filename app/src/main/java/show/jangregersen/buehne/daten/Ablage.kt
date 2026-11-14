@@ -19,7 +19,7 @@ import java.io.File
  * JSON in den App-Speicher (erst in eine Zwischendatei, dann umbenennen: ein Absturz mitten
  * im Schreiben kann die alte Datei nicht zerstören).
  */
-class Ablage(context: Context) {
+class Ablage(private val context: Context) {
     private val datei = File(context.filesDir, "bestand.json")
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var speicherJob: Job? = null
@@ -82,7 +82,11 @@ class Ablage(context: Context) {
         val neu = g.bestand
         if (neu != _stand.value) { speicherJob?.cancel(); _stand.value = neu; schreiben(neu) }
         f.delete()
+        // B12: Der Laptop hat neue oder neu exportierte Songs in den Musikordner kopiert.
+        val neueSongs = if (o.optBoolean("neuSuchen")) neuSuchen() else 0
         val teile = buildList {
+            if (neueSongs > 0) add(if (neueSongs == 1) "1 neuer Song" else "$neueSongs neue Songs")
+            else if (o.optBoolean("neuSuchen")) add("Musikdateien neu gelesen")
             when (titel.size) {
                 0 -> {}
                 1 -> add("Song ${titel[0]}")
@@ -93,6 +97,14 @@ class Ablage(context: Context) {
         val text = if (teile.isEmpty()) "Vom Laptop: alles war schon auf dem neuesten Stand." else "Vom Laptop übernommen: " + teile.joinToString(" · ")
         return if (g.abgelehnt.isEmpty()) text else "$text · Nicht übernommen, weil hier geändert: " + g.abgelehnt.joinToString(", ")
     }
+
+    /**
+     * Alle Musikordner, die Jan früher mit "Songs holen" freigegeben hat, noch einmal durchsuchen.
+     * Neue Dateien werden neue Songs, vorhandene bekommen nur die neue Länge (alles andere bleibt).
+     */
+    private fun neuSuchen(): Int = context.contentResolver.persistedUriPermissions
+        .filter { it.isReadPermission && android.provider.DocumentsContract.isTreeUri(it.uri) }
+        .sumOf { runCatching { show.jangregersen.buehne.audio.Import.ordnerHolen(context, it.uri, this) { }.neu }.getOrDefault(0) }
 
     fun sofortSichern() { speicherJob?.cancel(); schreiben(_stand.value) }
 

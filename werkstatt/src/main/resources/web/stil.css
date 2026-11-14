@@ -137,3 +137,6 @@ ol.setliste li .klein { width: auto; white-space: nowrap; font: 500 16px "Barlow
 .gigplan { max-width: 980px; }
 .gigplan .klein { font: 500 17px "Barlow Semi", sans-serif; color: var(--grau); }
 .gigplan .set { margin-top: 16px; }
+table.songdaten tr.fertig td { color: var(--grau); }
+table.songdaten input[type="checkbox"] { width: 20px; height: 20px; }
+header { flex-wrap: wrap; row-gap: 8px; }

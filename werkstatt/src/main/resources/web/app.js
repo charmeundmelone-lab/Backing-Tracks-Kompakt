@@ -532,4 +532,55 @@ function setKasten(g, s, i) {
 
 $("#gigplan").addEventListener("click", zeigeGigplan);
 
+
+// ── Neue Songs vom Laptop auf den Mudita (B12) ───────────────────────────────
+
+const mb = (b) => (b / 1048576).toFixed(0) + " MB";
+
+async function zeigeNeueSongs(fertig) {
+  const j = fertig || (await ruf("neuesongs"));
+  if (!j) return;
+  Z.song = null; Z.liste = j; zeigeStand(); zeigeListe();
+  const STAND = {
+    NEU: ["neu", "Noch nicht auf dem Mudita"],
+    ANDERS: ["anders", "Auf dem Mudita liegt eine andere Fassung (neu exportiert?)"],
+    GLEICH: ["gleich", "Schon genau so auf dem Mudita"],
+    UNBEKANNT: ["bekannt", "Steht in TrikTrak. Ob die Datei gleich ist, sieht man nur mit angeschlossenem Mudita."],
+  };
+  const haken = [];
+  const zeilen = j.dateien.map((d) => {
+    const h = el("input", { type: "checkbox", value: d.name });
+    h.checked = d.stand === "NEU" || d.stand === "ANDERS";
+    haken.push(h);
+    return el("tr", { class: d.stand === "GLEICH" ? "fertig" : "" },
+      el("td", {}, h),
+      el("td", { class: "weit" }, d.name, d.titel ? el("div", { class: "klein" }, "in TrikTrak: " + d.titel) : null),
+      el("td", { class: "klein" }, mb(d.groesse)),
+      el("td", { title: STAND[d.stand][1] }, el("span", { class: "pille " + (d.stand === "GLEICH" ? "ohne" : "refrain") }, STAND[d.stand][0])));
+  });
+  const knopf = el("button", { class: "knopf" }, "Angekreuzte auf den Mudita kopieren");
+  knopf.addEventListener("click", async () => {
+    const dateien = haken.filter((h) => h.checked).map((h) => h.value);
+    if (!dateien.length) { melden("Bitte mindestens einen Song ankreuzen."); return; }
+    const gross = j.dateien.filter((d) => dateien.includes(d.name)).reduce((n, d) => n + d.groesse, 0);
+    if (!confirm(`${dateien.length} ${dateien.length === 1 ? "Datei" : "Dateien"} (${mb(gross)}) auf den Mudita kopieren?\n\nGleichnamige Dateien dort werden ersetzt. Danach liest TrikTrak den Musikordner neu, sobald die App offen ist und nichts spielt. Texte, Zeiten und Setlisten bleiben.`)) return;
+    knopf.disabled = true; knopf.textContent = "Kopiere … (das dauert pro Song ein paar Sekunden)";
+    const r = await ruf("neuesongs", { dateien });
+    knopf.disabled = false; knopf.textContent = "Angekreuzte auf den Mudita kopieren";
+    if (!r) return;
+    melden(r.gesendet || "");
+    zeigeNeueSongs(Object.assign({}, r, { dateien: r.neueSongs.dateien, laptopOrdner: r.neueSongs.laptopOrdner, muditaOrdner: r.neueSongs.muditaOrdner, verglichen: r.neueSongs.verglichen }));
+  });
+  $("#werkbank").replaceChildren(
+    el("h2", {}, "Neue Songs"),
+    el("p", { class: "unterzeile" }, `Deine fertigen Songs am Laptop (${j.laptopOrdner}) im Vergleich mit dem Mudita (${j.muditaOrdner}). ` +
+      (j.verglichen ? "Angekreuzt sind die, die dort fehlen oder anders sind." : "Der Mudita ist nicht angeschlossen: Es lässt sich nur sagen, welche Songs TrikTrak schon kennt.")),
+    j.dateien.length ? el("table", { class: "songdaten" },
+      el("thead", {}, el("tr", {}, el("th", {}, ""), el("th", {}, "Datei"), el("th", {}, "Größe"), el("th", {}, "Stand"))),
+      el("tbody", {}, ...zeilen)) : el("p", { class: "leer" }, "Im Laptop-Ordner liegen keine Musikdateien."),
+    j.verglichen ? el("div", { class: "reihe", style: "margin-top:14px" }, knopf) : null);
+}
+
+$("#neuesongs").addEventListener("click", () => zeigeNeueSongs());
+
 ladeListe();
