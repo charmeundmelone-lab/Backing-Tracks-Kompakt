@@ -281,7 +281,6 @@ class WerkstattTest {
     }
 
     @Test fun shellTextHaeltApostrophUndLeerzeichen() {
-        assertEquals("\"/sdcard/Music/Can't judge a book K0.wav\"", Geraet.shText("/sdcard/Music/Can't judge a book K0.wav"))
-        assertEquals("\"a\\\"b\\\$c\\`d\"", Geraet.shText("a\"b\$c`d"))
+        assertEquals("'/sdcard/Music/Can'\\''t judge a book K0.wav'", Geraet.shText("/sdcard/Music/Can't judge a book K0.wav"))
     }
 }

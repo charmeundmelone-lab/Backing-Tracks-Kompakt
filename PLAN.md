@@ -624,3 +624,13 @@ Jans Meldung 14.11. morgens (vom Gig) – selbstständig behoben:
   nur PRIORITY_CATEGORY_MEDIA; Home → ZEN_MODE_OFF, alte Regel (Wecker+Medien, Unterhaltungen "none") genau zurück,
   Merker weg, Lautstärke wieder 12. Nicht geprüft: ein echter Mail-Ton (Shell-Test hätte eine Benachrichtigung
   in Jans Liste hinterlassen).
+- Gerätetest 14.11. 14:14–14:20 (App-Fassung 4 installiert, Daten vorher/nachher Byte für Byte gleich):
+  B11 Gig senden: "Testlauf" am Laptop umbenannt + Song umgestellt → kam an, gespielt-Haken blieben.
+  Konfliktfall: Laptop benennt um, am Mudita "automatisch ins nächste" umgeschaltet → Mudita-Stand
+  blieb, Meldung kam, Laptop-Fassung in sicherungen/laptop-gig-*. Danach über den Laptop exakt
+  zurückgestellt. B12: Vergleich fand zuerst fälschlich alles "neu" – Ursache: doppelte
+  Anführungszeichen kommen unter Windows nicht heil bei adb an → `Geraet.shText` mit einfachen
+  Anführungszeichen. Danach 42/42 "gleich"; "Can't judge a book K0.wav" (Apostroph!) testweise neu
+  kopiert (kein .kommt-Rest, Datei neu geschrieben), TrikTrak hat neu eingelesen (Ordner-Freigaben
+  14:18:33 erneuert), keine Datenänderung. Noch nicht geprüft: ein wirklich neuer Song (nach Jans
+  Neu-Export von "Perfect").

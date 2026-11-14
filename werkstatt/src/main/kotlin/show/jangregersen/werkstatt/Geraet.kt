@@ -94,8 +94,12 @@ object Geraet {
         if (lauf("-s", s, "shell", "mv -f ${shText(halb)} ${shText(ziel)}").first != 0) throw Fehler("„${datei.name}“ ließ sich auf dem Mudita nicht ablegen.")
     }
 
-    /** Text sicher für die Shell auf dem Mudita (Leerzeichen, Apostroph wie in „Can't judge a book“). */
-    fun shText(t: String): String = "\"" + t.replace("\\", "\\\\").replace("\"", "\\\"").replace("$", "\\$").replace("`", "\\`") + "\""
+    /**
+     * Text sicher für die Shell auf dem Mudita (Leerzeichen, Apostroph wie in „Can't judge a book“).
+     * Einfache Anführungszeichen: Doppelte kommen unter Windows nicht heil bei adb an (14.11. am
+     * Gerät gesehen). Ein Apostroph im Namen wird zu '\'' (Anführung zu, Apostroph, wieder auf).
+     */
+    fun shText(t: String): String = "'" + t.replace("'", "'\\''") + "'"
 
     /** Liegt noch eine gesendete Datei auf dem Mudita, die TrikTrak nicht übernommen hat? null = kein Mudita da. */
     fun wartetNoch(): Boolean? = seriennummer()?.let { runCatching { liegtNochDa(it) }.getOrNull() }
