@@ -36,7 +36,9 @@ object Geraet {
     }
 
     /** Ab dieser App-Fassung (versionCode in app/build.gradle.kts) liest TrikTrak `eingang.json`. */
-    private const val EINGANG_AB = 2
+    const val EINGANG_AB = 2
+    /** Ab dieser Fassung übernimmt TrikTrak auch Gigs und Setlisten vom Laptop (B11). */
+    const val GIGS_AB = 4
     /** Ab dieser Fassung kann TrikTrak den ganzen Bestand übernehmen (Wiederherstellen). */
     const val GANZ_AB = 3
     private const val ZWISCHEN = "/data/local/tmp/triktrak-eingang.json"

@@ -1,6 +1,7 @@
 package show.jangregersen.werkstatt
 
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.json.JSONObject
 import org.junit.Test
@@ -181,5 +182,73 @@ class WerkstattTest {
             // Auch nach Neustart der Werkstatt noch offen.
             assertEquals(setOf(1L), Arbeit(ordner).geaendert.toSet())
         } finally { ordner.deleteRecursively() }
+    }
+
+    // ── B11: Gigs am Laptop, Regel "Mudita schützen" ──────────────────────────
+    private val gigSongs = listOf(Song(1, "Eins", pfad = "x"), Song(2, "Zwei", pfad = "y"))
+    private val bar = show.jangregersen.buehne.daten.Gig(10, "Bar", 0, listOf(show.jangregersen.buehne.daten.SetListe(11, "Set 1", listOf(show.jangregersen.buehne.daten.Eintrag(1)))))
+    private fun mudita(vararg g: show.jangregersen.buehne.daten.Gig) = BestandJson.alsJson(Bestand(gigSongs, g.toList(), naechsteId = 20)).toString()
+
+    private fun mitArbeit(f: (Arbeit, java.io.File) -> Unit) {
+        val ordner = java.nio.file.Files.createTempDirectory("werkstatt-gig").toFile()
+        try { f(Arbeit(ordner), ordner) } finally { ordner.deleteRecursively() }
+    }
+
+    @Test fun gigAmLaptopUeberstehtHolenWennMuditaUnveraendert() = mitArbeit { a, ordner ->
+        a.vomGeraet(mudita(bar))
+        a.gigAendern(10) { g, _ -> g.copy(name = "Bar Eriksson") }
+        a.vomGeraet(mudita(bar))
+        assertEquals("Bar Eriksson", a.bestand.gig(10)!!.name)
+        assertEquals(setOf(10L), a.gigsGeaendert.keys)
+        // Auch nach Neustart der Werkstatt mit derselben Basis.
+        assertEquals(a.gigsGeaendert, Arbeit(ordner).gigsGeaendert)
+    }
+
+    @Test fun amMuditaGeaendertGewinntDerMudita() = mitArbeit { a, ordner ->
+        a.vomGeraet(mudita(bar))
+        a.gigAendern(10) { g, _ -> g.copy(name = "Laptop") }
+        a.vomGeraet(mudita(bar.copy(name = "Am Mudita")))
+        assertEquals("Am Mudita", a.bestand.gig(10)!!.name)
+        assertTrue(a.gigsGeaendert.isEmpty())
+        assertEquals(1, a.gigKonflikte.size)
+        // Die Laptop-Fassung ist nicht verloren.
+        assertTrue(java.io.File(ordner, "sicherungen").listFiles()!!.any { it.name.startsWith("laptop-gig-") && it.readText().contains("Laptop") })
+    }
+
+    @Test fun gespieltAmMuditaZaehltNichtAlsAenderung() = mitArbeit { a, _ ->
+        a.vomGeraet(mudita(bar))
+        a.gigAendern(10) { g, _ -> g.copy(name = "Laptop") }
+        val gespielt = bar.copy(sets = listOf(bar.sets[0].copy(eintraege = listOf(show.jangregersen.buehne.daten.Eintrag(1, gespielt = true)))))
+        a.vomGeraet(mudita(gespielt))
+        assertEquals("Laptop", a.bestand.gig(10)!!.name)
+        assertTrue(a.bestand.gig(10)!!.sets[0].eintraege[0].gespielt)
+    }
+
+    @Test fun neuerGigHatVorlaeufigeNummernUndGehtMit() = mitArbeit { a, _ ->
+        a.vomGeraet(mudita(bar))
+        val id = a.gigAendern(null) { g, neueId -> g.copy(name = "Hochzeit", sets = listOf(show.jangregersen.buehne.daten.SetListe(neueId(), "Set 1"))) }
+        assertTrue(id < 0)
+        val g = a.bestand.gig(id)!!
+        assertTrue(g.sets[0].id < 0 && g.sets[0].id != id)
+        assertEquals(setOf(id), a.gigsGeaendert.keys)
+        assertNull(a.gigsGeaendert[id])
+        val gesendet = BestandJson.eingangGigsAus(JSONObject(a.zumSenden()))
+        assertEquals(listOf("Hochzeit"), gesendet.map { it.gig?.name })
+        // Wieder gelöscht, bevor es raus war: nichts mehr zu senden.
+        a.gigAendern(id) { _, _ -> null }
+        assertTrue(a.gigsGeaendert.isEmpty())
+    }
+
+    @Test fun gesendetUndUebernommenIstErledigt() = mitArbeit { a, _ ->
+        a.vomGeraet(mudita(bar))
+        a.gigAendern(null) { g, neueId -> g.copy(name = "Hochzeit", sets = listOf(show.jangregersen.buehne.daten.SetListe(neueId(), "Set 1"))) }
+        a.gigsGesendet(false)
+        // Noch nicht übernommen: Laptop-Stand bleibt sichtbar.
+        a.vomGeraet(mudita(bar), eingangOffen = true)
+        assertTrue(a.bestand.gigs.any { it.name == "Hochzeit" })
+        // Jetzt hat der Mudita ihn mit echter Nummer: kein doppelter Gig am Laptop.
+        a.vomGeraet(mudita(bar, show.jangregersen.buehne.daten.Gig(20, "Hochzeit", 0, listOf(show.jangregersen.buehne.daten.SetListe(21, "Set 1")))))
+        assertEquals(listOf("Bar", "Hochzeit"), a.bestand.gigs.map { it.name })
+        assertTrue(a.gigsGeaendert.isEmpty() && a.gigsGesendet.isEmpty())
     }
 }

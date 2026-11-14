@@ -64,7 +64,7 @@ fun main(args: Array<String>) {
     // Hängt der Mudita schon am Kabel: gleich frisch holen. Das legt nebenbei eine Sicherung an.
     if (Geraet.seriennummer() != null) {
         println("Hole die Daten vom Mudita …")
-        runCatching { arbeit.vomGeraet(Geraet.bestandLesen()) }.onFailure { println("Holen ging nicht: ${(it as? Fehler)?.meldung ?: it.message}") }
+        runCatching { arbeit.vomGeraet(Geraet.bestandLesen(), Geraet.wartetNoch() == true) }.onFailure { println("Holen ging nicht: ${(it as? Fehler)?.meldung ?: it.message}") }
     }
     if ("--ohne-browser" !in args) browser(port)
 }
@@ -148,16 +148,29 @@ private fun api(was: String, frage: Map<String, String>, k: JSONObject): JSONObj
             liste().put("gesendet", if (angekommen) "Der Mudita ist wiederhergestellt. Falls Musikdateien nicht mehr gefunden werden, zeigt TrikTrak das beim Song an."
                 else "Gesendet. Die Sicherung liegt auf dem Mudita bereit und wird übernommen, sobald du TrikTrak öffnest (nicht während ein Song läuft). Danach hier einmal „Vom Mudita holen“.")
         }
-        "holen" -> { arbeit.vomGeraet(Geraet.bestandLesen()); liste() }
+        "holen" -> { arbeit.vomGeraet(Geraet.bestandLesen(), Geraet.wartetNoch() == true); liste().also { l -> konfliktMeldung()?.let { l.put("gesendet", it) } } }
         "senden" -> {
-            if (arbeit.geaendert.isEmpty()) throw Fehler("Es gibt nichts zu senden: Am Laptop ist nichts geändert, was der Mudita nicht schon hat.")
+            if (arbeit.offen() == 0) throw Fehler("Es gibt nichts zu senden: Am Laptop ist nichts geändert, was der Mudita nicht schon hat.")
+            // B11: Erst frisch holen. Gigs, die inzwischen am Mudita geändert wurden, bleiben dort
+            // (Regel "Mudita schützen") und gehen gar nicht erst mit.
+            val warten = Geraet.wartetNoch() == true
+            arbeit.vomGeraet(Geraet.bestandLesen(), warten)
+            val konflikt = konfliktMeldung()
+            if (arbeit.offen() == 0) return liste().put("gesendet", konflikt ?: "Der Mudita hat schon alles.")
             val n = arbeit.geaendert.size
-            val angekommen = Geraet.senden(arbeit.zumSenden())
+            val g = arbeit.gigsGeaendert.size
+            val angekommen = Geraet.senden(arbeit.zumSenden(), if (g > 0) Geraet.GIGS_AB else Geraet.EINGANG_AB)
+            arbeit.gigsGesendet(angekommen)
             // Angekommen: frisch holen, dabei fallen die übernommenen Songs aus "geändert" heraus.
             if (angekommen) arbeit.vomGeraet(Geraet.bestandLesen())
-            liste().put("gesendet", if (angekommen) "TrikTrak auf dem Mudita hat $n ${if (n == 1) "Song" else "Songs"} übernommen. Deine Zeiten vom Einmessen sind geblieben, wo der Text gleich blieb."
-                else "Gesendet. Die Änderungen liegen auf dem Mudita bereit und kommen in TrikTrak an, sobald du die App öffnest (nicht während ein Song läuft oder du einmisst). Danach hier einmal „Vom Mudita holen“.")
+            val was = listOfNotNull(n.takeIf { it > 0 }?.let { "$it ${if (it == 1) "Song" else "Songs"}" }, g.takeIf { it > 0 }?.let { "$it ${if (it == 1) "Gig" else "Gigs"}" }).joinToString(" und ")
+            liste().put("gesendet", listOfNotNull(konflikt,
+                if (angekommen) "TrikTrak auf dem Mudita hat $was übernommen. Deine Zeiten vom Einmessen sind geblieben, wo der Text gleich blieb."
+                else "Gesendet. Die Änderungen liegen auf dem Mudita bereit und kommen in TrikTrak an, sobald du die App öffnest (nicht während ein Song läuft oder du einmisst). Danach hier einmal „Vom Mudita holen“.").joinToString(" "))
         }
+        // B11: Gigs und Setlisten am Laptop.
+        "gigplan" -> gigplan()
+        "gig" -> { gigTun(k); gigplan() }
         "song" -> songJson(id())
         // B22: Tabelle "Songdaten" (Tonart, Kapo). Ohne id = Liste, mit id = einen Song ändern.
         "songdaten" -> {
@@ -216,6 +229,8 @@ private fun api(was: String, frage: Map<String, String>, k: JSONObject): JSONObj
 private fun liste(): JSONObject = JSONObject().apply {
     put("geholtAm", arbeit.geholtAm)
     put("mudita", Geraet.seriennummer() != null)
+    put("offen", arbeit.offen())
+    put("gigsOffen", arbeit.gigsGeaendert.size)
     put("songs", JSONArray(arbeit.bestand.songs.sortedBy { it.titel.lowercase() }.map { s ->
         val ab = Abschnitte.zerlegen(s.lyrics)
         val l = if (ab.isEmpty()) emptyList() else Ablauf.von(s.marken, ab)
@@ -227,6 +242,79 @@ private fun liste(): JSONObject = JSONObject().apply {
 private fun songdaten(): JSONObject = liste().put("daten", JSONArray(arbeit.bestand.songs.sortedBy { it.titel.lowercase() }.map { s ->
     JSONObject().put("id", s.id).put("titel", s.titel).put("tonart", s.tonart).put("kapo", s.kapo).put("geaendert", s.id in arbeit.geaendert)
 }))
+
+private fun konfliktMeldung(): String? = arbeit.gigKonflikte.takeIf { it.isNotEmpty() }?.let {
+    "Nicht übernommen, weil am Mudita inzwischen geändert: ${it.joinToString(", ")}. Dort gilt der Mudita-Stand; " +
+        "deine Laptop-Fassung liegt in „sicherungen“ (Datei laptop-gig-…)."
+}
+
+// ── B11: Gigs und Setlisten am Laptop ─────────────────────────────────────────
+
+/** Alle Gigs mit Sets und Songs (für die Seite "Gigs"), dazu die Songliste zum Auswählen. */
+private fun gigplan(): JSONObject = liste().apply {
+    put("gigs", JSONArray(arbeit.bestand.gigs.sortedWith(compareBy({ if (it.datum <= 0) Long.MAX_VALUE else it.datum }, { it.name.lowercase() })).map { g ->
+        JSONObject().put("id", g.id).put("name", g.name).put("datum", g.datum).put("autoWeiter", g.autoWeiter)
+            .put("geaendert", g.id in arbeit.gigsGeaendert).put("neu", g.id < 0)
+            .put("sets", JSONArray(g.sets.map { s ->
+                JSONObject().put("id", s.id).put("name", s.name).put("songs", JSONArray(s.eintraege.map { e ->
+                    val song = arbeit.bestand.song(e.songId)
+                    JSONObject().put("id", e.songId).put("titel", song?.titel ?: "(Song fehlt)").put("dauerMs", song?.dauerMs ?: 0)
+                        .put("weiter", e.ende == show.jangregersen.buehne.daten.Ende.WEITER).put("gespielt", e.gespielt)
+                }))
+            }))
+    }))
+    put("alleSongs", JSONArray(arbeit.bestand.songs.sortedBy { it.titel.lowercase() }.map { JSONObject().put("id", it.id).put("titel", it.titel).put("dauerMs", it.dauerMs) }))
+}
+
+/** Eine Änderung an Gigs/Sets. "tun" sagt, was; alle Änderungen laufen über [Arbeit.gigAendern]. */
+private fun gigTun(k: JSONObject) {
+    val tun = k.getString("tun")
+    val gigId = if (k.has("gig")) k.getLong("gig") else null
+    val setId = k.optLong("set", Long.MIN_VALUE)
+    val songId = k.optLong("song", Long.MIN_VALUE)
+    fun name(feld: String = "name") = k.optString(feld).trim().ifBlank { throw Fehler("Bitte einen Namen eingeben.") }.take(60)
+    fun mitSet(g: show.jangregersen.buehne.daten.Gig, f: (show.jangregersen.buehne.daten.SetListe) -> show.jangregersen.buehne.daten.SetListe) =
+        g.copy(sets = g.sets.map { if (it.id == setId) f(it) else it }).also { if (g.sets.none { it.id == setId }) throw Fehler("Dieses Set gibt es nicht mehr.") }
+    fun tauschen(l: List<Any>, i: Int, r: Int): Boolean = i >= 0 && i + r in l.indices
+    when (tun) {
+        "neu" -> arbeit.gigAendern(null) { g, neueId -> g.copy(name = name(), datum = k.optLong("datum", 0), sets = listOf(show.jangregersen.buehne.daten.SetListe(neueId(), "Set 1"))) }
+        "aendern" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { g, _ ->
+            g.copy(name = if (k.has("name")) name() else g.name, datum = if (k.has("datum")) k.getLong("datum") else g.datum, autoWeiter = if (k.has("autoWeiter")) k.getBoolean("autoWeiter") else g.autoWeiter)
+        }
+        "loeschen" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { _, _ -> null }
+        "setNeu" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { g, neueId -> g.copy(sets = g.sets + show.jangregersen.buehne.daten.SetListe(neueId(), "Set ${g.sets.size + 1}")) }
+        "setName" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { g, _ -> mitSet(g) { it.copy(name = name()) } }
+        "setLoeschen" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { g, _ ->
+            if (g.sets.size <= 1) throw Fehler("Ein Gig braucht mindestens ein Set.")
+            g.copy(sets = g.sets.filterNot { it.id == setId })
+        }
+        "setSchieben" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { g, _ ->
+            val l = g.sets.toMutableList(); val i = l.indexOfFirst { it.id == setId }; val r = k.getInt("richtung")
+            if (tauschen(l, i, r)) { val x = l[i]; l[i] = l[i + r]; l[i + r] = x }
+            g.copy(sets = l)
+        }
+        "songHinzu" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { g, _ ->
+            if (arbeit.bestand.song(songId) == null) throw Fehler("Diesen Song gibt es nicht.")
+            mitSet(g) { s -> if (s.eintraege.any { it.songId == songId }) throw Fehler("Der Song steht schon in diesem Set.") else s.copy(eintraege = s.eintraege + show.jangregersen.buehne.daten.Eintrag(songId)) }
+        }
+        "songWeg" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { g, _ -> mitSet(g) { s -> s.copy(eintraege = s.eintraege.filterNot { it.songId == songId }) } }
+        "songSchieben" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { g, _ ->
+            mitSet(g) { s ->
+                val l = s.eintraege.toMutableList(); val i = l.indexOfFirst { it.songId == songId }
+                if (k.has("nach")) {
+                    // Ziehen: an Stelle "nach" (0 = ganz oben).
+                    if (i >= 0) { val x = l.removeAt(i); l.add(k.getInt("nach").coerceIn(0, l.size), x) }
+                } else { val r = k.getInt("richtung"); if (tauschen(l, i, r)) { val x = l[i]; l[i] = l[i + r]; l[i + r] = x } }
+                s.copy(eintraege = l)
+            }
+        }
+        "songEnde" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { g, _ ->
+            val ende = if (k.getBoolean("weiter")) show.jangregersen.buehne.daten.Ende.WEITER else show.jangregersen.buehne.daten.Ende.ANHALTEN
+            mitSet(g) { s -> s.copy(eintraege = s.eintraege.map { if (it.songId == songId) it.copy(ende = ende) else it }) }
+        }
+        else -> throw Fehler("Unbekannte Gig-Änderung.")
+    }
+}
 
 /** Gig-Check: pro Gig und Set, was jedem Song noch fehlt (neueste Gigs zuerst). */
 private fun gigCheck(): JSONObject = JSONObject().put("gigs", JSONArray(arbeit.bestand.gigs.sortedByDescending { it.datum }.map { g ->
