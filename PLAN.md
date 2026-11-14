@@ -659,3 +659,25 @@ Jans Wünsche 14.11. nachmittags (Arbeitsliste C):
   "geändert, nicht gesendet" → BPM/Stempel dort nachgetragen, sonst hätte das nächste Senden sie
   geleert (Grundproblem: bei offenen Songs gewinnen die Laptop-Songdaten). NICHT am Gerät
   geprüft: Pfeile auf der Einstellungen-Seite im Set (Jan hat nur "El Circo" mit leerem Set).
+
+Gig "El Circo" Sa 14.11. abends (C4–C6):
+- [x] C4 Setliste: 3 Sets à ~40 min, 30 s Pause zwischen Songs, 60 s vor Kapo-Wechsel, Show-Automatik
+  ("weiter" bei jedem Eintrag, Gig "automatisch ins nächste"). Spannungskurve: Set 1 ruhig
+  anfangen (K3-Block Landslide/Crazy/Valerie/That's alright Mama, dann ohne Kapo), Set 2 stark
+  (Jolene, dann K2-Block bis Take on Me), Set 3 ruhiger (K2-Balladen, dann ohne Kapo bis
+  Sweet Caroline). Je Set ein Kapo-Wechsel; Set 2 endet und Set 3 beginnt mit Kapo 2.
+  Wichtig: Jan korrigierte während der Planung Kapo/Tempo vieler Songs am Mudita (neue Pfeile) und
+  löschte Ein Hoch auf uns, Sunny, Remember us (ohne Kapo), Country Roads (Einzelspuren) → Plan
+  neu gerechnet. Danach nahm er "Sitting Waiting Wishing" aus Set 1 (Set 1 jetzt 35:45).
+  Weg: Sets/Songs/"weiter" per Test-Werkstatt (`gig`-API), Pausen per Tippen am Mudita
+  (Pause gehört zum Song, nicht zum Eintrag; Werkstatt kann sie nicht). Achtung beim Tippen:
+  Antippen eines Sets in der Set-Übersicht macht es AKTIV und legt seinen ersten Song bereit →
+  am Ende Set 1 wieder antippen. Lange Titel brechen um und schieben die Pause-Knöpfe nach unten.
+- [x] C5 Jolene.wav (818 s, ab 190 s nur Rauschen −63 dB, Loop in Studio One) auf 191 s gekürzt
+  (`werkzeug/WavEnde.java`, Kopf unverändert, Anfang Byte für Byte gleich). Original:
+  `Music\Backing Tracks\Sicherung-Originale\Jolene-vor-Kuerzung-2026-11-14.wav`.
+- [x] C6 Erster echter Lauf "Neue Songs" (geänderte Datei): klappt, ABER "neu einlesen" holt
+  gelöschte Songs zurück, solange ihre Dateien im Musikordner liegen. Umgangen durch kurzes
+  Parken der 4 Dateien in `/sdcard/Download/TrikTrak-geparkt` (danach zurück, Ordner weg).
+  Offen (Verbesserung): App sollte beim Neu-Einlesen bekannte, gelöschte Dateien nicht wieder
+  anlegen (z. B. Liste "gelöscht" im Bestand) – mit Jan klären.
