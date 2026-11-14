@@ -569,3 +569,12 @@ Reste der Liste A und Kleines:
   - Unklare Beschriftung auf der Song-Karte: "Bereitlegen" / "Als Nächstes" (spielt es sofort?
     rückt es vor?) und "Wieder offen".
   - Grund für den Wechsel aufs Nothing Phone am Gig um 20:23: Bedienung zu umständlich.
+  - Bühnentext live: "Gut lesbar, passt" (34 sp schmal, volle Seiten).
+  - Songwechsel lief grundsätzlich wie gewünscht. Aber in der Pause will Jan manchmal den Timer
+    anhalten (noch etwas erzählen) oder mit einem anderen Song weitermachen. Befund: "Stopp" in der
+    Pause (`Buehne.stopp`) hält die Automatik schon an und legt den nächsten Song bereit, die
+    Beschriftung sagt das nicht. Anderer Song aus der Pause heraus: Liste → Karte bietet nur
+    "Als Nächstes".
+  - Wunsch: In der Pause groß sehen, welcher Kapo und welche Tonart der nächste Song hat, zum
+    Vorbereiten. Heute nur klein in der Infozeile (`songInfo`, 16 sp). Daten: nur 10 von 46 Songs
+    haben einen Kapo, 8 eine Tonart, der Rest müsste eingetragen werden (Werkstatt Stufe 3 oder Kompakt).
