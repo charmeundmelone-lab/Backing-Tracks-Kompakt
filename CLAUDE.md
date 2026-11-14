@@ -138,6 +138,15 @@ in Set 1 und 2 nichts. Jan hat "Englishman in New York" an den Anfang von Set 1 
 - Arbeitsdaten außerhalb des Repos: `C:\Users\HUAWEI\TrikTrak-Werkstatt\` (`bestand.json`,
   `zustand.json` mit `geaendert`, `gigsGeaendert`, `gigsGesendet`, `sicherungen/`). Holt beim
   Start automatisch, wenn der Mudita dranhängt.
+- **Automatische Sicherung (seit 15.11., Jans Wunsch):** Windows-Aufgabe "TrikTrak-Sicherung"
+  alle 5 Minuten → `TrikTrak-Werkstatt\TrikTrak-Sicherung-Start.exe` (ohne Fenster) →
+  `TrikTrak-Sicherung.ps1`. Hängt der Mudita per USB dran, holt sie `bestand.json` und legt
+  `sicherungen\mudita-JJJJMMTT-HHMMSS.json` an, nur bei Änderung (gleiches Format wie die
+  Werkstatt, erscheint auf deren Seite "Sicherungen"; die neuesten 60 bleiben). Nur lesend.
+  Log: `TrikTrak-Werkstatt\sicherung.log`. Quellen im Repo: `werkzeug/TrikTrak-Sicherung.ps1`
+  und `werkzeug/TrikTrak-Sicherung-Start.cs` (Bauanleitung im Kopf); nach Änderung ps1 in den
+  Datenordner kopieren. Aus/an: `Disable-ScheduledTask` / `Enable-ScheduledTask -TaskName "TrikTrak-Sicherung"`.
+  Ersetzt NICHT das frische Sichern direkt vor eigenem Schreiben/Installieren.
 - Selbst testen, ohne Jans Daten anzufassen: jars aus `werkstatt/build/install/werkstatt/lib/`
   in einen Scratch-Ordner kopieren, `java -Dtriktrak.daten=<Ordner mit /> -Dfile.encoding=UTF-8 -cp "lib/*" show.jangregersen.werkstatt.MainKt --ohne-browser`
   im Hintergrund starten (leerer Datenordner = frisch vom Mudita holen), per `curl` oder im
