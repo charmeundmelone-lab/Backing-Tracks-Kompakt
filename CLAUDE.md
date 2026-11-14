@@ -31,7 +31,7 @@ Ablauf-Code.
 
 ## Übergabe an die nächste Session (geschrieben 2026-11-13, ca. 15:15, ergänzt 19:30, vor Jans Gig)
 
-**Neu 14.11. nachts:** B17 Ausgangspegel −2 dB gebaut (nicht installiert), offene Gig-Fragen am Ende von PLAN.md ("Gig 13.11. abends"). Der Punkt "Jan fragen, wie der Gig lief" ist damit zum Teil erledigt.
+**Neu 14.11. nachts:** B17 Ausgangspegel −2 dB gebaut und mit Jans Ja installiert (Commit da716e1, 01:51, Daten danach Byte für Byte gleich, Sicherung `.geraet/bestand-2026-11-14-vor-b17.json`; nicht per Ohr geprüft), offene Gig-Fragen am Ende von PLAN.md ("Gig 13.11. abends"). Der Punkt "Jan fragen, wie der Gig lief" ist damit zum Teil erledigt.
 
 **Ganz kurz, wo es weitergeht (Stand 19:30):**
 - B5 erledigt (Jan wählte Seite B). **B6 ist installiert, auf Jans Wunsch noch VOR dem Gig**

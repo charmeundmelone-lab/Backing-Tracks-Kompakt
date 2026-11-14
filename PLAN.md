@@ -553,7 +553,7 @@ Reste der Liste A und Kleines:
   `media.audio_policy`: Kompakt 15/15 = 0 dB, Nothing 3a 16/16 = −2 dB (seine Kurve endet dort),
   keine Schutzsperre an beiden, alte App schwächt nichts ab. TrikTrak gibt jetzt 2 dB weniger aus
   (`Mischpult.AUSGANG_DB`, gilt auch für Ansagen), Medienlautstärke bleibt voll. Gebaut, Tests
-  grün, Installation wartet auf Jans Ja.
+  grün, am 14.11. 01:51 installiert (Daten gleich).
 - [ ] Laut Protokoll steckte der Adapter am Gig nur 20:04–20:22 am Kompakt, ab 20:23 am Nothing
   Phone. Jan fragen, warum er gewechselt hat (er nannte "Bedienung zwischen den Songs").
 - [ ] "Perfect K1.wav": Band-Kanal (links) ist stumm (−108 dB), nur Click drauf. Auf Laptop und
