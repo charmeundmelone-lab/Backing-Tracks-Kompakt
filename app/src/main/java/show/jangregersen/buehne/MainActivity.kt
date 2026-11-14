@@ -67,8 +67,9 @@ class MainActivity : ComponentActivity() {
 
     override fun onStart() {
         super.onStart()
-        if (!show.jangregersen.buehne.audio.VolleLautstaerke.let { it.sichtbar(true); it.pruefen() })
-            App.buehne.hinweis("Die Lautstärke lässt sich nicht auf voll stellen. Bitte am Gerät prüfen.")
+        // Kommt sie nicht auf voll (Gehörschutz-Sperre), zeigt die Wurzel einen großen Hinweis mit
+        // Knopf "Ton freigeben" (VolleLautstaerke.gedrosselt).
+        show.jangregersen.buehne.audio.VolleLautstaerke.sichtbar(true)
     }
 
     override fun onStop() {

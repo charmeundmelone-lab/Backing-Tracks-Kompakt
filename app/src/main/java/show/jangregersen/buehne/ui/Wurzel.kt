@@ -114,6 +114,28 @@ fun Wurzel(navi: Navi, beenden: () -> Unit) {
             is Seite.Frage -> FrageSeite(navi, s)
         }
         Meldungen()
+        DrosselHinweis()
+    }
+}
+
+/**
+ * Gehörschutz-Sperre aktiv (Ton praktisch stumm): großer Hinweis über allem, bis der Ton frei ist.
+ * Der Knopf holt Androids Fenster hervor, dort muss Jan auf OK tippen.
+ */
+@Composable
+private fun DrosselHinweis() {
+    val gedrosselt by show.jangregersen.buehne.audio.VolleLautstaerke.gedrosselt.collectAsState()
+    if (!gedrosselt) return
+    Column(Modifier.fillMaxSize().padding(top = 116.dp), verticalArrangement = Arrangement.Top) {
+        Column(
+            Modifier.fillMaxWidth().padding(horizontal = 10.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Etikett("Achtung · Ton gedrosselt", farbe = Weiss)
+            T("Android hat die Lautstärke gesperrt, die Anlage bekommt fast nichts.", titelStil(26.sp, Weiss), zeilen = 3)
+            T("Tippe auf „Ton freigeben“. Im Fenster danach auf OK tippen, nicht auf Abbrechen.", textStil(17.sp, Weiss, FontWeight.Bold), zeilen = 3)
+            TextKnopf("Ton freigeben", Modifier.fillMaxWidth(), Art.UMRISS, 60.dp, 21.sp) { show.jangregersen.buehne.audio.VolleLautstaerke.freigeben() }
+        }
     }
 }
 

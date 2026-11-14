@@ -605,3 +605,18 @@ Jans Entscheidungen 14.11. nachts (Vorschläge mit Favorit, jeweils "so bauen"):
   (kam zu spät), Werkstatt-Neufassung (`installDist` erst, wenn Jans Werkstatt zu ist).
   Rest: "Test Eins" steht jetzt im Test-Gig "Testlauf". Kleinigkeit offen: Auswahlseite sagt bei
   bereitem Song "Zeigt den Song mit Text", auch bei Songs ohne Text.
+
+Jans Meldung 14.11. morgens (vom Gig) – selbstständig behoben:
+- [x] B23 Mail-Ton kam über die Anlage → `audio/ShowRuhe.kt`: "Bitte nicht stören" (nur Medien
+  dürfen durch, keine Mail/SMS/Anrufe/Wecker), solange TrikTrak die Lautstärke hält; danach genau
+  die alte Einstellung zurück (Merker `files/ruhe-vorher.txt`, auch nach Absturz). Braucht einmal
+  Jans Erlaubnis (Einstellungen → Zugriff während „Bitte nicht stören“ → TrikTrak); bis dahin
+  Karte "Show-Ruhe erlauben" auf der Gigs-Seite. Manifest: ACCESS_NOTIFICATION_POLICY.
+- [x] B24 Kein Ton nach Android-Frage "über den Schwellenwert?" → Ursache: Gehörschutz-Sperre für
+  Kopfhörer/USB (Kompakt: `mSafeUsbMediaVolumeIndex=20` = Stufe 2 von 15, praktisch stumm).
+  Android blockiert das Hochstellen durch die App dann ohne Meldung und schaltet die Sperre nach
+  einer Spielzeit wieder ein (`mMusicActiveMs` zählt). Jetzt: `VolleLautstaerke.gedrosselt` →
+  großer Hinweis über allen Seiten mit Knopf "Ton freigeben" (stellt mit FLAG_SHOW_UI auf voll,
+  Android zeigt dann sein Fenster mit OK). Am Gerät nur simuliert (`files/test-gedrosselt`
+  zusammen mit `files/test-leise`); ob Androids Fenster beim Knopf wirklich kommt, zeigt sich erst,
+  wenn die Sperre wieder aktiv ist.

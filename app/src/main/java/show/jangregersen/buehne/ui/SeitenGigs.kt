@@ -67,6 +67,35 @@ fun datumLesen(text: String): Long? {
 
 fun datumText(tag: Long): String = if (tag <= 0) "" else LocalDate.ofEpochDay(tag).let { "%02d.%02d.%d".format(it.dayOfMonth, it.monthValue, it.year) }
 
+// ── Bitte nicht stören erlauben (14.11.) ─────────────────────────────────────
+
+/**
+ * Solange TrikTrak keinen Zugriff auf "Bitte nicht stören" hat, können Mail- und SMS-Töne über die
+ * Anlage gehen. Dann steht hier eine Karte, die einmal in die Einstellungen führt.
+ */
+@Composable
+private fun RuheErlauben() {
+    val ctx = androidx.compose.ui.platform.LocalContext.current
+    var erlaubt by remember { mutableStateOf(show.jangregersen.buehne.audio.ShowRuhe.erlaubt(ctx)) }
+    // Nach der Rückkehr aus den Einstellungen verschwindet die Karte von selbst.
+    androidx.compose.runtime.LaunchedEffect(erlaubt) {
+        while (!erlaubt) { kotlinx.coroutines.delay(1000); erlaubt = show.jangregersen.buehne.audio.ShowRuhe.erlaubt(ctx) }
+        show.jangregersen.buehne.audio.VolleLautstaerke.pruefen()
+    }
+    if (erlaubt) return
+    Column(
+        Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp).fillMaxWidth().border(2.5.dp, Schwarz, RoundedCornerShape(14.dp)).padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Etikett("Einmal nötig")
+        T("Mail- und SMS-Töne können noch über die Anlage gehen.", textStil(17.sp, gewicht = FontWeight.Bold), zeilen = 2)
+        TextKnopf("Show-Ruhe erlauben", Modifier.fillMaxWidth(), Art.VOLL, 52.dp, 18.sp) {
+            runCatching { ctx.startActivity(android.content.Intent(android.provider.Settings.ACTION_NOTIFICATION_POLICY_ACCESS_SETTINGS)) }
+        }
+        T("Dort „TrikTrak“ einschalten und zurück. Dann ist „Bitte nicht stören“ an, solange TrikTrak offen ist oder spielt.", textStil(14.sp), zeilen = 3)
+    }
+}
+
 // ── Gigs ─────────────────────────────────────────────────────────────────────
 
 @Composable
@@ -77,6 +106,7 @@ fun GigsSeite(navi: Navi) {
     val naechster = gigs.firstOrNull { it.datum >= heute }?.id
     Rahmen(navi, "TrikTrak", "Gigs") {
         Segmente(listOf("Gigs", "Archiv"), 0, Modifier.padding(start = 14.dp, end = 14.dp, top = 12.dp)) { if (it == 1) navi.ersetzen(Seite.Archiv()) }
+        RuheErlauben()
         SeitenListe(
             eintraege = gigs, zeilenHoehe = 88.dp, modifier = Modifier.weight(1f), schluessel = "gigs", oben = 10.dp,
             fuss = { s, n, _, z, v ->
