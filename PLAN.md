@@ -558,3 +558,14 @@ Reste der Liste A und Kleines:
   Phone. Jan fragen, warum er gewechselt hat (er nannte "Bedienung zwischen den Songs").
 - [ ] "Perfect K1.wav": Band-Kanal (links) ist stumm (−108 dB), nur Click drauf. Auf Laptop und
   Kompakt dieselbe Datei. Jan muss neu exportieren. War nicht im Gig-Set.
+- Jans Rückmeldung zur Bedienung (14.11., gesammelt, NOCH NICHTS UMBAUEN, erst Vorschläge mit Favorit):
+  - Zurück-Taste landet falsch, alle drei Fälle erlebt: (a) Setliste → Song-Karte → "Jetzt
+    bereitlegen" → Bühne, Zurück führt zur Song-Karte statt zur Setliste (`zurBuehne` legt die Bühne
+    auf die Karte); (b) Setliste ↔ "Sets" im Kreis, der Stapel wächst (`navi.zu` statt zurück);
+    (c) einmal zu oft Zurück und TrikTrak ging zu (`BackHandler` → `beenden()` auf Gigs).
+  - Anderen Song wählen, alle vier Lagen erlebt: Song im Set vorziehen, Song nicht im Set (Archiv),
+    während Pause/Ansage umentscheiden ("Erst den laufenden Song stoppen"), zu viele Schritte
+    (Setliste → Karte → Bereitlegen → Bühne → Play).
+  - Unklare Beschriftung auf der Song-Karte: "Bereitlegen" / "Als Nächstes" (spielt es sofort?
+    rückt es vor?) und "Wieder offen".
+  - Grund für den Wechsel aufs Nothing Phone am Gig um 20:23: Bedienung zu umständlich.
