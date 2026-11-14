@@ -50,16 +50,15 @@ fun SongWahlSeite(navi: Navi, setId: Long, songId: Long) {
         Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 14.dp, top = 10.dp, bottom = 8.dp), verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f)) {
                 Etikett(
-                    if (e == null) "Noch nicht im Set" else "Platz ${set.eintraege.indexOf(e) + 1}${if (e.gespielt) " · gespielt" else ""}"
+                    (if (e == null) "Noch nicht im Set" else "Platz ${set.eintraege.indexOf(e) + 1}${if (e.gespielt) " · gespielt" else ""}") + " · ${zeit(song.dauerMs)}"
                 )
                 T(song.titel, titelStil(30.sp), zeilen = 2)
-                T(zeit(song.dauerMs), textStil(16.sp), zeilen = 1)
             }
             SymbolKnopf(Sym.KREUZ, "Schließen", Modifier.width(52.dp), hoehe = 52.dp, groesse = 16.dp) { navi.zurueck() }
         }
         Linie(Modifier.padding(horizontal = 14.dp), 2.5.dp)
-        Column(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            KapoTonart(song, 30.sp, 10.dp)
+        Column(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+            KapoTonart(song, 26.sp, 8.dp)
             when {
                 istAktuell -> {
                     T(if (z.spielt) "Dieser Song läuft gerade." else "Dieser Song liegt schon auf der Bühne bereit.", textStil(18.sp, gewicht = FontWeight.Bold))
@@ -70,13 +69,13 @@ fun SongWahlSeite(navi: Navi, setId: Long, songId: Long) {
                     T("„Jetzt spielen“ geht erst, wenn der laufende Song zu Ende oder gestoppt ist.", textStil(15.sp))
                 }
                 else -> {
-                    WahlKnopf("Jetzt spielen", if (z.pause != null) "Pause endet. Song liegt bereit, du drückst Play." else "Song liegt auf der Bühne bereit, du drückst Play.", Art.VOLL, Sym.PLAY) {
+                    WahlKnopf("Jetzt spielen", if (z.pause != null) "Pause endet. Liegt bereit, Play drückst du." else "Liegt auf der Bühne bereit, Play drückst du.", Art.VOLL, Sym.PLAY) {
                         jetzt(navi, setId, songId)
                     }
                     if (bereit != null) WahlKnopf("Danach spielen", "Kommt nach „${bereit.titel}“.", Art.UMRISS, Sym.WEITER) { danach(navi, setId, song, imSet) }
                 }
             }
-            if (!imSet) WahlKnopf("Ans Ende vom Set", "Nur einplanen, spielt erst am Schluss.", Art.DUENN, Sym.PLUS) {
+            if (!imSet) WahlKnopf("Ans Ende vom Set", "Nur einplanen, kommt erst am Schluss.", Art.DUENN, Sym.PLUS) {
                 App.ablage.aendern { it.songsHinzufuegen(setId, listOf(songId)) }
                 App.buehne.hinweis("„${song.titel}“ steht jetzt am Ende vom Set.")
                 navi.zurueck()
@@ -86,7 +85,7 @@ fun SongWahlSeite(navi: Navi, setId: Long, songId: Long) {
                 App.buehne.hinweis("„${song.titel}“ ist wieder eingeplant.")
             }
         }
-        if (imSet) TextKnopf("Einstellungen: Pause, Songende, Ansage, Mixer", Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp).fillMaxWidth(), Art.DUENN, 50.dp, 15.sp) {
+        if (imSet) TextKnopf("Einstellungen: Pause, Ansage, Mixer", Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp).fillMaxWidth(), Art.DUENN, 50.dp, 15.sp) {
             navi.zu(Seite.SongKarte(setId, songId))
         }
     }
@@ -116,8 +115,8 @@ private fun danach(navi: Navi, setId: Long, song: Song, imSet: Boolean) {
 
 @Composable
 private fun WahlKnopf(text: String, erklaerung: String, art: Art, symbol: Sym? = null, onClick: () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        TextKnopf(text, Modifier.fillMaxWidth(), art, 60.dp, 21.sp, symbol, onClick = onClick)
+    Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        TextKnopf(text, Modifier.fillMaxWidth(), art, 54.dp, 21.sp, symbol, onClick = onClick)
         T(erklaerung, textStil(15.sp), Modifier.padding(horizontal = 6.dp), zeilen = 2)
     }
 }

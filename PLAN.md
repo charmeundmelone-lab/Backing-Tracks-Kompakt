@@ -597,3 +597,11 @@ Jans Entscheidungen 14.11. nachts (Vorschläge mit Favorit, jeweils "so bauen"):
   Song bereitliegt und nicht läuft.
 - [x] B22 (gebaut 14.11., in Test-Werkstatt geprüft; `Abgleich.textUndTeile` übernimmt jetzt Tonart+Kapo vom Laptop, braucht die neue App) Werkstatt-Seite "Songdaten": Tabelle aller Songs (Titel, Tonart, Kapo), durchtippen,
   dann "Zum Mudita senden". OHNE Vorschläge aus Dateinamen (Jans Wahl).
+- Gerätetest 14.11. 02:25–02:35 (installiert 02:30, Daten vor/nach gleich): Setliste ↔ Sets ohne
+  Kreis, Zurück Bühne → Setliste → Sets → Gigs, auf Gigs bleibt die App offen; Auswahlseite (im Set,
+  aus dem Archiv), "Jetzt spielen", "Danach spielen" fügt hinter dem bereiten Song ein; Pause mit
+  Kapo/Tonart-Kästen und neuen Knöpfen (Foto `.geraet/b21-pause.png`); Kästen auf der Bühne vor dem
+  Start. Seite war mit Jetzt-Band zu lang → kompakter gemacht. NICHT geprüft: "Timer anhalten"
+  (kam zu spät), Werkstatt-Neufassung (`installDist` erst, wenn Jans Werkstatt zu ist).
+  Rest: "Test Eins" steht jetzt im Test-Gig "Testlauf". Kleinigkeit offen: Auswahlseite sagt bei
+  bereitem Song "Zeigt den Song mit Text", auch bei Songs ohne Text.

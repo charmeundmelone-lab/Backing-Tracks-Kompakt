@@ -96,7 +96,8 @@ fun BuehneSeite(navi: Navi) {
         // B21: Solange der Song nur bereitliegt, stehen Kapo und Tonart groß oben (zum Vorbereiten).
         // Beim Start verschwinden sie einmal, danach bleibt die Seite ruhig.
         val pos by App.buehne.position.collectAsState()
-        if (!z.spielt && pos == 0L && !z.probe) KapoTonart(song, 30.sp, 10.dp, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp))
+        // Ohne Text zeigt die Bühne Tonart und Kapo ohnehin groß (SongDaten), dann nicht doppelt.
+        if (!z.spielt && pos == 0L && !z.probe && song.lyrics.isNotBlank()) KapoTonart(song, 30.sp, 10.dp, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp))
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (song.lyrics.isNotBlank()) LyricsBereich(song, z.dauerMs)
             else SongDaten(song)
