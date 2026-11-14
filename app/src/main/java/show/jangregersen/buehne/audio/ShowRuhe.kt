@@ -36,7 +36,8 @@ object ShowRuhe {
             val merker = File(c.filesDir, MERKER)
             val p = nm.notificationPolicy
             if (!merker.exists()) {
-                merker.writeText(listOf(nm.currentInterruptionFilter, p.priorityCategories, p.priorityCallSenders, p.priorityMessageSenders, p.suppressedVisualEffects).joinToString(";"))
+                val gespraeche = if (Build.VERSION.SDK_INT >= 30) p.priorityConversationSenders else -1
+                merker.writeText(listOf(nm.currentInterruptionFilter, p.priorityCategories, p.priorityCallSenders, p.priorityMessageSenders, p.suppressedVisualEffects, gespraeche).joinToString(";"))
             }
             // Nur Medien dürfen durch (ab Android 9 eigene Kategorie; davor gehen Medien immer durch).
             val nurMedien = if (Build.VERSION.SDK_INT >= 28) NotificationManager.Policy.PRIORITY_CATEGORY_MEDIA else 0
@@ -59,7 +60,9 @@ object ShowRuhe {
         runCatching {
             val w = merker.readText().trim().split(";").map { it.toInt() }
             if (nm != null && nm.isNotificationPolicyAccessGranted) {
-                nm.notificationPolicy = NotificationManager.Policy(w[1], w[2], w[3], w[4])
+                // Ab Android 11 auch die Einstellung für Unterhaltungen genau zurück.
+                nm.notificationPolicy = if (Build.VERSION.SDK_INT >= 30 && w.size > 5 && w[5] >= 0) NotificationManager.Policy(w[1], w[2], w[3], w[4], w[5])
+                    else NotificationManager.Policy(w[1], w[2], w[3], w[4])
                 nm.setInterruptionFilter(if (w[0] in 1..4) w[0] else NotificationManager.INTERRUPTION_FILTER_ALL)
             }
         }.onFailure { Log.e(TAG, "Bitte nicht stören ließ sich nicht zurückstellen", it) }

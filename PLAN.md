@@ -620,3 +620,7 @@ Jans Meldung 14.11. morgens (vom Gig) – selbstständig behoben:
   Android zeigt dann sein Fenster mit OK). Am Gerät nur simuliert (`files/test-gedrosselt`
   zusammen mit `files/test-leise`); ob Androids Fenster beim Knopf wirklich kommt, zeigt sich erst,
   wenn die Sperre wieder aktiv ist.
+- B23 am Gerät geprüft (14.11. 09:05): Jan hat den Zugriff erlaubt. TrikTrak offen → ZEN_MODE_IMPORTANT_INTERRUPTIONS,
+  nur PRIORITY_CATEGORY_MEDIA; Home → ZEN_MODE_OFF, alte Regel (Wecker+Medien, Unterhaltungen "none") genau zurück,
+  Merker weg, Lautstärke wieder 12. Nicht geprüft: ein echter Mail-Ton (Shell-Test hätte eine Benachrichtigung
+  in Jans Liste hinterlassen).
