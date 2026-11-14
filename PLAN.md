@@ -512,7 +512,7 @@ Werkstatt verbessern (nach Jans erstem Ausprobieren):
   ohne Zeilen gilt überall schon als Instrumental.
 - [ ] B9 "Text ab hier ↓" schiebt bisher die ganze Folge samt leerer Fächer. Mit Jan klären, ob
   nur die Texte wandern sollen.
-- [ ] B10 Für Songs ohne gleichnamige Studio-One-Datei (11 von 42, Liste oben unter "Fertige
+- [x] B10 (14.11. geprüft: schon im Code, `StudioOne.ausXml` nimmt benannte Marker, wenn kein Arranger-Track da ist, Hinweis "Teile aus den Markern gelesen"; Knopf "Andere Datei" wählt von Hand) Für Songs ohne gleichnamige Studio-One-Datei (11 von 42, Liste oben unter "Fertige
   Songs") die Datei von Hand wählen lassen; für Songs mit Markern statt Arranger-Teilen prüfen.
 
 Stufen 2 und 3:
