@@ -15,6 +15,7 @@ kotlin {
             "show/jangregersen/buehne/daten/Modell.kt",
             "show/jangregersen/buehne/daten/Aenderungen.kt",
             "show/jangregersen/buehne/daten/BestandJson.kt",
+            "show/jangregersen/buehne/daten/GigAbgleich.kt",
             "show/jangregersen/buehne/netz/Lrclib.kt"
         )
     }

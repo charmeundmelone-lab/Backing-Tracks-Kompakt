@@ -75,14 +75,23 @@ class Ablage(context: Context) {
             f.delete()
             return "Vom Laptop wiederhergestellt: ${neu.songs.size} Songs, ${neu.gigs.size} Gigs."
         }
-        val (neu, titel) = show.jangregersen.buehne.lyrics.Abgleich.eingang(_stand.value, songs)
+        val (mitSongs, titel) = show.jangregersen.buehne.lyrics.Abgleich.eingang(_stand.value, songs)
+        // B11: Gigs vom Laptop, der Mudita wird geschützt (GigAbgleich).
+        val gigs = runCatching { BestandJson.eingangGigsAus(o) }.getOrDefault(emptyList())
+        val g = GigAbgleich.uebernehmen(mitSongs, gigs)
+        val neu = g.bestand
         if (neu != _stand.value) { speicherJob?.cancel(); _stand.value = neu; schreiben(neu) }
         f.delete()
-        return when (titel.size) {
-            0 -> "Vom Laptop: alles war schon auf dem neuesten Stand."
-            1 -> "Vom Laptop übernommen: ${titel[0]}"
-            else -> "Vom Laptop übernommen (${titel.size} Songs): " + titel.take(4).joinToString(", ") + if (titel.size > 4) " …" else ""
+        val teile = buildList {
+            when (titel.size) {
+                0 -> {}
+                1 -> add("Song ${titel[0]}")
+                else -> add("${titel.size} Songs: " + titel.take(3).joinToString(", ") + if (titel.size > 3) " …" else "")
+            }
+            if (g.uebernommen.isNotEmpty()) add("Gigs: " + g.uebernommen.joinToString(", "))
         }
+        val text = if (teile.isEmpty()) "Vom Laptop: alles war schon auf dem neuesten Stand." else "Vom Laptop übernommen: " + teile.joinToString(" · ")
+        return if (g.abgelehnt.isEmpty()) text else "$text · Nicht übernommen, weil hier geändert: " + g.abgelehnt.joinToString(", ")
     }
 
     fun sofortSichern() { speicherJob?.cancel(); schreiben(_stand.value) }

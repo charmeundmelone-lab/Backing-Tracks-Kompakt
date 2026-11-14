@@ -14,6 +14,18 @@ import show.jangregersen.buehne.lyrics.Teil
 
 /** Erfundene Daten im Aufbau von Jans Studio-One-Dateien. */
 class WerkstattTest {
+    @Test fun gigsInEingangJsonHinUndZurueck() {
+        // B11: Laptop schreibt Gig-Änderungen in eingang.json, der Kompakt liest sie so wieder.
+        val g = show.jangregersen.buehne.daten.Gig(10, "Bar", 20000, listOf(show.jangregersen.buehne.daten.SetListe(11, "Set 1", listOf(show.jangregersen.buehne.daten.Eintrag(1, ende = 2)))))
+        val A = show.jangregersen.buehne.daten.GigAbgleich
+        fun aend(id: Long, g: show.jangregersen.buehne.daten.Gig?, b: String?) = show.jangregersen.buehne.daten.GigAbgleich.Aenderung(id, g, b)
+        val a = listOf(aend(10, g, A.abdruck(g)), aend(-1, show.jangregersen.buehne.daten.Gig(-1, "Neu"), null), aend(7, null, "x"))
+        val text = BestandJson.eingangJson(emptyList(), a).toString()
+        assertEquals(a, BestandJson.eingangGigsAus(JSONObject(text)))
+        // Ohne Gigs bleibt die Datei wie bisher (ältere App-Fassungen lesen sie weiter).
+        assertTrue(!BestandJson.eingangJson(emptyList()).has("gigs"))
+    }
+
     // Tempo 0,5 s pro Viertel (120 BPM): 8 Viertel = 4 s.
     private fun xml(arranger: String, marker: String = """<MarkerEvent markerStop="0" markerType="2" timeFormat="2" name="Start"/>""") = """
         <Song><TempoMap x:id="tempoMap"><TempoMapSegment curveType="0" start="0" end="1e+200" tempo="0.5"/></TempoMap>

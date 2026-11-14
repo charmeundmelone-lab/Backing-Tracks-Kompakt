@@ -24,14 +24,35 @@ object BestandJson {
         return Bestand(songs, gigs, maxOf(o.optLong("naechsteId", 1), maxId + 1))
     }
 
-    /** Datei `eingang.json`: am Laptop geänderte Songs, die der Kompakt übernehmen soll. */
-    fun eingangJson(songs: List<Song>): JSONObject = JSONObject().apply {
+    /** Datei `eingang.json`: am Laptop geänderte Songs (und seit B11 Gigs), die der Kompakt übernehmen soll. */
+    fun eingangJson(songs: List<Song>, gigs: List<GigAbgleich.Aenderung> = emptyList()): JSONObject = JSONObject().apply {
         put("eingang", 1)
         put("songs", JSONArray().apply { songs.forEach { put(songJson(it)) } })
+        if (gigs.isNotEmpty()) put("gigs", JSONArray().apply {
+            gigs.forEach { a ->
+                put(JSONObject().apply {
+                    put("gigId", a.gigId)
+                    put("basis", a.basis ?: JSONObject.NULL)
+                    put("gig", a.gig?.let { gigJson(it) } ?: JSONObject.NULL)
+                })
+            }
+        })
     }
 
     fun eingangAus(o: JSONObject): List<Song> =
         o.optJSONArray("songs")?.let { a -> (0 until a.length()).map { songAus(a.getJSONObject(it)) } } ?: emptyList()
+
+    fun eingangGigsAus(o: JSONObject): List<GigAbgleich.Aenderung> =
+        o.optJSONArray("gigs")?.let { a ->
+            (0 until a.length()).map { i ->
+                val x = a.getJSONObject(i)
+                GigAbgleich.Aenderung(
+                    x.getLong("gigId"),
+                    if (x.isNull("gig")) null else gigAus(x.getJSONObject("gig")),
+                    if (x.isNull("basis")) null else x.getString("basis")
+                )
+            }
+        } ?: emptyList()
 
     private fun songJson(s: Song) = JSONObject().apply {
         put("id", s.id); put("titel", s.titel); put("interpret", s.interpret); put("bpm", s.bpm)
