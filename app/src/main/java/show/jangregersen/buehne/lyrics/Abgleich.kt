@@ -54,6 +54,8 @@ object Abgleich {
             // Titel und BPM ebenso (B12, Songdaten am Laptop).
             titel = laptop.titel.ifBlank { geraet.titel },
             bpm = laptop.bpm,
+            // Tempo-Stempel (Langsam/Mittel/Schnell) seit 14.11. auch.
+            tempo = laptop.tempo,
             tonart = laptop.tonart,
             kapo = laptop.kapo,
             lyrics = laptop.lyrics,

@@ -27,6 +27,18 @@ class WerkstattTest {
         assertTrue(!BestandJson.eingangJson(emptyList()).has("gigs"))
     }
 
+    @Test fun songdatenMitTempoStempelKommenAufDenMudita() {
+        // 14.11.: BPM und Tempo-Stempel vom Laptop, Ansage und Mixer bleiben wie am Mudita.
+        val geraet = Song(1, "Riptide", pfad = "p", ansageVorher = "a.m4a", mix = mapOf("band" to 7))
+        val laptop = geraet.copy(bpm = 100, tempo = 2, ansageVorher = "", mix = emptyMap())
+        val neu = Abgleich.textUndTeile(geraet, laptop)
+        assertEquals(100, neu.bpm); assertEquals(2, neu.tempo)
+        assertEquals("a.m4a", neu.ansageVorher); assertEquals(7, neu.mix["band"])
+        // Und der Weg über eingang.json verliert den Stempel nicht.
+        val zurueck = BestandJson.eingangAus(JSONObject(BestandJson.eingangJson(listOf(laptop)).toString())).single()
+        assertEquals(2, zurueck.tempo)
+    }
+
     // Tempo 0,5 s pro Viertel (120 BPM): 8 Viertel = 4 s.
     private fun xml(arranger: String, marker: String = """<MarkerEvent markerStop="0" markerType="2" timeFormat="2" name="Start"/>""") = """
         <Song><TempoMap x:id="tempoMap"><TempoMapSegment curveType="0" start="0" end="1e+200" tempo="0.5"/></TempoMap>

@@ -35,7 +35,8 @@ sealed class Seite {
     data object Buehne : Seite()
     data class SongKarte(val setId: Long, val songId: Long) : Seite()
     data class SongWahl(val setId: Long, val songId: Long) : Seite()
-    data class Editor(val songId: Long, val reiter: Int = 0) : Seite()
+    /** [setId]: aus einem Set geöffnet, dann blättern die Pfeile in der Setliste, sonst im Archiv A–Z. */
+    data class Editor(val songId: Long, val reiter: Int = 0, val setId: Long? = null) : Seite()
     data class Einmessen(val songId: Long) : Seite()
     data class Mixer(val songId: Long) : Seite()
     data class TexteHolen(val ids: List<Long>, val einzeln: Boolean = false) : Seite()
@@ -51,6 +52,23 @@ class Navi {
     fun zu(s: Seite) { stapel.add(s) }
     fun ersetzen(s: Seite) { stapel[stapel.size - 1] = s }
     fun zurueck(): Boolean { if (stapel.size <= 1) return false; stapel.removeAt(stapel.size - 1); return true }
+
+    /**
+     * Pfeile auf den Einstellungsseiten: Alle Song-Seiten im Stapel zeigen danach den Nachbar-Song.
+     * So führt Zurück zur Auswahlseite des Songs, den man gerade sieht, nicht des ersten.
+     */
+    fun songWechseln(alt: Long, neu: Long) {
+        for (i in stapel.indices) {
+            val s = stapel[i]
+            val n = when {
+                s is Seite.SongKarte && s.songId == alt -> s.copy(songId = neu)
+                s is Seite.SongWahl && s.songId == alt -> s.copy(songId = neu)
+                s is Seite.Editor && s.songId == alt -> s.copy(songId = neu)
+                else -> s
+            }
+            if (n !== s) stapel[i] = n
+        }
+    }
 
     // Fester Weg (B18, Jans Wahl 14.11.): Die Hauptseiten liegen immer in derselben Reihenfolge im
     // Stapel, egal wie man hinkam: Gigs → Sets des Gigs → Setliste → Bühne. Zurück geht so immer
@@ -104,7 +122,7 @@ fun Wurzel(navi: Navi, beenden: () -> Unit) {
             Seite.Buehne -> BuehneSeite(navi)
             is Seite.SongKarte -> SongKarteSeite(navi, s.setId, s.songId)
             is Seite.SongWahl -> SongWahlSeite(navi, s.setId, s.songId)
-            is Seite.Editor -> EditorSeite(navi, s.songId, s.reiter)
+            is Seite.Editor -> EditorSeite(navi, s.songId, s.reiter, s.setId)
             is Seite.Einmessen -> EinmessenSeite(navi, s.songId)
             is Seite.Mixer -> MixerSeite(navi, s.songId)
             is Seite.TexteHolen -> TexteHolenSeite(navi, s.ids, s.einzeln)

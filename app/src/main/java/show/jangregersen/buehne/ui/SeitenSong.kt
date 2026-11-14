@@ -26,6 +26,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -54,6 +55,7 @@ import show.jangregersen.buehne.audio.Aufnahme
 import show.jangregersen.buehne.audio.PdfLyrics
 import show.jangregersen.buehne.audio.Rolle
 import show.jangregersen.buehne.audio.Spuren
+import show.jangregersen.buehne.daten.Bestand
 import show.jangregersen.buehne.daten.Ende
 import show.jangregersen.buehne.daten.Song
 import show.jangregersen.buehne.daten.Tempo
@@ -64,6 +66,7 @@ import show.jangregersen.buehne.daten.ohneSong
 import show.jangregersen.buehne.daten.songAendern
 import show.jangregersen.buehne.lyrics.Abschnitte
 import java.io.File
+import java.text.Normalizer
 
 val PAUSEN = listOf(0, 10, 20, 30, 45, 60, 90, 120, 180, 300, 600, 900, 1200, 1800, 2700, 3600)
 
@@ -86,8 +89,9 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
     val e = set.eintraege.firstOrNull { it.songId == songId } ?: run { WegHier(navi); return }
     val platz = set.eintraege.indexOf(e) + 1
     val istAktuell = z.songId == songId
-    var hoert by remember { mutableStateOf(false) }
-    DisposableEffect(Unit) { onDispose { if (hoert) App.buehne.notizStoppen() } }
+    // An den Song gebunden: Wechselt man mit den Pfeilen, verstummt die Ansage des vorigen.
+    var hoert by remember(songId) { mutableStateOf(false) }
+    DisposableEffect(songId) { onDispose { if (hoert) App.buehne.notizStoppen() } }
     Lautstaerketasten { }
 
     Column(Modifier.fillMaxSize()) {
@@ -102,6 +106,7 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
             SymbolKnopf(Sym.KREUZ, "Schließen", Modifier.width(52.dp), hoehe = 52.dp, groesse = 16.dp) { navi.zurueck() }
         }
         Linie(Modifier.padding(horizontal = 14.dp), 2.5.dp)
+        SongPfeile(navi, songId, setId, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp))
         // Kompakt gebaut, damit auch die große Bühnenschrift ohne Abschneiden passt:
         // Beschriftungen von Pause und Songende stehen links in der Zeile statt darüber.
         Column(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -115,7 +120,7 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
                         if (hoert) { App.buehne.notizStoppen(); hoert = false } else { hoert = true; App.buehne.notizAnhoeren(song.ansageVorher) { hoert = false } }
                     }
                     TextKnopf(if (song.ansageVorher.isBlank()) "Aufnehmen" else "Neu", Modifier.weight(1f), hoehe = 50.dp, groesse = 16.sp, symbol = Sym.AUFNAHME) {
-                        navi.zu(Seite.Editor(songId, 2))
+                        navi.zu(Seite.Editor(songId, 2, setId))
                     }
                 }
             }
@@ -128,7 +133,7 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
             }
         }
         Row(Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextKnopf("Bearbeiten", Modifier.weight(1.25f), Art.DUENN, 50.dp, 15.sp) { navi.zu(Seite.Editor(songId)) }
+            TextKnopf("Bearbeiten", Modifier.weight(1.25f), Art.DUENN, 50.dp, 15.sp) { navi.zu(Seite.Editor(songId, setId = setId)) }
             TextKnopf("Mixer", Modifier.weight(0.9f), Art.DUENN, 50.dp, 15.sp) { navi.zu(Seite.Mixer(songId)) }
             TextKnopf("Entfernen", Modifier.weight(1.2f), Art.GESTRICHELT, 50.dp, 15.sp, aktiv = !istAktuell) {
                 navi.zu(Seite.Frage("Aus dem Set nehmen?", "„${song.titel}“ verschwindet aus „${set.name}“. Im Archiv bleibt er.", "Herausnehmen") {
@@ -149,29 +154,71 @@ fun Stufen(wert: String, minus: () -> Unit, plus: () -> Unit, beschriftung: Stri
     }
 }
 
+/** Reihenfolge für die Pfeile: im Set die Setliste, sonst das Archiv von A bis Z (wie die Archivliste). */
+fun songFolge(b: Bestand, setId: Long?): List<Long> =
+    b.set(setId)?.eintraege?.map { it.songId }
+        ?: b.songs.sortedBy { Normalizer.normalize(it.titel.lowercase(), Normalizer.Form.NFD) }.map { it.id }
+
+/**
+ * Jans Wunsch 14.11.: Auf den Einstellungsseiten mit Pfeilen zum vorigen oder nächsten Song, ohne
+ * Umweg über die Liste. Gespeichert ist schon vorher (jede Änderung sofort), beim Wechsel wird
+ * zusätzlich sofort geschrieben.
+ */
+@Composable
+private fun SongPfeile(navi: Navi, songId: Long, setId: Long?, modifier: Modifier = Modifier, hoehe: androidx.compose.ui.unit.Dp = 50.dp) {
+    val b by App.ablage.stand.collectAsState()
+    val folge = songFolge(b, setId)
+    val i = folge.indexOf(songId)
+    val vor = if (i > 0) folge[i - 1] else null
+    val nach = if (i >= 0) folge.getOrNull(i + 1) else null
+    fun wechseln(neu: Long?) {
+        if (neu == null) return
+        App.ablage.sofortSichern()
+        navi.songWechseln(songId, neu)
+    }
+    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        Knopf(Modifier.weight(1f), Art.UMRISS, hoehe, aktiv = vor != null, beschreibung = "Voriger Song", onClick = { wechseln(vor) }) { f ->
+            Symbol(Sym.LINKS, f, 16.dp)
+            T("Voriger", textStil(17.sp, f, FontWeight.Bold), zeilen = 1)
+        }
+        Column(Modifier.width(92.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            T(if (i >= 0) "${i + 1} von ${folge.size}" else "", titelStil(20.sp), zeilen = 1, mitte = true)
+            T("gespeichert", textStil(13.sp), zeilen = 1, mitte = true)
+        }
+        Knopf(Modifier.weight(1f), Art.UMRISS, hoehe, aktiv = nach != null, beschreibung = "Nächster Song", onClick = { wechseln(nach) }) { f ->
+            T("Nächster", textStil(17.sp, f, FontWeight.Bold), zeilen = 1)
+            Symbol(Sym.RECHTS, f, 16.dp)
+        }
+    }
+}
+
 // ── Editor ───────────────────────────────────────────────────────────────────
 
 @Composable
-fun EditorSeite(navi: Navi, songId: Long, startReiter: Int) {
+fun EditorSeite(navi: Navi, songId: Long, startReiter: Int, setId: Long? = null) {
     val b by App.ablage.stand.collectAsState()
     val song = b.song(songId) ?: run { WegHier(navi); return }
     var reiter by remember { mutableStateOf(startReiter) }
     Column(Modifier.fillMaxSize()) {
+        // "Fertig" ist seit 14.11. weg: Es sah nach Speichern aus, gespeichert wird aber sofort.
         Row(Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             ZurueckKnopf(aufSchwarz = false) { navi.zurueck() }
             T(song.titel, titelStil(26.sp), Modifier.weight(1f), zeilen = 1)
-            TextKnopf("Fertig", art = Art.VOLL, hoehe = 44.dp) { navi.zurueck() }
         }
         Linie(dicke = 2.5.dp)
-        Segmente(listOf("Daten", "Lyrics", "Ansage"), reiter, Modifier.padding(start = 14.dp, end = 14.dp, top = 12.dp), hoehe = 42.dp) {
+        SongPfeile(navi, songId, setId, Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp), hoehe = 46.dp)
+        Segmente(listOf("Daten", "Lyrics", "Ansage"), reiter, Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp), hoehe = 42.dp) {
             reiter = it
             // Reiter im Stapel merken: nach Einmessen, Bühnentest usw. kommt man im selben Reiter zurück.
-            if (navi.oben is Seite.Editor) navi.ersetzen(Seite.Editor(songId, it))
+            if (navi.oben is Seite.Editor) navi.ersetzen(Seite.Editor(songId, it, setId))
         }
-        when (reiter) {
-            0 -> DatenReiter(navi, song)
-            1 -> LyricsReiter(navi, song)
-            else -> AnsageReiter(song)
+        // Pro Song frisch: Mittippen, Probe und eine laufende Ansage-Aufnahme gehören zum alten Song.
+        key(songId) {
+            when (reiter) {
+                0 -> DatenReiter(navi, song)
+                1 -> LyricsReiter(navi, song)
+                else -> AnsageReiter(song)
+            }
         }
     }
 }
@@ -184,7 +231,7 @@ private fun Feld(etikett: String, wert: String, modifier: Modifier = Modifier, z
             value = wert, onValueChange = onWert, singleLine = true,
             textStyle = textStil(21.sp),
             keyboardOptions = KeyboardOptions(keyboardType = if (zahl) KeyboardType.Number else KeyboardType.Text, capitalization = KeyboardCapitalization.Sentences),
-            modifier = Modifier.fillMaxWidth().height(46.dp).border(2.5.dp, Schwarz, RoundedCornerShape(12.dp)).padding(horizontal = 12.dp, vertical = 9.dp)
+            modifier = Modifier.fillMaxWidth().height(44.dp).border(2.5.dp, Schwarz, RoundedCornerShape(12.dp)).padding(horizontal = 12.dp, vertical = 8.dp)
         )
     }
 }
@@ -208,7 +255,8 @@ private fun DatenReiter(navi: Navi, song: Song) {
     }
     DisposableEffect(Unit) { onDispose { if (App.buehne.zustand.value.probe) App.buehne.probeEnde() } }
     Lautstaerketasten { }
-    Column(Modifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+    // Seit den Pfeilen (14.11.) enger gebaut, damit Probe/Mixer/Löschen unten sichtbar bleiben.
+    Column(Modifier.fillMaxSize().padding(horizontal = 14.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Feld("Titel", song.titel) { t -> songAendern(song.id) { it.copy(titel = t) } }
         Feld("Interpret", song.interpret) { t -> songAendern(song.id) { it.copy(interpret = t) } }
         Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -218,13 +266,13 @@ private fun DatenReiter(navi: Navi, song: Song) {
                 KleinStufen("${song.kapo}", { songAendern(song.id) { it.copy(kapo = (it.kapo - 1).coerceAtLeast(0)) } }, { songAendern(song.id) { it.copy(kapo = (it.kapo + 1).coerceAtMost(11)) } })
             }
         }
+        // Ohne eigene Überschrift: "BPM" und die Stempel erklären sich selbst.
         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Etikett("Tempo")
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Box(Modifier.weight(1f)) {
                     KleinStufen(if (song.bpm > 0) "${song.bpm} BPM" else "– BPM", { songAendern(song.id) { it.copy(bpm = (it.bpm - 1).coerceAtLeast(0)) } }, { songAendern(song.id) { it.copy(bpm = (it.bpm + 1).coerceAtMost(300)) } })
                 }
-                TextKnopf("Mittippen", Modifier.width(120.dp), hoehe = 46.dp, groesse = 16.sp) {
+                TextKnopf("Mittippen", Modifier.width(120.dp), hoehe = 44.dp, groesse = 16.sp) {
                     val jetzt = System.currentTimeMillis()
                     if (tipps.isNotEmpty() && jetzt - tipps.last() > 2500) tipps.clear()
                     tipps.add(jetzt); while (tipps.size > 6) tipps.removeAt(0)
@@ -261,12 +309,12 @@ private fun DatenReiter(navi: Navi, song: Song) {
 @Composable
 private fun KleinStufen(wert: String, minus: () -> Unit, plus: () -> Unit) {
     val form = RoundedCornerShape(12.dp)
-    Row(Modifier.fillMaxWidth().height(46.dp).clip(form).border(2.5.dp, Schwarz, form), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.width(44.dp).height(46.dp).tipp(onClick = minus), contentAlignment = Alignment.Center) { Symbol(Sym.MINUS, Schwarz, 16.dp) }
-        Box(Modifier.width(2.dp).height(46.dp).background(Schwarz))
+    Row(Modifier.fillMaxWidth().height(44.dp).clip(form).border(2.5.dp, Schwarz, form), verticalAlignment = Alignment.CenterVertically) {
+        Box(Modifier.width(44.dp).height(44.dp).tipp(onClick = minus), contentAlignment = Alignment.Center) { Symbol(Sym.MINUS, Schwarz, 16.dp) }
+        Box(Modifier.width(2.dp).height(44.dp).background(Schwarz))
         T(wert, titelStil(24.sp), Modifier.weight(1f), zeilen = 1, mitte = true)
-        Box(Modifier.width(2.dp).height(46.dp).background(Schwarz))
-        Box(Modifier.width(44.dp).height(46.dp).tipp(onClick = plus), contentAlignment = Alignment.Center) { Symbol(Sym.PLUS, Schwarz, 16.dp) }
+        Box(Modifier.width(2.dp).height(44.dp).background(Schwarz))
+        Box(Modifier.width(44.dp).height(44.dp).tipp(onClick = plus), contentAlignment = Alignment.Center) { Symbol(Sym.PLUS, Schwarz, 16.dp) }
     }
 }
 

@@ -634,3 +634,28 @@ Jans Meldung 14.11. morgens (vom Gig) – selbstständig behoben:
   kopiert (kein .kommt-Rest, Datei neu geschrieben), TrikTrak hat neu eingelesen (Ordner-Freigaben
   14:18:33 erneuert), keine Datenänderung. Noch nicht geprüft: ein wirklich neuer Song (nach Jans
   Neu-Export von "Perfect").
+
+Jans Wünsche 14.11. nachmittags (Arbeitsliste C):
+- [x] C1 Pfeile "‹ Voriger" / "Nächster ›" auf den Einstellungsseiten (`SongPfeile` in
+  `ui/SeitenSong.kt`): Einstellungen im Set blättern in der Setliste, Bearbeiten aus dem Archiv
+  von A bis Z (wie die Archivliste), aus dem Set geöffnet in der Setliste (`Seite.Editor.setId`).
+  `Navi.songWechseln` stellt alle Song-Seiten im Stapel um, Zurück führt so zum gezeigten Song.
+  Reiter bleibt beim Blättern; Mittippen/Probe/Aufnahme gehören zum alten Song (`key(songId)`).
+- [x] C2 "Einstellungen sofort speichern": war schon so (Ablage schreibt 0,3 s nach jeder Änderung,
+  dazu beim Verlassen). Jetzt sichtbar: "gespeichert" unter "3 von 14", beim Pfeil-Wechsel wird
+  sofort geschrieben, Knopf "Fertig" auf der Bearbeiten-Seite entfernt (sah nach Speichern aus).
+  Daten-Reiter dafür enger (Felder 44 dp, ohne Überschrift "Tempo"), Probe/Mixer/Löschen sichtbar.
+- [x] C3 Tempo-Filter: Jan wollte erst Kapo, korrigierte sich auf Tempo. Filter gab es schon, kein
+  Song hatte einen Stempel. BPM aus dem Click gemessen (`werkzeug/ClickTempo.java`, rechter Kanal,
+  häufigster Abstand), Grenzen < 90 Langsam, 90–119 Mittel, ab 120 Schnell; gefühltes Tempo bei
+  Achtel-Click/6/8 (Perfect 180, Tennessee Whiskey 150, Bed of Roses 160); Mrs. Robinson und
+  Can't judge a book (Click 200) → Schnell. Jans eigener Stempel bleibt ("All night Long" Schnell).
+  Ergebnis: 14 Langsam, 18 Mittel, 11 Schnell, Testsongs ohne. BPM-Feld = Click-Tempo im Ohr.
+  Werkstatt "Songdaten" hat Spalte "Tempo", `Abgleich.textUndTeile` übernimmt den Stempel.
+- Gerätetest 14.11. 17:05–17:12: App-Fassung 5 installiert (Daten vorher/nachher Byte für Byte
+  gleich), Pfeile auf der Bearbeiten-Seite (Fotos `.geraet/editor5b.png`), Stempel per
+  Test-Werkstatt gesendet: auf dem Mudita nur BPM/Tempo geändert, Gigs gleich, Filter "Schnell"
+  zeigt 11 (`.geraet/archiv-schnell.png`). Jans Werkstatt: Songs 3 und 14 sind dort seit 13.11.
+  "geändert, nicht gesendet" → BPM/Stempel dort nachgetragen, sonst hätte das nächste Senden sie
+  geleert (Grundproblem: bei offenen Songs gewinnen die Laptop-Songdaten). NICHT am Gerät
+  geprüft: Pfeile auf der Einstellungen-Seite im Set (Jan hat nur "El Circo" mit leerem Set).
