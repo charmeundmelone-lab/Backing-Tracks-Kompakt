@@ -68,14 +68,14 @@ fun SetlisteSeite(navi: Navi) {
     // Alles, was man im Set live braucht, liegt sichtbar auf dieser Seite, ohne Menü:
     // oben rechts "Sets" (anderes Set), unten Blättern · Song dazu · Umstellen.
     Rahmen(navi, ober, set.name, rechts = {
-        TextKnopf("Sets", Modifier.width(86.dp), hoehe = 44.dp, groesse = 16.sp) { navi.zu(Seite.GigSets(gig.id)) }
+        TextKnopf("Sets", Modifier.width(86.dp), hoehe = 44.dp, groesse = 16.sp) { navi.zumGig(gig.id) }
     }) {
         SeitenListe(
             eintraege = set.eintraege, zeilenHoehe = 66.dp, modifier = Modifier.weight(1f), schluessel = "set${set.id}", zeige = startZeige,
             fussHoehe = AKTIONSLEISTE_HOEHE,
             fuss = { s, n, _, zur, vor ->
                 AktionsLeiste(s, n, zur, vor, listOf(
-                    Aktion("Song", Sym.PLUS, voll = true) { navi.zu(Seite.Archiv(set.id)) },
+                    Aktion("Archiv", Sym.PLUS, voll = true) { navi.zu(Seite.Archiv(set.id)) },
                     Aktion("Umstellen") { verschieben = true }
                 ))
             },
@@ -88,7 +88,7 @@ fun SetlisteSeite(navi: Navi) {
             }
         ) { i, e ->
             val s = b.song(e.songId) ?: return@SeitenListe
-            SetZeile(i + 1, s, e, aktuell = e.songId == z.songId, spielt = z.spielt) { navi.zu(Seite.SongKarte(set.id, s.id)) }
+            SetZeile(i + 1, s, e, aktuell = e.songId == z.songId, spielt = z.spielt) { navi.zu(Seite.SongWahl(set.id, s.id)) }
         }
     }
 }

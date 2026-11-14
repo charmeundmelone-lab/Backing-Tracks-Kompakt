@@ -31,6 +31,8 @@ Ablauf-Code.
 
 ## Übergabe an die nächste Session (geschrieben 2026-11-13, ca. 15:15, ergänzt 19:30, vor Jans Gig)
 
+**Neu 14.11. nachts (2):** B18–B22 gebaut (Zurück fester Weg, Auswahlseite "Jetzt spielen / Danach spielen", Beschriftungen, Kapo+Tonart groß, Werkstatt-Seite "Songdaten"), Tests grün, NICHT installiert, nicht am Gerät geprüft. Werkstatt: `installDist` geht erst, wenn Jans laufende Werkstatt (seit 13.11. 16:12) zu ist. Details am Ende von PLAN.md.
+
 **Neu 14.11. nachts:** B17 Ausgangspegel −2 dB gebaut und mit Jans Ja installiert (Commit da716e1, 01:51, Daten danach Byte für Byte gleich, Sicherung `.geraet/bestand-2026-11-14-vor-b17.json`; nicht per Ohr geprüft), offene Gig-Fragen am Ende von PLAN.md ("Gig 13.11. abends"). Der Punkt "Jan fragen, wie der Gig lief" ist damit zum Teil erledigt.
 
 **Ganz kurz, wo es weitergeht (Stand 19:30):**

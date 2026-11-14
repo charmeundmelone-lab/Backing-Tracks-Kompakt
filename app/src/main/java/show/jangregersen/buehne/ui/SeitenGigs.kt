@@ -141,8 +141,7 @@ private fun neuerGig(navi: Navi) {
             val a = App.ablage
             val gigId = a.neueId(); val setId = a.neueId()
             a.aendern { it.mitGig(Gig(gigId, name.trim(), tag, listOf(SetListe(setId, "Set 1")))) }
-            navi.zurueck()
-            navi.zu(Seite.GigSets(gigId))
+            navi.zumGig(gigId)
         })
     })
 }
@@ -209,7 +208,7 @@ fun GigSetsSeite(navi: Navi, gigId: Long) {
         ) { i, set ->
             SetKarte(i + 1, set, aktiv = set.id == z.setId, laeuft = set.id == z.setId && z.spielt, onMenue = { setMenue = set.id }) {
                 App.buehne.setWaehlen(set.id)
-                navi.zu(Seite.Setliste)
+                navi.zurSetliste()
             }
         }
     }

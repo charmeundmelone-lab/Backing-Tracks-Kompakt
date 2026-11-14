@@ -34,6 +34,7 @@ sealed class Seite {
     data object Setliste : Seite()
     data object Buehne : Seite()
     data class SongKarte(val setId: Long, val songId: Long) : Seite()
+    data class SongWahl(val setId: Long, val songId: Long) : Seite()
     data class Editor(val songId: Long, val reiter: Int = 0) : Seite()
     data class Einmessen(val songId: Long) : Seite()
     data class Mixer(val songId: Long) : Seite()
@@ -50,14 +51,26 @@ class Navi {
     fun zu(s: Seite) { stapel.add(s) }
     fun ersetzen(s: Seite) { stapel[stapel.size - 1] = s }
     fun zurueck(): Boolean { if (stapel.size <= 1) return false; stapel.removeAt(stapel.size - 1); return true }
-    /** Zur Bühne: liegt sie schon im Stapel, dorthin zurück, sonst obendrauf. */
-    fun zurBuehne() {
-        val i = stapel.indexOfLast { it == Seite.Buehne }
-        if (i >= 0) while (stapel.size > i + 1) stapel.removeAt(stapel.size - 1) else zu(Seite.Buehne)
+
+    // Fester Weg (B18, Jans Wahl 14.11.): Die Hauptseiten liegen immer in derselben Reihenfolge im
+    // Stapel, egal wie man hinkam: Gigs → Sets des Gigs → Setliste → Bühne. Zurück geht so immer
+    // genau eine Stufe nach oben. Nebenseiten (Song-Karte, Mixer, Archiv …) liegen obendrauf und
+    // führen zurück zu der Seite, von der sie geöffnet wurden.
+
+    fun zurBuehne() = wegSetzen(wegZurSetliste() + Seite.Buehne)
+    fun zurSetliste() = wegSetzen(wegZurSetliste())
+    fun zumGig(gigId: Long) = wegSetzen(listOf(Seite.Gigs, Seite.GigSets(gigId)))
+
+    private fun wegZurSetliste(): List<Seite> {
+        val gig = App.ablage.jetzt.gigVonSet(App.buehne.zustand.value.setId)
+        return if (gig != null) listOf(Seite.Gigs, Seite.GigSets(gig.id), Seite.Setliste) else listOf(Seite.Gigs, Seite.Setliste)
     }
-    fun zurSetliste() {
-        val i = stapel.indexOfLast { it == Seite.Setliste }
-        if (i >= 0) while (stapel.size > i + 1) stapel.removeAt(stapel.size - 1) else zu(Seite.Setliste)
+
+    private fun wegSetzen(weg: List<Seite>) {
+        if (stapel.toList() == weg) return
+        // Erst ergänzen, dann kürzen: der Stapel ist nie leer, auch nicht für einen Augenblick.
+        stapel.addAll(weg)
+        repeat(stapel.size - weg.size) { stapel.removeAt(0) }
     }
 }
 
@@ -79,7 +92,9 @@ fun Lautstaerketasten(handler: (vor: Boolean) -> Unit) {
 
 @Composable
 fun Wurzel(navi: Navi, beenden: () -> Unit) {
-    BackHandler { if (!navi.zurueck()) beenden() }
+    // Auf der obersten Seite tut Zurück nichts: TrikTrak geht so nie aus Versehen zu (B18).
+    // Verlassen geht über die Home-Taste.
+    BackHandler { navi.zurueck() }
     Box(Modifier.fillMaxSize().background(Weiss)) {
         when (val s = navi.oben) {
             Seite.Gigs -> GigsSeite(navi)
@@ -88,6 +103,7 @@ fun Wurzel(navi: Navi, beenden: () -> Unit) {
             Seite.Setliste -> SetlisteSeite(navi)
             Seite.Buehne -> BuehneSeite(navi)
             is Seite.SongKarte -> SongKarteSeite(navi, s.setId, s.songId)
+            is Seite.SongWahl -> SongWahlSeite(navi, s.setId, s.songId)
             is Seite.Editor -> EditorSeite(navi, s.songId, s.reiter)
             is Seite.Einmessen -> EinmessenSeite(navi, s.songId)
             is Seite.Mixer -> MixerSeite(navi, s.songId)

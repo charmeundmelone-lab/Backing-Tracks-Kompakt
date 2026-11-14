@@ -288,6 +288,20 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         return true
     }
 
+    /**
+     * "Jetzt spielen" (B19): Song bereitlegen, Play drückt Jan selbst. Läuft gerade eine Pause oder
+     * Ansage, endet sie zuerst. Solange ein Song spielt: nichts (false).
+     */
+    fun jetztBereitlegen(setId: Long, songId: Long): Boolean {
+        val z = _zustand.value
+        if (z.spielt) return false
+        if (z.pause != null) {
+            pauseJob?.cancel(); engine.notizStoppen()
+            _zustand.update { it.copy(pause = null, spielt = false) }
+        }
+        return bereitlegen(setId, songId)
+    }
+
     /** Probehören außerhalb eines Sets. Verweigert, solange ein Set-Song läuft. */
     fun probe(songId: Long, abMs: Long = 0): Boolean {
         val z = _zustand.value

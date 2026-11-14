@@ -107,7 +107,7 @@ class Arbeit(private val ordner: File) {
         speichern()
     }
 
-    /** Ändert einen Song (nur Text und Teile). Der Stand davor bleibt für "Rückgängig" erhalten. */
+    /** Ändert einen Song (Text, Teile, Tonart, Kapo). Der Stand davor bleibt für "Rückgängig" erhalten. */
     @Synchronized
     fun aendern(id: Long, f: (Song) -> Song): Boolean {
         val alt = bestand.song(id) ?: throw Fehler("Diesen Song gibt es nicht mehr.")

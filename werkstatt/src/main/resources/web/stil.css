@@ -112,3 +112,13 @@ dialog li:hover { background: var(--hell); }
 .treffer .weit { flex: 1; }
 .treffer .klein { font-size: 16px; color: var(--grau); }
 .treffer .zitat { font-style: italic; margin-top: 2px; }
+
+/* Songdaten (B22) */
+table.songdaten { border-collapse: collapse; width: min(760px, 100%); margin-top: 6px; }
+table.songdaten th { text-align: left; font: 700 15px "Barlow Condensed", sans-serif; letter-spacing: 1.6px; text-transform: uppercase; color: var(--grau); padding: 6px 8px; border-bottom: var(--rand); }
+table.songdaten td { padding: 6px 8px; border-bottom: 1px solid #000; }
+table.songdaten td.weit { font: 700 23px "Barlow Condensed", sans-serif; width: 100%; }
+table.songdaten input.tonart, table.songdaten select.kapo { font: 700 22px "Barlow Condensed", sans-serif; padding: 6px 10px; border: var(--rand); border-radius: 10px; background: var(--weiss); }
+table.songdaten input.tonart { width: 110px; }
+table.songdaten select.kapo { width: 96px; }
+table.songdaten input:focus, table.songdaten select:focus { outline: 3px solid #000; outline-offset: 2px; }

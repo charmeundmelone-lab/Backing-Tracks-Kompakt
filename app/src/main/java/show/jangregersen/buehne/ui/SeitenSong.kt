@@ -86,7 +86,6 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
     val e = set.eintraege.firstOrNull { it.songId == songId } ?: run { WegHier(navi); return }
     val platz = set.eintraege.indexOf(e) + 1
     val istAktuell = z.songId == songId
-    val laeuftEtwas = z.spielt || z.pause != null
     var hoert by remember { mutableStateOf(false) }
     DisposableEffect(Unit) { onDispose { if (hoert) App.buehne.notizStoppen() } }
     Lautstaerketasten { }
@@ -96,7 +95,7 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
         if (aktuellSong != null) JetztBand(navi, aktuellSong.titel)
         Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 14.dp, top = 10.dp, bottom = 8.dp), verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f)) {
-                Etikett("Platz $platz${if (e.gespielt) " · gespielt" else ""}")
+                Etikett("Einstellungen · Platz $platz${if (e.gespielt) " · gespielt" else ""}")
                 T(song.titel, titelStil(30.sp), zeilen = 2)
                 T(listOf(songInfo(song), zeit(song.dauerMs)).filter { it.isNotBlank() }.joinToString(" · "), textStil(16.sp), zeilen = 1)
             }
@@ -106,21 +105,8 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
         // Kompakt gebaut, damit auch die große Bühnenschrift ohne Abschneiden passt:
         // Beschriftungen von Pause und Songende stehen links in der Zeile statt darüber.
         Column(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            val haupt: (@Composable (Modifier) -> Unit)? = when {
-                istAktuell -> null
-                !laeuftEtwas -> { m -> TextKnopf(if (e.gespielt) "Bereitlegen" else "Jetzt bereitlegen", m, Art.VOLL, 52.dp, symbol = Sym.PLAY) { App.buehne.bereitlegen(setId, songId); navi.zurBuehne() } }
-                else -> { m -> TextKnopf("Als Nächstes", m, Art.VOLL, 52.dp, symbol = Sym.WEITER) {
-                    App.ablage.aendern { it.alsNaechstes(setId, songId, z.songId) }
-                    App.buehne.hinweis("„${song.titel}“ kommt als Nächstes.")
-                    navi.zurueck()
-                } }
-            }
-            if (haupt != null || e.gespielt) Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                haupt?.invoke(Modifier.weight(if (e.gespielt) 1f else 2f))
-                if (e.gespielt) TextKnopf("Wieder offen", Modifier.weight(1f), hoehe = 52.dp, groesse = 16.sp) {
-                    App.ablage.aendern { it.eintragAendern(setId, songId) { x -> x.copy(gespielt = false) } }
-                }
-            }
+            // "Jetzt spielen", "Danach spielen" und "Nochmal einplanen" liegen seit B19 auf der
+            // Auswahlseite davor (SongWahlSeite); hier stehen nur noch die Einstellungen.
             Column {
                 Etikett(if (song.ansageVorher.isNotBlank()) "Ansage vorher · ${zeit(song.ansageVorherMs)}" else "Keine Ansage vorher")
                 Abstand(4.dp)

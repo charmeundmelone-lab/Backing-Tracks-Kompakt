@@ -65,7 +65,7 @@ function zeigeStand() {
   const b = $("#senden");
   b.disabled = !offen;
   b.textContent = offen ? `Zum Mudita senden (${offen})` : "Zum Mudita senden";
-  b.title = offen ? "Schickt Text und Teile der geänderten Songs an TrikTrak. Deine Zeiten vom Einmessen bleiben, wo der Text gleich bleibt." : "Nichts zu senden: Am Laptop ist nichts geändert.";
+  b.title = offen ? "Schickt Text, Teile, Tonart und Kapo der geänderten Songs an TrikTrak. Deine Zeiten vom Einmessen bleiben, wo der Text gleich bleibt." : "Nichts zu senden: Am Laptop ist nichts geändert.";
 }
 
 function zeigeListe() {
@@ -352,5 +352,51 @@ async function zeigeGigCheck() {
 }
 
 $("#gigcheck").addEventListener("click", zeigeGigCheck);
+
+
+// ── Songdaten: Tonart und Kapo für alle Songs (B22) ──────────────────────────
+
+async function zeigeSongdaten() {
+  const j = await ruf("songdaten");
+  if (!j) return;
+  Z.song = null; Z.liste = j; zeigeStand(); zeigeListe();
+  const kapoWahl = (wert) => el("select", { class: "kapo" },
+    ...Array.from({ length: 13 }, (_, n) => { const o = el("option", { value: String(n) }, n === 0 ? "ohne" : String(n)); if (n === wert) o.selected = true; return o; }));
+  const zeilen = j.daten.map((s) => {
+    const ton = el("input", { class: "tonart", value: s.tonart, placeholder: "z. B. Cm", maxlength: "12", autocomplete: "off" });
+    const kapo = kapoWahl(s.kapo);
+    const merk = el("span", { class: "klein" }, s.geaendert ? "geändert" : "");
+    const tr = el("tr", {}, el("td", { class: "weit" }, s.titel), el("td", {}, ton), el("td", {}, kapo), el("td", {}, merk));
+    const speichern = async () => {
+      if (ton.value.trim() === s.tonart && Number(kapo.value) === s.kapo) return;
+      const r = await ruf("songdaten", { id: s.id, tonart: ton.value, kapo: Number(kapo.value) });
+      if (!r) return;
+      const neu = r.daten.find((x) => x.id === s.id);
+      Object.assign(s, neu); ton.value = s.tonart; merk.textContent = s.geaendert ? "geändert" : "";
+      Z.liste = r; zeigeStand(); zeigeListe();
+    };
+    ton.addEventListener("change", speichern);
+    kapo.addEventListener("change", speichern);
+    // Enter springt eine Zeile tiefer ins selbe Feld: so tippt man die Liste schnell durch.
+    for (const feld of [ton, kapo]) feld.addEventListener("keydown", (e) => {
+      if (e.key !== "Enter") return;
+      e.preventDefault(); speichern();
+      const naechste = tr.nextElementSibling;
+      if (naechste) naechste.querySelector(feld === ton ? "input" : "select").focus();
+    });
+    return tr;
+  });
+  $("#werkbank").replaceChildren(
+    el("h2", {}, "Songdaten"),
+    el("p", { class: "unterzeile" }, "Tonart und Kapo für alle Songs. TrikTrak zeigt beides groß in der Pause und auf der Bühne, bevor du Play drückst. " +
+      "Jede Änderung wird sofort gemerkt. Enter springt eine Zeile tiefer. Danach oben „Zum Mudita senden“."),
+    el("table", { class: "songdaten" },
+      el("thead", {}, el("tr", {}, el("th", {}, "Song"), el("th", {}, "Tonart"), el("th", {}, "Kapo"), el("th", {}, ""))),
+      el("tbody", {}, ...zeilen)));
+  const erstes = $("#werkbank input.tonart");
+  if (erstes) erstes.focus();
+}
+
+$("#songdaten").addEventListener("click", zeigeSongdaten);
 
 ladeListe();

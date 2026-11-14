@@ -274,4 +274,13 @@ class AbgleichTest {
         assertEquals(vomLaptop, Ablauf.lesen(r.marken))
         assertTrue(r.markenVorlaeufig)
     }
+
+    @Test fun tonartUndKapoVomLaptopGelten() {
+        // B22: Tabelle "Songdaten" am Laptop. Getippte Zeiten bleiben, Tonart und Kapo kommen an.
+        val geraet = song(text, getippt)
+        val r = A.textUndTeile(geraet, song(text, getippt).copy(tonart = "Cm", kapo = 3))
+        assertEquals("Cm", r.tonart)
+        assertEquals(3, r.kapo)
+        assertEquals(geraet.marken, r.marken)
+    }
 }

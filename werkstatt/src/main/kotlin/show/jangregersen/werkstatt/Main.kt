@@ -159,6 +159,16 @@ private fun api(was: String, frage: Map<String, String>, k: JSONObject): JSONObj
                 else "Gesendet. Die Änderungen liegen auf dem Mudita bereit und kommen in TrikTrak an, sobald du die App öffnest (nicht während ein Song läuft oder du einmisst). Danach hier einmal „Vom Mudita holen“.")
         }
         "song" -> songJson(id())
+        // B22: Tabelle "Songdaten" (Tonart, Kapo). Ohne id = Liste, mit id = einen Song ändern.
+        "songdaten" -> {
+            if (k.has("id")) {
+                val i = id()
+                val kapo = k.optInt("kapo", 0)
+                if (kapo !in 0..12) throw Fehler("Kapo geht von 0 (ohne) bis 12.")
+                arbeit.aendern(i) { s -> s.copy(tonart = k.optString("tonart").trim().take(12), kapo = kapo) }
+            }
+            songdaten()
+        }
         "text" -> id().let { i -> arbeit.aendern(i) { s -> s.copy(lyrics = k.getString("text"), marken = Ablauf.markenNachText(s.marken, s.lyrics, k.getString("text"))) }; songJson(i) }
         "folge" -> folge(id(), k)
         "tauschen" -> tauschen(id(), k)
@@ -203,6 +213,10 @@ private fun liste(): JSONObject = JSONObject().apply {
             .put("teile", l.size).put("eingemessen", l.count { it.eingemessen }).put("vorlaeufig", s.markenVorlaeufig).put("geaendert", s.id in arbeit.geaendert)
     }))
 }
+
+private fun songdaten(): JSONObject = liste().put("daten", JSONArray(arbeit.bestand.songs.sortedBy { it.titel.lowercase() }.map { s ->
+    JSONObject().put("id", s.id).put("titel", s.titel).put("tonart", s.tonart).put("kapo", s.kapo).put("geaendert", s.id in arbeit.geaendert)
+}))
 
 /** Gig-Check: pro Gig und Set, was jedem Song noch fehlt (neueste Gigs zuerst). */
 private fun gigCheck(): JSONObject = JSONObject().put("gigs", JSONArray(arbeit.bestand.gigs.sortedByDescending { it.datum }.map { g ->

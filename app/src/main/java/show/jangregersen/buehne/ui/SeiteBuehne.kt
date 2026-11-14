@@ -93,6 +93,10 @@ fun BuehneSeite(navi: Navi) {
     Column(Modifier.fillMaxSize()) {
         BuehnenKopf(song, if (z.probe) "Probe" else if (z.spielt) "Jetzt${platz?.let { " · $it" } ?: ""}" else "Bereit${platz?.let { " · $it" } ?: ""}", z.dauerMs, z.spielt)
         z.setDurch?.let { SetEndeHinweis(it) }
+        // B21: Solange der Song nur bereitliegt, stehen Kapo und Tonart groß oben (zum Vorbereiten).
+        // Beim Start verschwinden sie einmal, danach bleibt die Seite ruhig.
+        val pos by App.buehne.position.collectAsState()
+        if (!z.spielt && pos == 0L && !z.probe) KapoTonart(song, 30.sp, 10.dp, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp))
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (song.lyrics.isNotBlank()) LyricsBereich(song, z.dauerMs)
             else SongDaten(song)
@@ -409,29 +413,31 @@ private fun AnsageAnsicht(navi: Navi, pause: show.jangregersen.buehne.spiel.Bueh
                 T(if (pause.art == "Ansage") "Ansage läuft im Ohr" else "Stille Pause", titelStil(26.sp, Weiss), zeilen = 1)
             }
         }
+        // B21: Restzeit kleiner als früher (150 sp), dafür Kapo und Tonart des nächsten Songs groß,
+        // damit Jan sich in der Pause vorbereiten kann.
         Column(Modifier.weight(1f).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             Etikett("Gleich geht es weiter in")
-            T(zeit(pause.restSek * 1000L), titelStil(150.sp).copy(lineHeight = 146.sp), zeilen = 1)
+            T(zeit(pause.restSek * 1000L), titelStil(92.sp).copy(lineHeight = 90.sp, fontFeatureSettings = "tnum"), zeilen = 1)
             val voll = if (pause.gesamtSek > 0) (((pause.gesamtSek - pause.restSek) * 10) / pause.gesamtSek).coerceIn(0, 10) else 0
             Kaestchen(10, voll, Schwarz, Modifier.width(250.dp), 8.dp)
-            Abstand(8.dp)
+            Abstand(6.dp)
             T(pause.beschreibung, textStil(14.sp), Modifier.padding(horizontal = 18.dp), zeilen = 1, mitte = true)
         }
         Column(Modifier.padding(horizontal = 18.dp)) {
             Linie(dicke = 2.5.dp)
             Abstand(10.dp)
-            Etikett("Als Nächstes${if (platz.isNotEmpty()) " · $platz" else ""}")
+            Etikett("Als Nächstes${if (platz.isNotEmpty()) " · $platz" else ""} · ${zeit(kommt.dauerMs)}")
             T(kommt.titel, titelStil(34.sp).copy(lineHeight = 35.sp), zeilen = 2)
-            T(listOf(songInfo(kommt), zeit(kommt.dauerMs)).joinToString(" · "), textStil(16.sp), zeilen = 1)
+            Abstand(10.dp)
+            KapoTonart(kommt)
             Abstand(12.dp)
         }
+        // B20: Jeder Knopf sagt, was passiert.
         Row(Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Knopf(Modifier.weight(1f), beschreibung = "Zur Setliste", onClick = { navi.zurSetliste() }) { f ->
-                Column(horizontalAlignment = Alignment.CenterHorizontally) { Symbol(Sym.LISTE, f, 20.dp); T("Liste", textStil(12.sp, f, FontWeight.Bold)) }
-            }
-            TextKnopf("Stopp", Modifier.weight(1f)) { App.buehne.stopp() }
-            Knopf(Modifier.weight(1.6f), Art.VOLL, onClick = { App.buehne.pauseUeberspringen() }) { f ->
-                T("Starten", textStil(17.sp, f, FontWeight.Bold)); Symbol(Sym.WEITER, f, 18.dp)
+            TextKnopf("Anderer Song", Modifier.weight(1f), hoehe = 60.dp, groesse = 16.sp) { navi.zurSetliste() }
+            TextKnopf("Timer anhalten", Modifier.weight(1f), hoehe = 60.dp, groesse = 16.sp) { App.buehne.stopp() }
+            Knopf(Modifier.weight(1.1f), Art.VOLL, 60.dp, onClick = { App.buehne.pauseUeberspringen() }) { f ->
+                T("Jetzt starten", textStil(16.sp, f, FontWeight.Bold), zeilen = 1); Symbol(Sym.WEITER, f, 16.dp)
             }
         }
     }

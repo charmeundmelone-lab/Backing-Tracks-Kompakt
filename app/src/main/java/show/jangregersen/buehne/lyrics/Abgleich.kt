@@ -50,6 +50,9 @@ object Abgleich {
         val neu = l.mapIndexed { i, t -> if (i < gleich && g[i].eingemessen) g[i] else t }
         val unveraendert = gleich == l.size && gleich == g.size
         return geraet.copy(
+            // Tonart und Kapo kommen seit B22 auch vom Laptop (Tabelle "Songdaten").
+            tonart = laptop.tonart,
+            kapo = laptop.kapo,
             lyrics = laptop.lyrics,
             zeilenZeiten = laptop.zeilenZeiten,
             originalMs = laptop.originalMs,
