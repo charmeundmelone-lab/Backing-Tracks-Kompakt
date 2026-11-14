@@ -51,6 +51,9 @@ object Abgleich {
         val unveraendert = gleich == l.size && gleich == g.size
         return geraet.copy(
             // Tonart und Kapo kommen seit B22 auch vom Laptop (Tabelle "Songdaten").
+            // Titel und BPM ebenso (B12, Songdaten am Laptop).
+            titel = laptop.titel.ifBlank { geraet.titel },
+            bpm = laptop.bpm,
             tonart = laptop.tonart,
             kapo = laptop.kapo,
             lyrics = laptop.lyrics,

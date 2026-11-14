@@ -175,7 +175,9 @@ private fun api(was: String, frage: Map<String, String>, k: JSONObject): JSONObj
                 val i = id()
                 val kapo = k.optInt("kapo", 0)
                 if (kapo !in 0..12) throw Fehler("Kapo geht von 0 (ohne) bis 12.")
-                arbeit.aendern(i) { s -> s.copy(tonart = k.optString("tonart").trim().take(12), kapo = kapo) }
+                val bpm = k.optInt("bpm", 0)
+                if (bpm !in 0..300) throw Fehler("BPM bitte zwischen 0 (unbekannt) und 300.")
+                arbeit.aendern(i) { s -> s.copy(titel = k.optString("titel", s.titel).trim().ifBlank { s.titel }.take(80), tonart = k.optString("tonart").trim().take(12), kapo = kapo, bpm = bpm) }
             }
             songdaten()
         }
@@ -237,7 +239,7 @@ private fun liste(): JSONObject = JSONObject().apply {
 }
 
 private fun songdaten(): JSONObject = liste().put("daten", JSONArray(arbeit.bestand.songs.sortedBy { it.titel.lowercase() }.map { s ->
-    JSONObject().put("id", s.id).put("titel", s.titel).put("tonart", s.tonart).put("kapo", s.kapo).put("geaendert", s.id in arbeit.geaendert)
+    JSONObject().put("id", s.id).put("titel", s.titel).put("tonart", s.tonart).put("kapo", s.kapo).put("bpm", s.bpm).put("geaendert", s.id in arbeit.geaendert)
 }))
 
 /**

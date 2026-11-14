@@ -140,3 +140,6 @@ ol.setliste li .klein { width: auto; white-space: nowrap; font: 500 16px "Barlow
 table.songdaten tr.fertig td { color: var(--grau); }
 table.songdaten input[type="checkbox"] { width: 20px; height: 20px; }
 header { flex-wrap: wrap; row-gap: 8px; }
+table.songdaten input.titel { font: 700 22px "Barlow Condensed", sans-serif; padding: 6px 10px; border: 1.5px solid #000; border-radius: 10px; width: 100%; min-width: 220px; }
+table.songdaten input.bpm { font: 700 22px "Barlow Condensed", sans-serif; padding: 6px 10px; border: var(--rand); border-radius: 10px; width: 70px; }
+table.songdaten { width: min(900px, 100%); }

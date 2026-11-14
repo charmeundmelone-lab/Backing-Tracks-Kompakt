@@ -380,35 +380,39 @@ async function zeigeSongdaten() {
   const kapoWahl = (wert) => el("select", { class: "kapo" },
     ...Array.from({ length: 13 }, (_, n) => { const o = el("option", { value: String(n) }, n === 0 ? "ohne" : String(n)); if (n === wert) o.selected = true; return o; }));
   const zeilen = j.daten.map((s) => {
+    const titel = el("input", { class: "titel", value: s.titel, maxlength: "80", autocomplete: "off" });
     const ton = el("input", { class: "tonart", value: s.tonart, placeholder: "z. B. Cm", maxlength: "12", autocomplete: "off" });
+    const bpm = el("input", { class: "bpm", value: s.bpm ? String(s.bpm) : "", placeholder: "–", inputmode: "numeric", maxlength: "3", autocomplete: "off" });
     const kapo = kapoWahl(s.kapo);
     const merk = el("span", { class: "klein" }, s.geaendert ? "geändert" : "");
-    const tr = el("tr", {}, el("td", { class: "weit" }, s.titel), el("td", {}, ton), el("td", {}, kapo), el("td", {}, merk));
+    const tr = el("tr", {}, el("td", { class: "weit" }, titel), el("td", {}, ton), el("td", {}, kapo), el("td", {}, bpm), el("td", {}, merk));
     const speichern = async () => {
-      if (ton.value.trim() === s.tonart && Number(kapo.value) === s.kapo) return;
-      const r = await ruf("songdaten", { id: s.id, tonart: ton.value, kapo: Number(kapo.value) });
+      if (titel.value.trim() === s.titel && ton.value.trim() === s.tonart && Number(kapo.value) === s.kapo && (Number(bpm.value) || 0) === s.bpm) return;
+      const r = await ruf("songdaten", { id: s.id, titel: titel.value, tonart: ton.value, kapo: Number(kapo.value), bpm: Number(bpm.value) || 0 });
       if (!r) return;
       const neu = r.daten.find((x) => x.id === s.id);
-      Object.assign(s, neu); ton.value = s.tonart; merk.textContent = s.geaendert ? "geändert" : "";
+      Object.assign(s, neu); titel.value = s.titel; ton.value = s.tonart; bpm.value = s.bpm ? String(s.bpm) : ""; merk.textContent = s.geaendert ? "geändert" : "";
       Z.liste = r; zeigeStand(); zeigeListe();
     };
     ton.addEventListener("change", speichern);
+    titel.addEventListener("change", speichern);
+    bpm.addEventListener("change", speichern);
     kapo.addEventListener("change", speichern);
     // Enter springt eine Zeile tiefer ins selbe Feld: so tippt man die Liste schnell durch.
-    for (const feld of [ton, kapo]) feld.addEventListener("keydown", (e) => {
+    for (const feld of [titel, ton, kapo, bpm]) feld.addEventListener("keydown", (e) => {
       if (e.key !== "Enter") return;
       e.preventDefault(); speichern();
       const naechste = tr.nextElementSibling;
-      if (naechste) naechste.querySelector(feld === ton ? "input" : "select").focus();
+      if (naechste) naechste.querySelector(feld === kapo ? "select" : "input." + feld.className).focus();
     });
     return tr;
   });
   $("#werkbank").replaceChildren(
     el("h2", {}, "Songdaten"),
-    el("p", { class: "unterzeile" }, "Tonart und Kapo für alle Songs. TrikTrak zeigt beides groß in der Pause und auf der Bühne, bevor du Play drückst. " +
+    el("p", { class: "unterzeile" }, "Titel, Tonart, Kapo und Tempo (BPM) für alle Songs. TrikTrak zeigt Kapo und Tonart groß in der Pause und auf der Bühne, bevor du Play drückst. " +
       "Jede Änderung wird sofort gemerkt. Enter springt eine Zeile tiefer. Danach oben „Zum Mudita senden“."),
     el("table", { class: "songdaten" },
-      el("thead", {}, el("tr", {}, el("th", {}, "Song"), el("th", {}, "Tonart"), el("th", {}, "Kapo"), el("th", {}, ""))),
+      el("thead", {}, el("tr", {}, el("th", {}, "Song"), el("th", {}, "Tonart"), el("th", {}, "Kapo"), el("th", {}, "BPM"), el("th", {}, ""))),
       el("tbody", {}, ...zeilen)));
   const erstes = $("#werkbank input.tonart");
   if (erstes) erstes.focus();
