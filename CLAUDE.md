@@ -29,14 +29,24 @@ Ablauf-Code.
   Dateien lesen, am Gerät meist `geraet.sh texte` statt Fotos.
 - Das Repo ist **öffentlich**: nie Songtexte, `bestand.json` oder Jans Daten einchecken.
 
-## Übergabe an die nächste Session (geschrieben 2026-11-14, ca. 14:40)
+## Übergabe an die nächste Session (geschrieben 2026-11-14, ca. 17:15)
 
 **Stand in einem Satz:** Arbeitsliste B ist fertig bis auf B7 (Jan bedient die Werkstatt selbst)
-und einen Test mit einem wirklich neuen Song. `main`, alles committet und gepusht, alle Tests
-grün (`:app:testDebugUnitTest`, `:werkstatt:test` mit 23 Tests). Auf dem Kompakt läuft
-**App-Fassung 4** (versionCode 4, Bau von Commit `47d9488`, App-Code seither unverändert),
-installiert 14.11. 14:14. Die Werkstatt hinter Jans Desktop-Symbol ist auf dem neuesten Stand
-(`installDist` nach `d68388d`).
+und einen Test mit einem wirklich neuen Song; dazu Arbeitsliste C (Jans Wünsche 14.11.
+nachmittags, Ende von PLAN.md) fertig. `main`, alles committet und gepusht, alle Tests grün
+(`:app:testDebugUnitTest`, `:werkstatt:test` mit 24 Tests). Auf dem Kompakt läuft
+**App-Fassung 5** (versionCode 5, Bau von Commit `94cb219`), installiert 14.11. 17:08. Die
+Werkstatt hinter Jans Desktop-Symbol ist auf dem neuesten Stand (`installDist` nach `94cb219`).
+
+**Neu am 14.11. nachmittags (C1–C3):** Pfeile "‹ Voriger" / "Nächster ›" auf Einstellungen (im
+Set: Setliste) und Bearbeiten (Archiv A–Z bzw. Setliste), "gespeichert" sichtbar, "Fertig" weg.
+Alle Songs haben BPM (aus dem Click gemessen, `werkzeug/ClickTempo.java`) und Tempo-Stempel
+(14 Langsam, 18 Mittel, 11 Schnell); Werkstatt "Songdaten" hat Spalte "Tempo". Jan hat am
+Mudita selbst angefangen zu stempeln ("All night Long" Schnell, blieb). Jan hat "Bar Eriksson"
+und "Testlauf" selbst gelöscht, es gibt nur "El Circo" (Sa 14.11., leeres Set). In Jans
+Werkstatt sind Songs 3 und 14 seit 13.11. "geändert, nicht gesendet" (Text) – nicht ungefragt
+senden. Achtung Grundproblem: Bei offenen Songs überschreiben die Laptop-Songdaten (BPM,
+Tempo, Kapo, Tonart, Titel) beim Senden die Werte vom Mudita.
 
 **Als Nächstes:**
 1. Jan nach seinem nächsten Gig fragen: −2 dB Ausgang (B17), Show-Ruhe (B23), neue Auswahlseite
@@ -48,8 +58,9 @@ installiert 14.11. 14:14. Die Werkstatt hinter Jans Desktop-Symbol ist auf dem n
    Song (neue Datei) ist noch nie über diesen Weg gelaufen.
 4. Offen und nicht dringend: "Timer anhalten" in der Pause am Gerät ansehen (B20, kam beim Test
    zu spät); Androids OK-Fenster beim Knopf "Ton freigeben" (B24) zeigt sich erst, wenn die
-   Gehörschutz-Sperre wieder greift; Test-Gig "Testlauf" enthält zusätzlich "Test Eins"
-   (Testdaten nur mit Jans OK löschen); tote Seiten TexteHolen/TeileUndAblauf in der App.
+   Gehörschutz-Sperre wieder greift; Testsongs "Test Eins/Zwei/Drei" im Archiv (nur mit Jans OK
+   löschen); tote Seiten TexteHolen/TeileUndAblauf in der App; Pfeile auf der Einstellungen-Seite
+   im Set am Gerät ansehen, sobald ein Set Songs hat.
 
 **Was am 13./14.11. dazukam (Details und Gerätetests am Ende von PLAN.md):**
 - Gig 13.11. "Bar Eriksson": Jan wechselte nach 18 Minuten aufs Nothing Phone, weil die
@@ -124,9 +135,10 @@ installiert 14.11. 14:14. Die Werkstatt hinter Jans Desktop-Symbol ist auf dem n
   Tipp `sh werkzeug/geraet.sh fokus`. Läuft TrikTrak mit einem Song: Finger weg. Jan nutzt den
   Kompakt selbst und hat oft Bluetooth-Kopfhörer verbunden.
 - Vor jeder Installation `bestand.json` sichern und danach per `cmp` vergleichen (bisher immer
-  Byte für Byte gleich). Rückwege: `.geraet/fassung4-2026-11-14.apk` (jetzt installiert),
+  Byte für Byte gleich). Rückwege: `.geraet/fassung5-2026-11-14.apk` (jetzt installiert), `.geraet/fassung4-2026-11-14.apk`,
   `.geraet/vor-b6-2026-11-13.apk`, `.geraet/vor-b2-2026-11-13.apk`, `.geraet/alt-2026-11-13.apk`;
-  Daten zuletzt `.geraet/bestand-2026-11-14-vor-fassung4.json`. Ältere Fassungen können
+  Daten zuletzt `.geraet/bestand-2026-11-14-vor-fassung5.json` (vor Stempeln) und
+  `.geraet/bestand-2026-11-14-nach-tempo.json`. Ältere Fassungen können
   `eingang.json` mit Gigs nicht lesen.
 - **Lautstärke:** TrikTrak stellt die Medienlautstärke beim Öffnen für das aktuelle Ausgabegerät
   auf voll und gibt beim Verlassen genau dessen alte Stufe zurück (Lautsprecher stand zuletzt
