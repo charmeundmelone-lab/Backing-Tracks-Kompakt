@@ -29,46 +29,67 @@ Ablauf-Code.
   Dateien lesen, am Gerät meist `geraet.sh texte` statt Fotos.
 - Das Repo ist **öffentlich**: nie Songtexte, `bestand.json` oder Jans Daten einchecken.
 
-## Übergabe an die nächste Session (geschrieben 2026-11-14, ca. 17:15)
+## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:50)
 
-**Stand in einem Satz:** Arbeitsliste B ist fertig bis auf B7 (Jan bedient die Werkstatt selbst)
-und einen Test mit einem wirklich neuen Song; dazu Arbeitsliste C (Jans Wünsche 14.11.
-nachmittags, Ende von PLAN.md) fertig. `main`, alles committet und gepusht, alle Tests grün
-(`:app:testDebugUnitTest`, `:werkstatt:test` mit 24 Tests). Auf dem Kompakt läuft
-**App-Fassung 5** (versionCode 5, Bau von Commit `94cb219`), installiert 14.11. 17:08. Die
-Werkstatt hinter Jans Desktop-Symbol ist auf dem neuesten Stand (`installDist` nach `94cb219`).
+**Stand in einem Satz:** Arbeitsliste B fertig bis auf B7 (Jan bedient die Werkstatt selbst)
+und einen Test mit einer wirklich neuen Datei; Arbeitsliste C (C1–C6, Ende von PLAN.md) fertig.
+`main`, alles committet und gepusht, alle Tests grün (`:app:testDebugUnitTest`,
+`:werkstatt:test` mit 24 Tests). Auf dem Kompakt läuft **App-Fassung 5** (versionCode 5, Bau
+von `94cb219`, App-Code seither unverändert), installiert 14.11. 17:08. Die Werkstatt hinter
+Jans Desktop-Symbol ist auf dem neuesten Stand (`installDist` nach `94cb219`).
 
-**Neu am 14.11. nachmittags (C1–C3):** Pfeile "‹ Voriger" / "Nächster ›" auf Einstellungen (im
-Set: Setliste) und Bearbeiten (Archiv A–Z bzw. Setliste), "gespeichert" sichtbar, "Fertig" weg.
-Alle Songs haben BPM (aus dem Click gemessen, `werkzeug/ClickTempo.java`) und Tempo-Stempel
-(14 Langsam, 18 Mittel, 11 Schnell); Werkstatt "Songdaten" hat Spalte "Tempo". Jan hat am
-Mudita selbst angefangen zu stempeln ("All night Long" Schnell, blieb). Jan hat "Bar Eriksson"
-und "Testlauf" selbst gelöscht, es gibt nur "El Circo" (Sa 14.11., leeres Set). In Jans
-Werkstatt sind Songs 3 und 14 seit 13.11. "geändert, nicht gesendet" (Text) – nicht ungefragt
-senden. Achtung Grundproblem: Bei offenen Songs überschreiben die Laptop-Songdaten (BPM,
-Tempo, Kapo, Tonart, Titel) beim Senden die Werte vom Mudita.
+**Was am 14.11. nachmittags/abends dazukam (Details PLAN.md C1–C6):**
+- C1/C2: Pfeile "‹ Voriger" / "Nächster ›" auf Einstellungen (im Set: Setliste) und Bearbeiten
+  (Archiv A–Z bzw. Setliste), "gespeichert" sichtbar, Knopf "Fertig" weg. Jan hat die Pfeile
+  sofort benutzt und alle Songs selbst durchgesehen.
+- C3: Alle Songs haben BPM (aus dem Click gemessen, `werkzeug/ClickTempo.java`) und
+  Tempo-Stempel; Werkstatt "Songdaten" hat Spalte "Tempo", `Abgleich.textUndTeile` übernimmt sie.
+  Danach hat Jan am Mudita viele Kapo- und einige Tempo-Werte korrigiert (z. B. viele Songs
+  Kapo 2, Riptide Kapo 5) und gelöscht: Ein Hoch auf uns, Sunny, Remember us (ohne Kapo),
+  Country Roads (Einzelspuren). Jetzt 42 Songs. Diese Werte am Mudita gelten.
+- C4: Gig "El Circo" (Sa 14.11.) mit 3 Sets, Show-Automatik, Pausen 30 s / 60 s vor
+  Kapo-Wechsel, je Set ein Kapo-Block (Set 1 K3, Set 2 K2 nach Jolene, Set 3 K2 zuerst).
+- C5: `Jolene.wav` auf 3:11 gekürzt (`werkzeug/WavEnde.java`), Original in
+  `Music\Backing Tracks\Sicherung-Originale\`.
+- C6: "Neue Songs" klappt mit geänderter Datei, ABER das Neu-Einlesen holt gelöschte Songs zurück,
+  solange ihre Dateien im Musikordner liegen. Umgehung: Dateien vorher parken (PLAN.md C6).
 
-**Gig "El Circo" Sa 14.11. abends (Stand 17:55):** 3 Sets mit Automatik und Pausen auf dem
-Mudita, Set 1 aktiv (Details PLAN.md C4–C6). Jolene auf 3:11 gekürzt. Jans Kapo-/Tempo-Werte
-am Mudita sind seit 17:30 neu (viele Songs Kapo 2, Riptide Kapo 5). Daten zuletzt
-`.geraet/bestand-2026-11-14-elcirco-fertig.json`. Bekanntes Problem: "Neue Songs" + neu einlesen
-holt gelöschte Songs zurück, solange ihre Dateien im Musikordner liegen (siehe C6).
+**Stand nach dem Gig (Mudita-Daten 15.11. 00:41, `.geraet/bestand-2026-11-15.json`):**
+In Set 3 sind The World I've known, Tennessee Whiskey und Bed of Roses als gespielt markiert,
+in Set 1 und 2 nichts. Jan hat "Englishman in New York" an den Anfang von Set 1 gezogen.
+"All night Long" ist NICHT in Set 1 (mein Vorschlag war: ans Ende von Set 1, Two Princes Pause
+1:00). Wie der Abend lief, ist unbekannt: Jan fragen.
 
 **Als Nächstes:**
-1. Jan nach dem Gig "El Circo" fragen (Automatik mit Pausen, Kapo-Wechsel, Jolene gekürzt) und nach seinem nächsten Gig: −2 dB Ausgang (B17), Show-Ruhe (B23), neue Auswahlseite
-   und Zurück-Weg (B18–B20), Kapo/Tonart in der Pause (B21). Probleme gehen vor allem anderen.
-2. B7: Jan probiert die Werkstatt selbst aus (Songdaten, Gigs, Neue Songs, Teile ohne Gesang
-   benennen, Text ab hier ↓). Zuschauen, wo er hängt; erst Vorschläge mit Favorit, dann bauen.
-3. Sobald Jan "Perfect K1.wav" neu exportiert hat (Band-Kanal links ist stumm, −108 dB): über
-   "Neue Songs" kopieren und prüfen, dass TrikTrak die neue Länge übernimmt. Ein wirklich neuer
-   Song (neue Datei) ist noch nie über diesen Weg gelaufen.
-4. Offen und nicht dringend: "Timer anhalten" in der Pause am Gerät ansehen (B20, kam beim Test
-   zu spät); Androids OK-Fenster beim Knopf "Ton freigeben" (B24) zeigt sich erst, wenn die
-   Gehörschutz-Sperre wieder greift; Testsongs "Test Eins/Zwei/Drei" im Archiv (nur mit Jans OK
-   löschen); tote Seiten TexteHolen/TeileUndAblauf in der App; Pfeile auf der Einstellungen-Seite
-   im Set am Gerät ansehen, sobald ein Set Songs hat.
+1. Jan nach "El Circo" fragen: Lief TrikTrak den ganzen Abend? Warum nur Set 3 gespielt
+   markiert (Sets 1/2 auf dem Nothing? oder Haken nur bei Set 3?). Automatik mit Pausen,
+   Warnton, "Timer anhalten", Kapo-Wechsel, Show-Ruhe, Lautstärke. Probleme gehen vor allem.
+2. C6 verbessern (mit Jan klären): beim Neu-Einlesen gelöschte Dateien nicht wieder anlegen
+   (z. B. Liste "gelöscht" im Bestand), damit "Neue Songs" ohne Parken geht.
+3. B7: Jan probiert die Werkstatt selbst (Songdaten, Gigs, Neue Songs, Teile benennen,
+   Text ab hier ↓). Zuschauen, wo er hängt; erst Vorschläge mit Favorit, dann bauen.
+4. "Perfect K1.wav": Band-Kanal links stumm (−108 dB), Jan muss neu exportieren; dann über
+   "Neue Songs" (mit Parken, siehe C6) kopieren.
+5. Offen, nicht dringend: Grundproblem Werkstatt – bei Songs, die am Laptop "geändert, nicht
+   gesendet" sind (in Jans Werkstatt: 3 Bed of Roses, 14 Here I go again, Text vom 13.11.),
+   überschreiben die Laptop-Songdaten (BPM, Tempo, Kapo, Tonart, Titel) beim Senden die Werte
+   vom Mudita. Jans Kapo-Korrekturen vom 14.11. (Bed of Roses Kapo 2!) würden so verloren gehen,
+   bevor Jan sendet: vorher holen und prüfen bzw. Abgleich nur geänderte Felder nehmen lassen.
+   Außerdem: "Timer anhalten" am Gerät ansehen (B20); OK-Fenster bei "Ton freigeben" (B24);
+   Testsongs "Test Eins/Zwei/Drei" (nur mit Jans OK löschen); tote Seiten
+   TexteHolen/TeileUndAblauf.
 
-**Was am 13./14.11. dazukam (Details und Gerätetests am Ende von PLAN.md):**
+**Lehren 14.11.:**
+- Jan arbeitet oft gleichzeitig am Mudita. Vor jedem Schreiben frisch sichern und mit der
+  letzten Sicherung vergleichen (`cmp`), bei Abweichung erst nachsehen, was er geändert hat.
+- In der Set-Übersicht macht Antippen eines Sets es AKTIV und legt seinen ersten Song bereit:
+  nach Arbeiten an anderen Sets das richtige Set wieder antippen.
+- Die Pause gehört zum Song (`pauseSek`), nicht zum Set-Eintrag; die Werkstatt kann sie nicht
+  setzen. Am Mudita tippen; lange Titel brechen um und schieben die Knöpfe nach unten.
+- TrikTrak übernimmt `eingang.json` nicht, solange eine Bearbeiten-/Einmessen-Seite offen ist.
+
+
+**Was am 13./14.11. vormittags dazukam (Details und Gerätetests am Ende von PLAN.md):**
 - Gig 13.11. "Bar Eriksson": Jan wechselte nach 18 Minuten aufs Nothing Phone, weil die
   Bedienung hakte. Daraus B18–B22: Zurück folgt einem festen Weg (Bühne → Setliste → Sets →
   Gigs, auf Gigs geht die App nicht mehr zu); Tipp auf einen Song öffnet die Auswahlseite
@@ -143,8 +164,8 @@ holt gelöschte Songs zurück, solange ihre Dateien im Musikordner liegen (siehe
 - Vor jeder Installation `bestand.json` sichern und danach per `cmp` vergleichen (bisher immer
   Byte für Byte gleich). Rückwege: `.geraet/fassung5-2026-11-14.apk` (jetzt installiert), `.geraet/fassung4-2026-11-14.apk`,
   `.geraet/vor-b6-2026-11-13.apk`, `.geraet/vor-b2-2026-11-13.apk`, `.geraet/alt-2026-11-13.apk`;
-  Daten zuletzt `.geraet/bestand-2026-11-14-vor-fassung5.json` (vor Stempeln) und
-  `.geraet/bestand-2026-11-14-nach-tempo.json`. Ältere Fassungen können
+  Daten zuletzt `.geraet/bestand-2026-11-15.json` (nach dem Gig), davor
+  `.geraet/bestand-2026-11-14-elcirco-fertig.json`. Ältere Fassungen können
   `eingang.json` mit Gigs nicht lesen.
 - **Lautstärke:** TrikTrak stellt die Medienlautstärke beim Öffnen für das aktuelle Ausgabegerät
   auf voll und gibt beim Verlassen genau dessen alte Stufe zurück (Lautsprecher stand zuletzt
