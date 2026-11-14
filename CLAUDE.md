@@ -48,8 +48,14 @@ Werkstatt sind Songs 3 und 14 seit 13.11. "geändert, nicht gesendet" (Text) –
 senden. Achtung Grundproblem: Bei offenen Songs überschreiben die Laptop-Songdaten (BPM,
 Tempo, Kapo, Tonart, Titel) beim Senden die Werte vom Mudita.
 
+**Gig "El Circo" Sa 14.11. abends (Stand 17:55):** 3 Sets mit Automatik und Pausen auf dem
+Mudita, Set 1 aktiv (Details PLAN.md C4–C6). Jolene auf 3:11 gekürzt. Jans Kapo-/Tempo-Werte
+am Mudita sind seit 17:30 neu (viele Songs Kapo 2, Riptide Kapo 5). Daten zuletzt
+`.geraet/bestand-2026-11-14-elcirco-fertig.json`. Bekanntes Problem: "Neue Songs" + neu einlesen
+holt gelöschte Songs zurück, solange ihre Dateien im Musikordner liegen (siehe C6).
+
 **Als Nächstes:**
-1. Jan nach seinem nächsten Gig fragen: −2 dB Ausgang (B17), Show-Ruhe (B23), neue Auswahlseite
+1. Jan nach dem Gig "El Circo" fragen (Automatik mit Pausen, Kapo-Wechsel, Jolene gekürzt) und nach seinem nächsten Gig: −2 dB Ausgang (B17), Show-Ruhe (B23), neue Auswahlseite
    und Zurück-Weg (B18–B20), Kapo/Tonart in der Pause (B21). Probleme gehen vor allem anderen.
 2. B7: Jan probiert die Werkstatt selbst aus (Songdaten, Gigs, Neue Songs, Teile ohne Gesang
    benennen, Text ab hier ↓). Zuschauen, wo er hängt; erst Vorschläge mit Favorit, dann bauen.
