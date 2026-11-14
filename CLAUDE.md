@@ -29,7 +29,7 @@ Ablauf-Code.
   Dateien lesen, am Gerät meist `geraet.sh texte` statt Fotos.
 - Das Repo ist **öffentlich**: nie Songtexte, `bestand.json` oder Jans Daten einchecken.
 
-## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:50)
+## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:55)
 
 **Stand in einem Satz:** Arbeitsliste B fertig bis auf B7 (Jan bedient die Werkstatt selbst)
 und einen Test mit einer wirklich neuen Datei; Arbeitsliste C (C1–C6, Ende von PLAN.md) fertig.
@@ -37,6 +37,11 @@ und einen Test mit einer wirklich neuen Datei; Arbeitsliste C (C1–C6, Ende von
 `:werkstatt:test` mit 24 Tests). Auf dem Kompakt läuft **App-Fassung 5** (versionCode 5, Bau
 von `94cb219`, App-Code seither unverändert), installiert 14.11. 17:08. Die Werkstatt hinter
 Jans Desktop-Symbol ist auf dem neuesten Stand (`installDist` nach `94cb219`).
+
+**Neu am 15.11. nachts:** Automatische Mudita-Sicherung (Windows-Aufgabe "TrikTrak-Sicherung",
+alle 5 Minuten, nur bei Änderung, nur lesend) nach `TrikTrak-Werkstatt\sicherungen\mudita-*.json`,
+Log `TrikTrak-Werkstatt\sicherung.log`. Eingerichtet und getestet, Details unten bei "TrikTrak
+Werkstatt". Bei Fragen zu verlorenen Daten zuerst dort nachsehen.
 
 **Was am 14.11. nachmittags/abends dazukam (Details PLAN.md C1–C6):**
 - C1/C2: Pfeile "‹ Voriger" / "Nächster ›" auf Einstellungen (im Set: Setliste) und Bearbeiten
