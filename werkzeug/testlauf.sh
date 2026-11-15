@@ -160,7 +160,8 @@ ablauf() {
   pruefe liste-in-pause 5 "kommt nach der Pause" "Test Drei"
   tippe "Test Drei"
   pruefe pause-mit-anderem-song 5 "Stille Pause" "Test Drei" "Rückgängig"
-  tippe "Jetzt starten"; tippe "Pause"
+  # Die Testpause ist kurz (20 s): ist sie schon abgelaufen, läuft der Song von selbst.
+  texte | grep -qF "Jetzt starten" && tippe "Jetzt starten"; tippe "Pause"
   pruefe jetzt-starten 5 "Test Drei" "Beenden"
   # 6 Set wechseln während ein Song läuft: beginnt erst danach
   tippe "Zur Setliste"; tippe "Set A"

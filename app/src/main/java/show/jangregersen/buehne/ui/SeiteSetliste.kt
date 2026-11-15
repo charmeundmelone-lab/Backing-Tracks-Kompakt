@@ -179,7 +179,7 @@ private fun SetZeile(nr: Int, s: Song, e: Eintrag, aktuell: Boolean, status: Str
         val ansage = s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank()
         val zeile2 = !e.gespielt || haeltAn || ansage
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            if (zeile2) PassenderTitel(s.titel, { textStil(it).copy(lineHeight = 24.sp) }, 22, 15, durchgestrichen = e.gespielt)
+            if (zeile2) PassenderTitel(s.titel, { textStil(it) }, 22, 15, durchgestrichen = e.gespielt)
             else T(s.titel, textStil(22.sp).copy(lineHeight = 24.sp), zeilen = 2, durchgestrichen = e.gespielt)
             if (zeile2) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (ansage) Symbol(Sym.MIKRO, Schwarz, 15.dp)
@@ -203,7 +203,7 @@ private fun PausenKaestchen(s: Song, farbe: androidx.compose.ui.graphics.Color) 
     Box(
         Modifier.semantics { contentDescription = "Pause umschalten" }
             .tipp { App.ablage.aendern { it.songAendern(s.id) { x -> x.copy(pauseSek = pauseSpeichern(naechstePause(x.pauseDanach))) } } }
-            .padding(horizontal = 4.dp, vertical = 3.dp)
+            .padding(end = 8.dp, top = 3.dp, bottom = 3.dp)
     ) {
         Box(Modifier.border(1.5.dp, farbe, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) {
             T(if (p > 0) "Pause ${pauseText(p)}" else "ohne Pause", textStil(13.sp, farbe, FontWeight.Bold), zeilen = 1)

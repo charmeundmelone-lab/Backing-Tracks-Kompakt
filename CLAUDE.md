@@ -37,6 +37,8 @@ Eintrag 10 s (gespeichert 0 = Standard 10 s, -1 = 0 s); "Set bearbeiten" hat rec
 Pausen-Knopf (ein Tipp = nächster Wert). Songtitel schrumpfen statt umzubrechen (`PassenderTitel`).
 Im Gig eingeplante Songs stehen im Archiv grau, nochmal einplanen/spielen nur nach Rückfrage.
 El-Circo-Sets auf Jans Wunsch auf den Stand vom Abend zurückgesetzt (alle ungespielt).
+Dazu E6: in der normalen Setliste wieder das kleine Pausen-Kästchen aus Fassung 5 unter jedem
+offenen Song, ein Tipp schaltet die Pause weiter (Jan fand die Pausen in "Set bearbeiten" nicht).
 Werkstatt: `Main.kt` rechnet die Pause jetzt mit `pauseDanach`, `installDist` steht noch aus
 (nur wenn Jans Werkstatt aus ist). Offen: E5 Menüführung schlanker (später, erst Vorschläge).
 Rückwege App: `.geraet/fassung7-2026-11-15.apk` (jetzt installiert), `.geraet/fassung5-2026-11-14.apk` (Fassung 6 nicht gesichert).
