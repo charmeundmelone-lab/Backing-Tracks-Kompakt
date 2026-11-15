@@ -29,7 +29,18 @@ Ablauf-Code.
   Dateien lesen, am Gerät meist `geraet.sh texte` statt Fotos.
 - Das Repo ist **öffentlich**: nie Songtexte, `bestand.json` oder Jans Daten einchecken.
 
-## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:55; Nachträge D und E unten drüber)
+## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:55; Nachträge D, E, F unten drüber)
+
+**Neu 15.11. abends (Arbeitsliste F, PLAN.md): Bedienung wie die alte App, Fassung 8 (versionCode 8)
+GEBAUT, NOCH NICHT INSTALLIERT.** Jan konnte mit Fassung 7 "so nicht arbeiten"; die alte App war
+besser. Jetzt: ein Hauptbildschirm `ui/SeiteHaupt.kt` (Reiter "Set ⌄"/"Archiv", Liste, feste
+Player-Leiste unten), Wischen rechts = als Nächstes, links = ans Ende (`WischZeile`,
+`Buehne.ansEnde`), Antippen = Einstellungen, Set wechseln über die Set-Klappe, Text-Knopf öffnet die
+Bühne (geht am Songende zurück). Optik und Pausen-Kästchen wie Fassung 7 (Jans Wunsch).
+Entwurf: `entwuerfe/wie-alt/`. `testlauf.sh ablauf` ist auf die neue Bedienung umgeschrieben
+(`geraet.sh wisch`), aber noch nie am Gerät gelaufen: Schritte können anfangs an Kleinigkeiten
+(Texte, Koordinaten) hängen. Nächster Schritt: mit Jans Ja installieren, `ablauf`, Fotos ansehen,
+nachbessern. Rückweg: `.geraet/fassung7-2026-11-15.apk`.
 
 **Neu 15.11. vormittags (Arbeitsliste E, PLAN.md): Fassung 7 (versionCode 7) INSTALLIERT,
 `testlauf.sh ablauf` 25/25 OK.** Pausen nur noch 0 s · 10 s · 30 s · 1 min · 2 min, jeder Song ohne
