@@ -211,13 +211,12 @@ private fun SetBereich(navi: Navi, setId: Long) {
     }
 }
 
-/** Eine Zeile der Setliste, Aussehen wie Fassung 7. [naechster]: oben dicke Linie mit „Als Nächstes“. */
+/** Eine Zeile der Setliste, Aussehen wie Fassung 7. [naechster]: schwarzes Schild „Als Nächstes“ und dicke Linie darunter. */
 @Composable
 private fun LiveZeile(nr: Int, s: Song, e: Eintrag, naechster: Boolean, haeltAnZeigen: Boolean, onClick: () -> Unit) {
     Box(Modifier.fillMaxWidth().height(64.dp)) {
         Row(
             Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(63.dp)
-                .then(if (naechster) Modifier.drawBehind { drawRect(Schwarz, size = androidx.compose.ui.geometry.Size(size.width, 2.5.dp.toPx())) } else Modifier)
                 .tipp(onClick = onClick).padding(start = 8.dp, end = 10.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
@@ -237,16 +236,14 @@ private fun LiveZeile(nr: Int, s: Song, e: Eintrag, naechster: Boolean, haeltAnZ
                     if (ansage) Symbol(Sym.MIKRO, Schwarz, 15.dp)
                     if (!e.gespielt) PausenKaestchen(s, Schwarz)
                     if (haeltAn) Box(Modifier.border(1.5.dp, Schwarz, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) { T("hält an", textStil(14.sp, gewicht = FontWeight.Bold), zeilen = 1) }
+                    if (naechster) Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Schwarz).padding(horizontal = 6.dp, vertical = 1.dp)) {
+                        T("ALS NÄCHSTES", etikettStil(Weiss, 12.sp), zeilen = 1)
+                    }
                 }
             }
             T(zeit(s.dauerMs), titelStil(20.sp, gewicht = FontWeight.SemiBold), Modifier.width(44.dp), zeilen = 1)
         }
         Linie(Modifier.align(Alignment.BottomCenter).padding(horizontal = 10.dp), dicke = if (naechster) 2.5.dp else 1.dp)
-        if (naechster) {
-            Box(Modifier.align(Alignment.TopStart).padding(start = 44.dp).offset(y = (-7).dp).background(Weiss).padding(horizontal = 5.dp)) {
-                T("ALS NÄCHSTES", etikettStil(groesse = 11.sp), zeilen = 1)
-            }
-        }
     }
 }
 
@@ -536,7 +533,7 @@ private fun PlayerLeiste(navi: Navi) {
                     }
                     angespielt -> LeistenKnopf(Modifier.weight(1f), voll = bestaetigen, beschreibung = "Song beenden", onClick = {
                         if (bestaetigen) { bestaetigen = false; App.buehne.beenden() }
-                        else { bestaetigen = true; App.buehne.hinweis("Nochmal auf „Nochmal“ tippen, dann ist der Song zu Ende.") }
+                        else { bestaetigen = true; App.buehne.hinweis("Zum Beenden nochmal auf „Nochmal“ tippen.") }
                     }) { f ->
                         Symbol(Sym.STOP, f, 18.dp)
                         T(if (bestaetigen) "Nochmal" else "Beenden", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)

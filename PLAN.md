@@ -761,3 +761,29 @@ kommt später. Jetzt umsetzen:
   beim laufenden Song; Tipp schaltet weiter (`PausenKaestchen`), unsichtbar vergrößerte Tippfläche.
 - [ ] E5 Menüführung schlanker (Jan: "zu viele Menüs, zwischen denen man hin und her schaltet"),
   später. Erst Vorschläge mit Favorit.
+
+## Arbeitsliste F: Bedienung wie die alte App (15.11. abends, Jans Auftrag)
+
+Jan: "Ich kann mit der App so nicht arbeiten. Da war die alte Backing Track App wesentlich besser."
+Entscheidung: Bedienung wie die alte App, aber Optik und Textgrößen wie Fassung 7 ("super"),
+Pausen-Kästchen bleiben, alles für E-Ink und die kleine Größe. Vermisst hat er: alles auf einem
+Bildschirm, Player-Leiste unten, Archiv als zweiter Reiter, Wischen (rechts = ganz nach oben/als
+Nächstes, links = ganz nach unten), "aber diesmal perfekt funktionierend". Entwurf: `entwuerfe/wie-alt/`.
+
+- [x] F1 Hauptbildschirm `ui/SeiteHaupt.kt` (ersetzt die Live-Setliste, `Seite.Setliste`): Kopf mit
+  Reitern "Set ⌄" und "Archiv", Liste in der Mitte, feste Player-Leiste unten (Zustand, Restzeit,
+  Titel, Fortschritt bzw. Kapo/Tonart, Knöpfe Text · Play/Pause · Beenden (2 Tipps) bzw. Weiter; in
+  der Pause Countdown, "Jetzt starten", "Anhalten"). Reiter bleibt beim Zurückkommen (`HauptZustand`).
+- [x] F2 Wischen (`WischZeile`): rechts = `Buehne.vorziehen`, links = neu `Buehne.ansEnde` /
+  `Bestand.ansEnde`, je 8 s Rückgängig (Band unten über der Liste). E-Ink: Zeile springt einmal zur
+  Seite, sobald es zählt (64 dp), dahinter steht, was passiert. Geste hängt an der Song-ID und ruft
+  die Aktionen über `rememberUpdatedState` (Fehler der alten App: Stale Capture). Gespielte Songs:
+  rechts = nochmal (Rückfrage). Archiv: gleiche Gesten, mit Rückfrage bei Wiederholung.
+- [x] F3 Antippen eines Songs = Einstellungen (SongKarte bzw. Editor), startet nie Musik. Set
+  wechseln über die Set-Klappe (Tipp auf den Set-Reiter), dort auch "Set bearbeiten" und "Alle Gigs".
+- [x] F4 Text: Knopf in der Leiste öffnet die Bühne (Text-Ansicht wie bisher); am Songende geht es
+  von selbst zurück (`BuehneSeite(zurueckAmEnde)`). In der Pause ist "Text" aus.
+- [x] F5 App öffnet am Gig-Tag auf dem Hauptbildschirm; Gig-Sets und Wunschsong führen dorthin.
+  `werkzeug/testlauf.sh` neu (Wischen per `geraet.sh wisch`), versionCode 8. Tests grün.
+- [ ] F6 Installieren (Jans Ja) + `testlauf.sh ablauf`, Fotos ansehen, nachbessern.
+- [ ] F7 Jan probiert selbst mit echtem Set.
