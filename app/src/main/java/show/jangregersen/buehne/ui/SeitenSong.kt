@@ -111,7 +111,8 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
         // Beschriftungen von Pause und Songende stehen links in der Zeile statt darüber.
         Column(Modifier.weight(1f).padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             // "Jetzt spielen", "Danach spielen" und "Nochmal einplanen" liegen seit B19 auf der
-            // Auswahlseite davor (SongWahlSeite); hier stehen nur noch die Einstellungen.
+            // Auswahlseite davor; seit 15.11. gilt live "Antippen = kommt als Nächstes", diese Seite
+            // erreicht man über "Set bearbeiten". Hier stehen nur die Einstellungen.
             Column {
                 Etikett(if (song.ansageVorher.isNotBlank()) "Ansage vorher · ${zeit(song.ansageVorherMs)}" else "Keine Ansage vorher")
                 Abstand(4.dp)

@@ -97,6 +97,62 @@ fun SetListe.dauerMs(b: Bestand, nurOffene: Boolean = false): Long =
     eintraege.filter { !nurOffene || !it.gespielt }.sumOf { b.song(it.songId)?.dauerMs ?: 0L }
 
 /**
+ * Testmodus (15.11., werkzeug/testlauf.sh): aus Jans Bestand eine Spielwiese machen. Alle Songs
+ * bleiben (fürs Archiv/Wunschsong), Gigs werden ersetzt durch einen Gig "Testlauf" am Tag [heute]
+ * mit zwei kurzen Sets aus den 8-s-Songs "Test Eins/Zwei/Drei" (sonst die drei kürzesten Songs),
+ * Automatik mit 20 s Pause (lang genug, um die Pause-Seite zu prüfen), keine Ansagen.
+ */
+fun Bestand.testlauf(heute: Long): Bestand {
+    val namen = listOf("Test Eins", "Test Zwei", "Test Drei")
+    val drei = namen.mapNotNull { n -> songs.firstOrNull { it.titel == n } }.takeIf { it.size == 3 }
+        ?: songs.filter { it.dauerMs > 0 }.sortedBy { it.dauerMs }.take(3)
+    if (drei.size < 3) return copy(gigs = emptyList())
+    val ids = drei.map { it.id }.toSet()
+    val (a, bb, c) = drei
+    var id = naechsteId
+    val gig = Gig(id++, "Testlauf", heute, listOf(
+        SetListe(id++, "Set A", listOf(Eintrag(a.id, ende = Ende.WEITER), Eintrag(bb.id, ende = Ende.WEITER), Eintrag(c.id, ende = Ende.ANHALTEN))),
+        SetListe(id++, "Set B", listOf(Eintrag(c.id, ende = Ende.WEITER), Eintrag(a.id, ende = Ende.ANHALTEN)))
+    ), autoWeiter = false)
+    return copy(
+        songs = songs.map { if (it.id in ids) it.copy(pauseSek = 20, ansageVorher = "", ansageNachher = "") else it },
+        gigs = listOf(gig), naechsteId = id
+    )
+}
+
+/**
+ * Jans eine Regel (15.11.): Antippen = kommt als Nächstes dran. [aktuellId] ist der Song, der
+ * gerade läuft oder bereitliegt. [laeuft] = er spielt (oder wurde angespielt und pausiert): dann
+ * kommt [songId] direkt dahinter. Sonst (er liegt nur bereit, auch während der Pause davor) kommt
+ * [songId] direkt davor und wird selbst der bereite Song. Fehlt [songId] im Set, wird er aufgenommen;
+ * war er gespielt, gilt er wieder als offen.
+ */
+fun Bestand.vorziehen(setId: Long, songId: Long, aktuellId: Long?, laeuft: Boolean): Bestand = setAendern(setId) { s ->
+    if (songId == aktuellId) return@setAendern s
+    val e = (s.eintraege.firstOrNull { it.songId == songId } ?: Eintrag(songId)).copy(gespielt = false)
+    val rest = s.eintraege.filterNot { it.songId == songId }.toMutableList()
+    val anker = rest.indexOfFirst { it.songId == aktuellId }
+    val idx = when {
+        anker >= 0 && laeuft -> anker + 1
+        anker >= 0 -> anker
+        else -> rest.indexOfFirst { !it.gespielt }.let { if (it < 0) rest.size else it }
+    }
+    rest.add(idx, e)
+    s.copy(eintraege = rest)
+}
+
+/**
+ * Reihenfolge, in der die offenen Songs wirklich drankommen: ab [aktuellId] bis zum Ende, danach
+ * die offenen davor (die holt die Automatik am Schluss, siehe [naechsterNach]).
+ */
+fun SetListe.wasKommt(aktuellId: Long?): List<Eintrag> {
+    val idx = eintraege.indexOfFirst { it.songId == aktuellId }
+    val offen = { e: Eintrag -> !e.gespielt || e.songId == aktuellId }
+    return if (idx < 0) eintraege.filter(offen)
+    else eintraege.drop(idx).filter(offen) + eintraege.take(idx).filter(offen)
+}
+
+/**
  * Nimmt [songId] neu ins Set auf, direkt hinter [nachId] (z. B. den laufenden Song).
  * Ohne Anker landet er vor dem ersten ungespielten Song. Ist er schon drin, bleibt alles, wie es ist.
  */

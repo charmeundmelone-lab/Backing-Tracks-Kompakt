@@ -22,6 +22,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -201,6 +203,7 @@ fun GigSetsSeite(navi: Navi, gigId: Long) {
         if (offen != null) {
             val idx = gig.sets.indexOf(offen)
             Menue(listOfNotNull(
+                "Set bearbeiten" to { setMenue = null; navi.zu(Seite.SetBearbeiten(offen.id)) },
                 "Umbenennen" to { setMenue = null; navi.zu(Seite.Eingabe("Set umbenennen", offen.name) { n -> if (n.isNotBlank()) App.ablage.aendern { it.setAendern(offen.id) { s -> s.copy(name = n.trim()) } }; navi.zurueck() }) },
                 if (idx > 0) "Nach vorne" to { App.ablage.aendern { it.setSchieben(gigId, offen.id, -1) }; setMenue = null } else null,
                 if (idx < gig.sets.size - 1) "Nach hinten" to { App.ablage.aendern { it.setSchieben(gigId, offen.id, 1) }; setMenue = null } else null,
@@ -236,16 +239,18 @@ fun GigSetsSeite(navi: Navi, gigId: Long) {
                 }
             }
         ) { i, set ->
-            SetKarte(i + 1, set, aktiv = set.id == z.setId, laeuft = set.id == z.setId && z.spielt, onMenue = { setMenue = set.id }) {
+            SetKarte(i + 1, set, aktiv = set.id == z.setId, laeuft = set.id == z.setId && z.spielt, danach = set.id == z.setDanach, onMenue = { setMenue = set.id }) {
+                // Läuft ein Song, beginnt das gewählte Set erst danach (Buehne.setWaehlen); dann zur Bühne.
+                val lief = App.buehne.angespielt()
                 App.buehne.setWaehlen(set.id)
-                navi.zurSetliste()
+                if (lief && set.id != z.setId) navi.zurBuehne() else navi.zurSetliste()
             }
         }
     }
 }
 
 @Composable
-private fun SetKarte(nr: Int, set: SetListe, aktiv: Boolean, laeuft: Boolean, onMenue: () -> Unit, onClick: () -> Unit) {
+private fun SetKarte(nr: Int, set: SetListe, aktiv: Boolean, laeuft: Boolean, danach: Boolean, onMenue: () -> Unit, onClick: () -> Unit) {
     val b = App.ablage.jetzt
     val gespielt = set.eintraege.count { it.gespielt }
     val gesamt = set.eintraege.size
@@ -254,6 +259,7 @@ private fun SetKarte(nr: Int, set: SetListe, aktiv: Boolean, laeuft: Boolean, on
     val form = RoundedCornerShape(14.dp)
     val etikett = when {
         laeuft -> "läuft"
+        danach -> "kommt danach"
         aktiv -> "aktiv"
         gesamt > 0 && gespielt == gesamt -> "gespielt"
         else -> ""
@@ -266,7 +272,7 @@ private fun SetKarte(nr: Int, set: SetListe, aktiv: Boolean, laeuft: Boolean, on
         Row(verticalAlignment = Alignment.CenterVertically) {
             T("$nr · ${set.name}", titelStil(25.sp, vorne), Modifier.weight(1f), zeilen = 1)
             if (etikett.isNotEmpty()) Etikett(etikett, farbe = vorne)
-            Box(Modifier.size(40.dp).tipp(onClick = onMenue), contentAlignment = Alignment.Center) { Symbol(Sym.PUNKTE, vorne, 20.dp) }
+            Box(Modifier.size(40.dp).tipp(onClick = onMenue).semantics { contentDescription = "Set-Menü" }, contentAlignment = Alignment.Center) { Symbol(Sym.PUNKTE, vorne, 20.dp) }
         }
         Kaestchen(12, if (gesamt == 0) 0 else (gespielt * 12 + gesamt - 1) / gesamt, vorne, Modifier.padding(end = 8.dp), 8.dp)
         val rest = set.dauerMs(b, nurOffene = true)

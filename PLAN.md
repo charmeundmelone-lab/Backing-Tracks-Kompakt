@@ -689,3 +689,37 @@ Gig "El Circo" Sa 14.11. abends (C4–C6):
   Songs ohne Basis nehmen die Mudita-Werte. 3 neue Tests. Jans Werkstatt einmal geholt: Songs 3/14
   waren nur wegen Kapo "offen" (Text längst angekommen), jetzt nichts offen.
 - [x] Automatische Mudita-Sicherung (Windows-Aufgabe "TrikTrak-Sicherung", alle 5 Min., siehe CLAUDE.md).
+
+## Arbeitsliste D: "TrikTrak einfach" (15.11., nach El Circo)
+
+Jans Rückmeldung zu El Circo: TrikTrak lief den ganzen Abend, aber beim Spielen unübersichtlich,
+zu viele Tipps (Liste → Song → Menü). Auftrag: Weltklasse-Bedienung, einfach, wenig Tipps,
+schlank, Lesbarkeit mindestens wie bisher (Jan ist kurzsichtig, Lesbarkeit war "sehr gut").
+Entwurf: `entwuerfe/einfach/` (8 Seiten, Bilder in `bilder/`), von Jan angenommen.
+
+- [x] D1 Fehler: Set antippen, während ein Song lief, machte das andere Set sofort aktiv (Song ohne
+  Haken, Automatik stand, nächster Song aus dem falschen Set; erklärt vermutlich die fehlenden
+  Haken in Set 1/2 nach El Circo). Jetzt: Set beginnt nach dem laufenden Song (`Zustand.setDanach`,
+  `setDanachBeginnen`), in der Pause zwischen Songs sofort. Set-Karte zeigt "kommt danach".
+- [x] D2 Eine Regel "Antippen = kommt als Nächstes" (`Bestand.vorziehen`, `Buehne.vorziehen`):
+  läuft ein Song → danach; Pause → ersetzt den wartenden Song, Countdown läuft weiter; nichts
+  läuft → sofort bereit. Danach automatisch zurück zur Bühne, 8 s "Rückgängig". Auswahlseite
+  (SeiteSongWahl) entfernt. Gilt in Setliste, Bühne ("Dann"-Liste) und Archiv ("Wunschsong").
+- [x] D3 Bühne: drei Knöpfe (Liste · Play/Pause · Beenden bzw. Weiter). Beenden braucht zweiten
+  Tipp und macht weiter wie am Songende (`Buehne.beenden`). Ohne Text: Kapo/Tonart 44 sp wie
+  bisher + "Dann"-Liste der folgenden Songs (antippbar) statt leerer Fläche; BPM-Kasten entfällt.
+  Lautstärketasten auf Bühne ohne Text tun nichts mehr (vorher Android-Lautstärkebalken).
+- [x] D4 Pause-Seite: "Jetzt starten" breit, darunter "Anderer Song" | "Anhalten" (vorher drei
+  abgeschnittene Knöpfe).
+- [x] D5 Setliste live: ein Kopf (Gig · gespielt · Restzeit, Set-Name ▾ = Sets, "Bühne"), oben was
+  kommt (`SetListe.wasKommt`), gespielte in einer Zeile unten (antippbar), immer ab Seite 1,
+  zweite Zeile nur bei Abweichung ("hält an", Ansage), unten nur "Wunschsong".
+- [x] D6 "Set bearbeiten" (neue Seite, über ⋯ am Set): Songs dazu (Archiv: Tipp = ans Ende),
+  Umstellen, Tipp = Einstellungen des Songs; Pause/Ende je Zeile sichtbar.
+- [x] D7 Am Gig-Tag (bis 6 Uhr zählt der Vortag) öffnet TrikTrak gleich auf der Bühne, erstes
+  offenes Set bereit (`Buehne.gigHeute`).
+- [x] D8 Abend-Protokoll `files/protokoll.txt` (Start, zu Ende, beendet nach m:ss, übersprungen).
+- [x] D9 Testlauf-Skript `werkzeug/testlauf.sh` + Testmodus (`files/testmodus` → test-bestand.json,
+  Spielwiese `Bestand.testlauf`, Jans Daten unberührt, vorher/nachher-Vergleich). Symbol-Knöpfe
+  haben jetzt Namen (contentDescription), damit das Skript sie findet.
+- [ ] D10 Installieren (Jans Ja) und `testlauf.sh ablauf` am Gerät, Fotos prüfen, nachbessern.

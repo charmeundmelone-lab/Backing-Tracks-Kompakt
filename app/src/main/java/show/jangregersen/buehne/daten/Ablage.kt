@@ -20,7 +20,13 @@ import java.io.File
  * im Schreiben kann die alte Datei nicht zerstören).
  */
 class Ablage(private val context: Context) {
-    private val datei = File(context.filesDir, "bestand.json")
+    /**
+     * Testmodus (15.11., werkzeug/testlauf.sh): Liegt files/testmodus, arbeitet die App nur mit
+     * test-bestand.json. Jans bestand.json wird dann weder gelesen noch geschrieben (außer einmal
+     * gelesen, um die Spielwiese anzulegen), Post vom Laptop bleibt liegen.
+     */
+    val testmodus = File(context.filesDir, "testmodus").exists()
+    private val datei = File(context.filesDir, if (testmodus) "test-bestand.json" else "bestand.json")
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var speicherJob: Job? = null
 
@@ -53,6 +59,7 @@ class Ablage(private val context: Context) {
      */
     @Synchronized
     fun eingangUebernehmen(): String? {
+        if (testmodus) return null
         val f = File(datei.parentFile, "eingang.json")
         if (!f.exists()) return null
         val o: JSONObject
@@ -109,7 +116,12 @@ class Ablage(private val context: Context) {
     fun sofortSichern() { speicherJob?.cancel(); schreiben(_stand.value) }
 
     private fun laden(): Bestand = try {
-        if (datei.exists()) ausJson(JSONObject(datei.readText())) else Bestand()
+        if (testmodus && !datei.exists()) {
+            val echt = File(context.filesDir, "bestand.json").let { if (it.exists()) ausJson(JSONObject(it.readText())) else Bestand() }
+            // Gig-Tag wie in Buehne.gigHeute: bis 6 Uhr morgens zählt der Vortag.
+            val tag = java.time.LocalDateTime.now().let { if (it.hour < 6) it.toLocalDate().minusDays(1) else it.toLocalDate() }.toEpochDay()
+            echt.testlauf(tag).also { schreiben(it) }
+        } else if (datei.exists()) ausJson(JSONObject(datei.readText())) else Bestand()
     } catch (e: Exception) {
         Log.e(TAG, "Bestand nicht lesbar, sichere Kopie und starte leer", e)
         runCatching { datei.copyTo(File(datei.parentFile, "bestand-defekt-${System.currentTimeMillis()}.json")) }

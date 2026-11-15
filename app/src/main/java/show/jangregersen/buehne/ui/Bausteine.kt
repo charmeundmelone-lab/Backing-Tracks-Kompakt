@@ -38,6 +38,8 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -158,6 +160,8 @@ fun Knopf(
     Row(
         modifier = m
             .clickable(interactionSource = quelle, indication = null, enabled = aktiv, onClickLabel = beschreibung, onClick = onClick)
+            // Name für Symbol-Knöpfe: so findet werkzeug/testlauf.sh sie (und Vorlese-Hilfen auch).
+            .then(if (beschreibung != null) Modifier.semantics { contentDescription = beschreibung } else Modifier)
             .padding(horizontal = 10.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically

@@ -13,7 +13,7 @@ android {
         minSdk = 26
         targetSdk = 35
         // 2 = liest eingang.json (Zum Mudita senden), 3 = auch ganzer Bestand (Wiederherstellen).
-        versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 5
+        versionCode = (project.findProperty("versionCode") as String?)?.toIntOrNull() ?: 6
         versionName = "0.1"
     }
 

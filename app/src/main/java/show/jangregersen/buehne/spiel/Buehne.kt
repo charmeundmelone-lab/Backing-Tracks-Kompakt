@@ -24,6 +24,8 @@ import show.jangregersen.buehne.daten.Song
 import show.jangregersen.buehne.daten.eintragAendern
 import show.jangregersen.buehne.daten.ersterOffener
 import show.jangregersen.buehne.daten.naechsterNach
+import show.jangregersen.buehne.daten.setAendern
+import show.jangregersen.buehne.daten.vorziehen
 import java.io.File
 
 private const val TAG = "Buehne"
@@ -55,8 +57,17 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         val fehler: String? = null,
         val hinweis: String? = null,
         /** Bleibender Hinweis auf der Bühne nach dem letzten Song eines Sets, bis wieder gespielt wird. */
-        val setDurch: String? = null
+        val setDurch: String? = null,
+        /** Set, das nach dem laufenden Song beginnt (gewählt, während ein Song lief). */
+        val setDanach: Long? = null,
+        /** Hinweis mit Knopf "Rückgängig" nach dem Antippen eines Songs (verschwindet nach 8 s). */
+        val rueckgaengig: String? = null
     )
+
+    /** Stand vor dem letzten Antippen, für "Rückgängig". */
+    private class Vorher(val setId: Long, val eintraege: List<show.jangregersen.buehne.daten.Eintrag>, val songId: Long?, val laeuft: Boolean, val songIdDanach: Long?)
+    private var vorher: Vorher? = null
+    private var rueckJob: Job? = null
 
     private val engine = Engine(app)
     private val haupt = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
@@ -115,7 +126,7 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         }
     }
 
-    private fun songEnde() {
+    private fun songEnde(art: String = "zu Ende") {
         val z = _zustand.value
         val songId = z.songId ?: return
         val setId = z.setId
@@ -125,7 +136,9 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
             dienstAus()
             return
         }
+        protokoll(art, songId, setId, if (art == "zu Ende") null else engine.positionMs)
         ablage.aendern { it.eintragAendern(setId, songId) { e -> e.copy(gespielt = true) } }
+        if (setDanachBeginnen()) return
         val b = ablage.jetzt
         val set = b.set(setId) ?: return
         val ende = set.eintraege.firstOrNull { it.songId == songId }?.ende ?: Ende.ANHALTEN
@@ -252,24 +265,80 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         nachPauseStarten()
     }
 
-    /** Nächsten Song bereitlegen (laufender gilt als gespielt). */
+    /** Nächsten Song bereitlegen (laufender gilt als gespielt). Auf der Bühne: "Überspringen". */
     fun weiter() {
         val z = _zustand.value
         if (z.pause != null) { pauseUeberspringen(); return }
         val setId = z.setId ?: return
         val songId = z.songId
-        if (songId != null) ablage.aendern { it.eintragAendern(setId, songId) { e -> e.copy(gespielt = true) } }
+        if (songId != null) {
+            protokoll("übersprungen", songId, setId, null)
+            ablage.aendern { it.eintragAendern(setId, songId) { e -> e.copy(gespielt = true) } }
+        }
+        if (setDanachBeginnen()) return
         val naechster = ablage.jetzt.set(setId)?.naechsterNach(songId)
         if (naechster == null) { setFertig(setId); return }
         ablage.jetzt.song(naechster.songId)?.let { laden(it, setId) }
         _zustand.update { it.copy(spielt = false) }
     }
 
-    /** Set aktiv machen. Läuft gerade ein Song, wird er nicht unterbrochen. */
-    fun setWaehlen(setId: Long) {
-        _zustand.update { if (it.setId != setId) it.copy(setDurch = null) else it }
+    /** Läuft gerade ein Song oder wurde er angespielt und pausiert (nicht die Pause zwischen Songs)? */
+    fun angespielt(): Boolean {
         val z = _zustand.value
-        if (z.spielt || z.pause != null) { _zustand.update { it.copy(setId = setId, probe = false) }; return }
+        return z.spielt || (z.pause == null && engine.hatSpuren && engine.positionMs > 0)
+    }
+
+    /**
+     * "Beenden" auf der Bühne (zweiter Tipp): Der Song gilt als fertig, danach geht es genau so
+     * weiter wie am normalen Songende (Pause/Ansage, Automatik, Set-Ende).
+     */
+    fun beenden() {
+        val z = _zustand.value
+        if (z.pause != null || z.songId == null) return
+        if (z.probe) { stopp(); return }
+        if (!angespielt()) return
+        engine.pause()
+        endeBehandelt = true
+        songEnde("beendet")
+    }
+
+    /**
+     * Gewähltes Set beginnt nach dem laufenden Song: jetzt bereitlegen. true = ist passiert.
+     * Danach hält die App an (kein Automatik-Übergang in ein anderes Set).
+     */
+    private fun setDanachBeginnen(): Boolean {
+        val danach = _zustand.value.setDanach ?: return false
+        pauseJob?.cancel(); engine.notizStoppen()
+        engine.stop(); _position.value = 0
+        _zustand.update { it.copy(setDanach = null, spielt = false, pause = null) }
+        dienstAus()
+        setWaehlen(danach)
+        val name = ablage.jetzt.set(danach)?.name ?: "Set"
+        _zustand.update { it.copy(setDurch = "„$name“ liegt bereit.") }
+        return true
+    }
+
+    /**
+     * Set aktiv machen. Läuft gerade ein Song, wird er nicht unterbrochen und das Set beginnt erst
+     * danach (früher wurde es sofort aktiv: der Song bekam dann keinen Haken, die Automatik stand
+     * und als Nächstes kam ein Song aus dem anderen Set). In der Pause zwischen zwei Songs endet
+     * die Automatik und das Set liegt sofort bereit.
+     */
+    fun setWaehlen(setId: Long) {
+        val z0 = _zustand.value
+        if (angespielt() && !z0.probe) {
+            if (z0.setId == setId) { _zustand.update { it.copy(setDanach = null) }; return }
+            _zustand.update { it.copy(setDanach = setId) }
+            hinweis("„${ablage.jetzt.set(setId)?.name ?: "Set"}“ beginnt nach diesem Song.")
+            return
+        }
+        if (z0.pause != null) {
+            pauseJob?.cancel(); engine.notizStoppen()
+            _zustand.update { it.copy(pause = null, spielt = false) }
+        }
+        _zustand.update { if (it.setId != setId) it.copy(setDurch = null, setDanach = null) else it.copy(setDanach = null) }
+        val z = _zustand.value
+        if (z.spielt) { _zustand.update { it.copy(setId = setId, probe = false) }; return }
         val erster = ablage.jetzt.set(setId)?.ersterOffener()
         if (erster == null) {
             engine.entladen()
@@ -279,27 +348,84 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         ablage.jetzt.song(erster.songId)?.let { laden(it, setId) }
     }
 
-    /** Einen bestimmten Song im Set bereitlegen (nur wenn nichts läuft). */
-    fun bereitlegen(setId: Long, songId: Long): Boolean {
+    /**
+     * Jans eine Regel (15.11.): Antippen = kommt als Nächstes dran. Läuft ein Song, kommt der
+     * angetippte danach. In der Pause zwischen zwei Songs ersetzt er den wartenden Song, der
+     * Countdown läuft weiter. Läuft nichts, liegt er sofort bereit. Danach gibt es 8 s lang
+     * "Rückgängig". Ergebnis: Text für Jan, oder null, wenn nichts zu tun war.
+     */
+    fun vorziehen(setId: Long, songId: Long) {
         val z = _zustand.value
-        if (z.spielt || z.pause != null) return false
-        _zustand.update { it.copy(setDurch = null) }
-        ablage.jetzt.song(songId)?.let { laden(it, setId) }
-        return true
+        if (z.probe) { hinweis("Erst das Probehören beenden."); return }
+        if (songId == z.songId && setId == z.setId) return
+        val song = ablage.jetzt.song(songId) ?: return
+        val laeuft = angespielt() && z.setId == setId
+        val vorEintraege = ablage.jetzt.set(setId)?.eintraege ?: return
+        ablage.aendern { it.vorziehen(setId, songId, z.songId.takeIf { z.setId == setId }, laeuft) }
+        val text: String
+        if (laeuft) {
+            z.songId?.let { vorladen(setId, it) }
+            text = "„${song.titel}“ kommt als Nächstes."
+        } else {
+            laden(song, setId)
+            _zustand.update { it.copy(setDurch = null, setDanach = null) }
+            text = if (z.pause != null) "„${song.titel}“ kommt nach der Pause." else "„${song.titel}“ liegt bereit."
+        }
+        vorher = Vorher(setId, vorEintraege, z.songId, laeuft, _zustand.value.songId)
+        _zustand.update { it.copy(rueckgaengig = text, hinweis = null) }
+        rueckJob?.cancel()
+        rueckJob = haupt.launch { delay(8000); vorher = null; _zustand.update { it.copy(rueckgaengig = null) } }
+    }
+
+    /** Letztes Antippen zurücknehmen, solange sich auf der Bühne nichts weiter getan hat. */
+    fun rueckgaengig() {
+        val v = vorher ?: return
+        vorher = null; rueckJob?.cancel()
+        _zustand.update { it.copy(rueckgaengig = null) }
+        val z = _zustand.value
+        val nochGleich = z.songId == v.songIdDanach && (v.laeuft || !z.spielt)
+        if (!nochGleich) { hinweis("Geht nicht mehr, der Song hat schon begonnen."); return }
+        ablage.aendern { it.setAendern(v.setId) { s -> s.copy(eintraege = v.eintraege) } }
+        if (v.laeuft) {
+            z.songId?.let { vorladen(v.setId, it) }
+        } else {
+            val alt = ablage.jetzt.song(v.songId)
+            if (alt != null) laden(alt, v.setId) else { engine.entladen(); _position.value = 0; _zustand.update { it.copy(songId = null, dauerMs = 0) } }
+        }
+        hinweis("Zurückgenommen.")
     }
 
     /**
-     * "Jetzt spielen" (B19): Song bereitlegen, Play drückt Jan selbst. Läuft gerade eine Pause oder
-     * Ansage, endet sie zuerst. Solange ein Song spielt: nichts (false).
+     * Beim Öffnen der App: Gibt es heute einen Gig (bis 6 Uhr morgens zählt noch der Vortag), wird
+     * sein erstes offenes Set aktiv, sofern nicht schon ein Set dieses Gigs aktiv ist.
+     * true = die App soll gleich auf der Bühne aufgehen.
      */
-    fun jetztBereitlegen(setId: Long, songId: Long): Boolean {
+    fun gigHeute(): Boolean {
         val z = _zustand.value
-        if (z.spielt) return false
-        if (z.pause != null) {
-            pauseJob?.cancel(); engine.notizStoppen()
-            _zustand.update { it.copy(pause = null, spielt = false) }
-        }
-        return bereitlegen(setId, songId)
+        if (z.spielt || z.pause != null) return true
+        val b = ablage.jetzt
+        val jetzt = java.time.LocalDateTime.now()
+        val tag = (if (jetzt.hour < 6) jetzt.toLocalDate().minusDays(1) else jetzt.toLocalDate()).toEpochDay()
+        val gig = b.gigs.firstOrNull { it.datum == tag && it.sets.any { s -> s.eintraege.isNotEmpty() } } ?: return false
+        if (gig.sets.any { it.id == z.setId }) return z.songId != null
+        val set = gig.sets.firstOrNull { it.ersterOffener() != null } ?: gig.sets.firstOrNull { it.eintraege.isNotEmpty() } ?: return false
+        setWaehlen(set.id)
+        return _zustand.value.songId != null
+    }
+
+    /**
+     * Abend-Protokoll (15.11.): eine Zeile pro Song in files/protokoll.txt, damit wir nach einem Gig
+     * wissen, was wirklich lief (und als Grundlage für die GEMA-Liste).
+     */
+    private fun protokoll(art: String, songId: Long, setId: Long?, nachMs: Long?) {
+        runCatching {
+            val b = ablage.jetzt
+            val gig = b.gigVonSet(setId)
+            val zeit = java.time.LocalDateTime.now().withNano(0).toString().replace('T', ' ')
+            val zeile = listOf(zeit, gig?.name ?: "-", b.set(setId)?.name ?: "-", b.song(songId)?.titel ?: "?",
+                art + (nachMs?.let { " nach ${it / 60000}:%02d".format((it / 1000) % 60) } ?: "")).joinToString(" | ")
+            File(app.filesDir, if (ablage.testmodus) "protokoll-test.txt" else "protokoll.txt").appendText(zeile + "\n")
+        }.onFailure { Log.w(TAG, "Protokoll: ${it.message}") }
     }
 
     /** Probehören außerhalb eines Sets. Verweigert, solange ein Set-Song läuft. */
@@ -374,6 +500,7 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
     private fun abspielen() {
         if (!engine.hatSpuren) return
         endeBehandelt = false
+        _zustand.value.let { z -> if (!z.probe && engine.positionMs == 0L) z.songId?.let { protokoll("Start", it, z.setId, null) } }
         engine.play()
         // Probehören zählt nicht als Weiterspielen: der Set-Ende-Hinweis bleibt dann stehen.
         _zustand.update { it.copy(spielt = true, setDurch = if (it.probe) it.setDurch else null) }

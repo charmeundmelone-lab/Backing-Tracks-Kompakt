@@ -47,7 +47,11 @@ import androidx.compose.ui.unit.sp
 import show.jangregersen.buehne.App
 import show.jangregersen.buehne.daten.Ende
 import show.jangregersen.buehne.daten.Song
+import show.jangregersen.buehne.daten.ersterOffener
 import show.jangregersen.buehne.daten.naechsterNach
+import show.jangregersen.buehne.daten.wasKommt
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import show.jangregersen.buehne.lyrics.Abschnitte
 import show.jangregersen.buehne.lyrics.LyricsSeite
 
@@ -87,32 +91,113 @@ fun BuehneSeite(navi: Navi) {
 
     val platz = set?.eintraege?.indexOfFirst { it.songId == song.id }?.let { if (it >= 0) "${it + 1} / ${set.eintraege.size}" else null }
     val naechsterEintrag = set?.naechsterNach(song.id)
-    val naechster = b.song(naechsterEintrag?.songId)
-    val endeHier = set?.eintraege?.firstOrNull { it.songId == song.id }?.ende ?: Ende.ANHALTEN
+    // Gewähltes Folge-Set (B: Set-Wechsel nur nach dem laufenden Song): "Danach" zeigt dessen ersten Song.
+    val folgeSet = b.set(z.setDanach)
+    val naechster = if (folgeSet != null) b.song(folgeSet.ersterOffener()?.songId) else b.song(naechsterEintrag?.songId)
+    val endeHier = if (folgeSet != null) Ende.ANHALTEN else set?.eintraege?.firstOrNull { it.songId == song.id }?.ende ?: Ende.ANHALTEN
+    val pos by App.buehne.position.collectAsState()
+    val angespielt = z.spielt || pos > 0
+    // Beenden braucht einen zweiten Tipp (15.11.): Ein Fehltipp neben Play darf den Song nicht abbrechen.
+    var bestaetigen by remember(song.id) { mutableStateOf(false) }
+    LaunchedEffect(bestaetigen) { if (bestaetigen) { kotlinx.coroutines.delay(4000); bestaetigen = false } }
+    if (!angespielt && bestaetigen) bestaetigen = false
 
+    Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize()) {
         BuehnenKopf(song, if (z.probe) "Probe" else if (z.spielt) "Jetzt${platz?.let { " · $it" } ?: ""}" else "Bereit${platz?.let { " · $it" } ?: ""}", z.dauerMs, z.spielt)
         z.setDurch?.let { SetEndeHinweis(it) }
         // B21: Solange der Song nur bereitliegt, stehen Kapo und Tonart groß oben (zum Vorbereiten).
         // Beim Start verschwinden sie einmal, danach bleibt die Seite ruhig.
-        val pos by App.buehne.position.collectAsState()
-        // Ohne Text zeigt die Bühne Tonart und Kapo ohnehin groß (SongDaten), dann nicht doppelt.
+        // Ohne Text stehen Tonart und Kapo ohnehin groß im Inhalt (OhneText), dann nicht doppelt.
         if (!z.spielt && pos == 0L && !z.probe && song.lyrics.isNotBlank()) KapoTonart(song, 30.sp, 10.dp, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp))
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (song.lyrics.isNotBlank()) LyricsBereich(song, z.dauerMs)
-            else SongDaten(song)
+            else OhneText(song, if (z.probe || folgeSet != null) emptyList() else set?.wasKommt(song.id)?.drop(2).orEmpty(), set?.id)
         }
-        if (!z.probe) DanachBlock(naechster, song, endeHier, naechsterEintrag == null)
+        if (!z.probe) DanachBlock(naechster, song, endeHier, naechster == null, folgeSet?.name)
+        // Drei Knöpfe, immer an derselben Stelle (15.11.): Liste · Play/Pause · Beenden bzw. Überspringen.
         Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, bottom = 14.dp, top = 2.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Knopf(Modifier.weight(1f), beschreibung = "Zur Setliste", onClick = { if (z.probe) navi.zurueck() else navi.zurSetliste() }) { f ->
+            Knopf(Modifier.weight(1f), hoehe = 62.dp, beschreibung = "Zur Setliste", onClick = { if (z.probe) navi.zurueck() else navi.zurSetliste() }) { f ->
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Symbol(Sym.LISTE, f, 20.dp)
-                    T(if (z.probe) "Zurück" else "Liste", textStil(12.sp, f, FontWeight.Bold))
+                    T(if (z.probe) "Zurück" else "Liste", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
                 }
             }
-            SymbolKnopf(Sym.STOP, "Stopp", Modifier.weight(1f), groesse = 20.dp) { App.buehne.stopp() }
-            SymbolKnopf(if (z.spielt) Sym.PAUSE else Sym.PLAY, if (z.spielt) "Pause" else "Abspielen", Modifier.weight(1f), Art.VOLL, groesse = 22.dp) { App.buehne.playPause() }
-            SymbolKnopf(Sym.WEITER, "Nächster Song", Modifier.weight(1f), groesse = 22.dp, aktiv = !z.probe && naechster != null) { App.buehne.weiter() }
+            SymbolKnopf(if (z.spielt) Sym.PAUSE else Sym.PLAY, if (z.spielt) "Pause" else "Abspielen", Modifier.weight(1.5f), Art.VOLL, hoehe = 62.dp, groesse = 26.dp) { App.buehne.playPause() }
+            when {
+                z.probe -> SymbolKnopf(Sym.STOP, "Stopp", Modifier.weight(1f), hoehe = 62.dp, groesse = 20.dp) { App.buehne.stopp() }
+                angespielt -> Knopf(Modifier.weight(1f), if (bestaetigen) Art.VOLL else Art.UMRISS, 62.dp, beschreibung = "Song beenden", onClick = {
+                    if (bestaetigen) { bestaetigen = false; App.buehne.beenden() } else bestaetigen = true
+                }) { f ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Symbol(Sym.STOP, f, 18.dp)
+                        T(if (bestaetigen) "Nochmal" else "Beenden", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
+                    }
+                }
+                else -> Knopf(Modifier.weight(1f), hoehe = 62.dp, aktiv = naechster != null || folgeSet != null, beschreibung = "Überspringen", onClick = { App.buehne.weiter() }) { f ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Symbol(Sym.WEITER, f, 20.dp)
+                        T("Weiter", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
+                    }
+                }
+            }
+        }
+    }
+    if (bestaetigen) {
+        val was = when {
+            folgeSet != null -> "Dann liegt „${folgeSet.name}“ bereit."
+            naechster == null -> "Dann ist das Set zu Ende."
+            endeHier == Ende.ANHALTEN -> "Dann liegt „${naechster.titel}“ bereit."
+            song.ansageNachher.isNotBlank() || naechster.ansageVorher.isNotBlank() -> "Dann Ansage und „${naechster.titel}“."
+            (song.pauseSek.takeIf { it > 0 } ?: naechster.pauseSek) > 0 -> "Dann Pause ${pauseText(song.pauseSek.takeIf { it > 0 } ?: naechster.pauseSek)} und „${naechster.titel}“."
+            else -> "Dann startet gleich „${naechster.titel}“."
+        }
+        Column(Modifier.fillMaxSize().padding(bottom = 84.dp), verticalArrangement = Arrangement.Bottom) {
+            Box(Modifier.fillMaxWidth().padding(horizontal = 10.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz).tipp { bestaetigen = false }.padding(14.dp)) {
+                T("Nochmal auf „Beenden“ tippen, um den Song zu beenden. $was", textStil(17.sp, Weiss, FontWeight.Bold), zeilen = 3)
+            }
+        }
+    }
+    }
+}
+
+/**
+ * Bühne ohne Text (die meisten Songs): Kapo und Tonart groß wie bisher, darunter, was nach dem
+ * "Danach"-Song kommt. Antippen holt einen Song nach vorn (Jans eine Regel, 15.11.).
+ */
+@Composable
+private fun OhneText(song: Song, dann: List<show.jangregersen.buehne.daten.Eintrag>, setId: Long?) {
+    val b by App.ablage.stand.collectAsState()
+    // Die Lautstärketasten haben hier nichts zu blättern: nicht an Android weitergeben (sonst
+    // blitzt der Lautstärkebalken auf und der Pegel springt kurz).
+    Lautstaerketasten { }
+    Column(Modifier.fillMaxSize().padding(top = 12.dp)) {
+        KapoTonart(song, 44.sp, 12.dp, Modifier.padding(horizontal = 14.dp))
+        if (dann.isEmpty() || setId == null) return@Column
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth().padding(top = 10.dp)) {
+            val zeilen = ((maxHeight - 30.dp) / 56.dp).toInt().coerceAtLeast(0)
+            if (zeilen == 0) return@BoxWithConstraints
+            Column(Modifier.fillMaxSize()) {
+                Row(Modifier.fillMaxWidth().height(30.dp).padding(horizontal = 18.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Etikett("Dann", Modifier.weight(1f))
+                    Etikett("Antippen = als Nächstes")
+                }
+                Linie(Modifier.padding(horizontal = 10.dp))
+                val set = b.set(setId)
+                dann.take(zeilen).forEach { e ->
+                    val s = b.song(e.songId) ?: return@forEach
+                    val nr = (set?.eintraege?.indexOfFirst { it.songId == e.songId } ?: -1) + 1
+                    Row(
+                        Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(55.dp).tipp { App.buehne.vorziehen(setId, s.id) }.padding(horizontal = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
+                    ) {
+                        T(if (nr > 0) "$nr" else "", titelStil(22.sp), Modifier.width(26.dp), zeilen = 1)
+                        T(s.titel, textStil(24.sp), Modifier.weight(1f), zeilen = 1)
+                        T(zeit(s.dauerMs), titelStil(20.sp, gewicht = FontWeight.SemiBold), zeilen = 1)
+                    }
+                    Linie(Modifier.padding(horizontal = 10.dp))
+                }
+            }
         }
     }
 }
@@ -167,41 +252,13 @@ private fun SetEndeHinweis(text: String) {
 }
 
 @Composable
-private fun SongDaten(song: Song) {
-    // Nur Werte zeigen, die es wirklich gibt: leere Kästchen wären auf der Bühne nur Rauschen.
-    val werte = listOfNotNull(
-        song.tonart.takeIf { it.isNotBlank() }?.let { "Tonart" to it },
-        if (song.kapo > 0) "Kapo" to "${song.kapo}" else null,
-        if (song.bpm > 0) "Tempo" to "${song.bpm}" else null
-    )
-    Column(Modifier.fillMaxSize().padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        if (song.interpret.isNotBlank()) T(song.interpret, titelStil(26.sp, gewicht = FontWeight.SemiBold), zeilen = 1)
-        werte.chunked(2).forEach { reihe ->
-            Row(horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                reihe.forEach { (e, w) -> GrossWert(e, w, Modifier.weight(1f)) }
-                if (reihe.size == 1) Box(Modifier.weight(1f))
-            }
-        }
-        Etikett("Keine Lyrics")
-    }
-}
-
-@Composable
-private fun GrossWert(etikett: String, wert: String, modifier: Modifier, klein: Boolean = false) {
-    Column(modifier.border(2.5.dp, Schwarz, RoundedCornerShape(14.dp)).padding(12.dp)) {
-        Etikett(etikett)
-        T(wert, titelStil(if (klein) 26.sp else 44.sp), zeilen = 2)
-    }
-}
-
-@Composable
-private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boolean) {
+private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boolean, folgeSet: String? = null) {
     // Immer sichtbar, immer an derselben Stelle. Der nächste Titel bekommt die volle Breite und
     // bricht lieber um, als abgeschnitten zu werden (Jan: "wirklich gut lesbar").
     Column(Modifier.padding(start = 18.dp, end = 18.dp, bottom = 6.dp)) {
         Linie(dicke = 2.5.dp)
         Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            Etikett("Danach", Modifier.weight(1f))
+            Etikett(if (folgeSet != null) "Danach · $folgeSet" else "Danach", Modifier.weight(1f))
             if (naechster != null) {
                 val (sym, text) = when {
                     ende == Ende.ANHALTEN -> Sym.STOP to "hält an"
@@ -433,14 +490,34 @@ private fun AnsageAnsicht(navi: Navi, pause: show.jangregersen.buehne.spiel.Bueh
             KapoTonart(kommt)
             Abstand(12.dp)
         }
-        // B20: Jeder Knopf sagt, was passiert.
-        Row(Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            TextKnopf("Anderer Song", Modifier.weight(1f), hoehe = 60.dp, groesse = 16.sp) { navi.zurSetliste() }
-            TextKnopf("Timer anhalten", Modifier.weight(1f), hoehe = 60.dp, groesse = 16.sp) { App.buehne.stopp() }
-            Knopf(Modifier.weight(1.1f), Art.VOLL, 60.dp, onClick = { App.buehne.pauseUeberspringen() }) { f ->
-                T("Jetzt starten", textStil(16.sp, f, FontWeight.Bold), zeilen = 1); Symbol(Sym.WEITER, f, 16.dp)
+        // B20: Jeder Knopf sagt, was passiert. Seit 15.11. zweizeilig, damit kein Text abgeschnitten
+        // wird. "Anderer Song" führt zur Liste: der angetippte Song ersetzt den wartenden, der
+        // Countdown läuft weiter.
+        Column(Modifier.padding(start = 14.dp, end = 14.dp, bottom = 14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Knopf(Modifier.fillMaxWidth(), Art.VOLL, 58.dp, onClick = { App.buehne.pauseUeberspringen() }) { f ->
+                Symbol(Sym.PLAY, f, 20.dp); T("Jetzt starten", textStil(21.sp, f, FontWeight.Bold), zeilen = 1)
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                TextKnopf("Anderer Song", Modifier.weight(1f), hoehe = 54.dp, groesse = 18.sp) { navi.zurSetliste() }
+                TextKnopf("Anhalten", Modifier.weight(1f), hoehe = 54.dp, groesse = 18.sp) { App.buehne.stopp() }
             }
         }
     }
 }
 
+
+/**
+ * Kapo und Tonart als zwei große Kästen (B21). Kapo 0 = "ohne", Tonart leer = "–", damit die Kästen
+ * immer gleich stehen und nichts springt.
+ */
+@Composable
+fun KapoTonart(song: Song, groesse: TextUnit = 44.sp, innen: Dp = 12.dp, modifier: Modifier = Modifier) {
+    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        listOf("Kapo" to (if (song.kapo > 0) "${song.kapo}" else "ohne"), "Tonart" to song.tonart.ifBlank { "–" }).forEach { (et, wert) ->
+            Column(Modifier.weight(1f).border(2.5.dp, Schwarz, RoundedCornerShape(14.dp)).padding(horizontal = innen, vertical = innen * 0.6f)) {
+                Etikett(et)
+                T(wert, titelStil(groesse).copy(lineHeight = groesse * 1.02f), zeilen = 1)
+            }
+        }
+    }
+}

@@ -27,6 +27,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navi = remember { Navi() }
             val z by App.buehne.zustand.collectAsState()
+            // Am Gig-Tag (oder wenn gerade etwas läuft) gleich auf der Bühne öffnen, erstes Set bereit (15.11.).
+            LaunchedEffect(Unit) { if (App.buehne.gigHeute()) navi.zurBuehne() }
             // Post vom Laptop (Werkstatt "Zum Mudita senden"): alle 2 s nachsehen, aber nur, wenn die
             // App zu sehen ist, nichts spielt und Jan gerade nicht an einem Text oder Song arbeitet.
             LaunchedEffect(Unit) {

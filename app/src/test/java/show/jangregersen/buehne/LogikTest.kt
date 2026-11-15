@@ -13,6 +13,10 @@ import show.jangregersen.buehne.daten.alsNaechstes
 import show.jangregersen.buehne.daten.naechsterNach
 import show.jangregersen.buehne.daten.schieben
 import show.jangregersen.buehne.daten.verschieben
+import show.jangregersen.buehne.daten.eintragAendern
+import show.jangregersen.buehne.daten.vorziehen
+import show.jangregersen.buehne.daten.wasKommt
+import show.jangregersen.buehne.daten.testlauf
 import show.jangregersen.buehne.lyrics.Abschnitte
 
 class LogikTest {
@@ -67,5 +71,59 @@ class LogikTest {
         b = bestand().alsNaechstes(100, 5, 2)
         assertEquals(listOf(1L, 2L, 5L, 3L, 4L), b.set(100)!!.eintraege.map { it.songId })
         assertEquals(5L, b.set(100)!!.naechsterNach(2)!!.songId)
+    }
+
+    private fun ids(b: Bestand) = b.set(100)!!.eintraege.map { it.songId }
+
+    /** Jans eine Regel (15.11.): Antippen = kommt als Nächstes dran. */
+    @Test fun vorziehenWaehrendSongLaeuft() {
+        // Song 2 läuft: der angetippte (5) kommt direkt danach.
+        val b = bestand().vorziehen(100, 5, 2, laeuft = true)
+        assertEquals(listOf(1L, 2L, 5L, 3L, 4L), ids(b))
+        assertEquals(5L, b.set(100)!!.naechsterNach(2)!!.songId)
+    }
+
+    @Test fun vorziehenWennNurBereit() {
+        // Song 2 liegt nur bereit (oder wartet in der Pause): der angetippte kommt davor und ist selbst dran.
+        val b = bestand().vorziehen(100, 5, 2, laeuft = false)
+        assertEquals(listOf(1L, 5L, 2L, 3L, 4L), ids(b))
+        assertEquals(2L, b.set(100)!!.naechsterNach(5)!!.songId)
+    }
+
+    @Test fun vorziehenNimmtFremdenSongAufUndHoltGespieltenZurueck() {
+        var b = bestand().copy(songs = bestand().songs + Song(9, "Wunsch", pfad = "p9"))
+        b = b.vorziehen(100, 9, 3, laeuft = true)
+        assertEquals(listOf(1L, 2L, 3L, 9L, 4L, 5L), ids(b))
+        b = b.eintragAendern(100, 1) { it.copy(gespielt = true) }.vorziehen(100, 1, 3, laeuft = true)
+        assertEquals(listOf(2L, 3L, 1L, 9L, 4L, 5L), ids(b))
+        assertEquals(false, b.set(100)!!.eintraege.first { it.songId == 1L }.gespielt)
+        // Der laufende Song selbst ändert nichts.
+        assertEquals(ids(b), ids(b.vorziehen(100, 3, 3, laeuft = true)))
+    }
+
+    @Test fun testlaufSpielwiese() {
+        val songs = listOf(Song(1, "Lang", pfad = "a", dauerMs = 200_000), Song(2, "Test Eins", pfad = "b", dauerMs = 8000, ansageVorher = "x"),
+            Song(3, "Test Zwei", pfad = "c", dauerMs = 8000), Song(4, "Test Drei", pfad = "d", dauerMs = 8000))
+        val b = Bestand(songs, listOf(Gig(50, "Echter Gig", 0, listOf(SetListe(60, "S", listOf(Eintrag(1)))))), 100).testlauf(20000)
+        assertEquals(listOf("Testlauf"), b.gigs.map { it.name })
+        assertEquals(20000L, b.gigs[0].datum)
+        assertEquals(listOf(2L, 3L, 4L), b.gigs[0].sets[0].eintraege.map { it.songId })
+        assertEquals(listOf(4L, 2L), b.gigs[0].sets[1].eintraege.map { it.songId })
+        assertEquals(4, b.songs.size)
+        assertEquals("", b.song(2)!!.ansageVorher)
+        assertEquals(20, b.song(3)!!.pauseSek)
+        assertEquals(0, b.song(1)!!.pauseSek)
+    }
+
+    @Test fun wasKommtBeginntBeimLaufendenSong() {
+        var b = bestand()
+        b = b.eintragAendern(100, 1) { it.copy(gespielt = true) }.eintragAendern(100, 2) { it.copy(gespielt = true) }
+        // Song 3 läuft, Song 1/2 gespielt: angezeigt werden 3, 4, 5.
+        assertEquals(listOf(3L, 4L, 5L), b.set(100)!!.wasKommt(3).map { it.songId })
+        // Ein übersprungener Song vor dem laufenden kommt am Schluss (wie die Automatik es spielt).
+        b = b.eintragAendern(100, 2) { it.copy(gespielt = false) }
+        assertEquals(listOf(3L, 4L, 5L, 2L), b.set(100)!!.wasKommt(3).map { it.songId })
+        // Ohne laufenden Song: alle offenen in Reihenfolge.
+        assertEquals(listOf(2L, 3L, 4L, 5L), b.set(100)!!.wasKommt(null).map { it.songId })
     }
 }

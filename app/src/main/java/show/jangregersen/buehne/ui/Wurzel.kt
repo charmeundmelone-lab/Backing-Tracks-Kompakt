@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -29,12 +30,14 @@ import show.jangregersen.buehne.App
 
 sealed class Seite {
     data object Gigs : Seite()
-    data class Archiv(val zielSetId: Long? = null) : Seite()
+    /** [zielSetId]: Songs für dieses Set wählen. [wunsch]: live, Antippen = kommt als Nächstes. */
+    data class Archiv(val zielSetId: Long? = null, val wunsch: Boolean = false) : Seite()
+    /** Set vorbereiten: Reihenfolge, Songs dazu, Einstellungen je Song (getrennt von der Bühne, 15.11.). */
+    data class SetBearbeiten(val setId: Long) : Seite()
     data class GigSets(val gigId: Long) : Seite()
     data object Setliste : Seite()
     data object Buehne : Seite()
     data class SongKarte(val setId: Long, val songId: Long) : Seite()
-    data class SongWahl(val setId: Long, val songId: Long) : Seite()
     /** [setId]: aus einem Set geöffnet, dann blättern die Pfeile in der Setliste, sonst im Archiv A–Z. */
     data class Editor(val songId: Long, val reiter: Int = 0, val setId: Long? = null) : Seite()
     data class Einmessen(val songId: Long) : Seite()
@@ -62,7 +65,6 @@ class Navi {
             val s = stapel[i]
             val n = when {
                 s is Seite.SongKarte && s.songId == alt -> s.copy(songId = neu)
-                s is Seite.SongWahl && s.songId == alt -> s.copy(songId = neu)
                 s is Seite.Editor && s.songId == alt -> s.copy(songId = neu)
                 else -> s
             }
@@ -116,12 +118,12 @@ fun Wurzel(navi: Navi, beenden: () -> Unit) {
     Box(Modifier.fillMaxSize().background(Weiss)) {
         when (val s = navi.oben) {
             Seite.Gigs -> GigsSeite(navi)
-            is Seite.Archiv -> ArchivSeite(navi, s.zielSetId)
+            is Seite.Archiv -> ArchivSeite(navi, s.zielSetId, s.wunsch)
             is Seite.GigSets -> GigSetsSeite(navi, s.gigId)
             Seite.Setliste -> SetlisteSeite(navi)
             Seite.Buehne -> BuehneSeite(navi)
             is Seite.SongKarte -> SongKarteSeite(navi, s.setId, s.songId)
-            is Seite.SongWahl -> SongWahlSeite(navi, s.setId, s.songId)
+            is Seite.SetBearbeiten -> SetBearbeitenSeite(navi, s.setId)
             is Seite.Editor -> EditorSeite(navi, s.songId, s.reiter, s.setId)
             is Seite.Einmessen -> EinmessenSeite(navi, s.songId)
             is Seite.Mixer -> MixerSeite(navi, s.songId)
@@ -183,6 +185,20 @@ private fun Meldungen() {
         Column(Modifier.fillMaxSize().padding(bottom = 104.dp), verticalArrangement = Arrangement.Bottom) {
             Box(Modifier.fillMaxWidth().padding(horizontal = 10.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz).padding(14.dp)) {
                 T(h, textStil(16.sp, Weiss, FontWeight.Bold))
+            }
+        }
+    }
+    // Nach dem Antippen eines Songs (15.11.): 8 s lang mit Knopf "Rückgängig". Nur der Knopf nimmt Tipps an.
+    val r = z.rueckgaengig
+    if (r != null) {
+        Column(Modifier.fillMaxSize().padding(bottom = 84.dp), verticalArrangement = Arrangement.Bottom) {
+            Row(
+                // tipp {}: Ein Tipp neben "Rückgängig" darf nicht auf den Song darunter durchgehen.
+                Modifier.fillMaxWidth().padding(horizontal = 10.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz).tipp { }.padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
+                T(r, textStil(17.sp, Weiss, FontWeight.Bold), Modifier.weight(1f), zeilen = 3)
+                TextKnopf("Rückgängig", Modifier.width(128.dp), Art.UMRISS, 50.dp, 17.sp) { App.buehne.rueckgaengig() }
             }
         }
     }

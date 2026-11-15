@@ -38,6 +38,7 @@ import kotlinx.coroutines.withContext
 import show.jangregersen.buehne.App
 import show.jangregersen.buehne.audio.Import
 import show.jangregersen.buehne.daten.Song
+import show.jangregersen.buehne.daten.songsHinzufuegen
 import show.jangregersen.buehne.daten.Tempo
 import java.text.Normalizer
 
@@ -53,7 +54,7 @@ fun songInfo(s: Song): String = listOfNotNull(
 ).joinToString(" · ").ifEmpty { s.interpret }
 
 @Composable
-fun ArchivSeite(navi: Navi, zielSetId: Long?) {
+fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
     val b by App.ablage.stand.collectAsState()
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -89,7 +90,7 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?) {
         return
     }
 
-    val ober = if (zielSet != null) "Song wählen für" else "Archiv · ${b.songs.size} Songs"
+    val ober = if (zielSet != null && wunsch) "Wunschsong · kommt als Nächstes" else if (zielSet != null) "Songs dazu für" else "Archiv · ${b.songs.size} Songs"
     val titel = if (zielSet != null) "${zielSet.name} · ${zielSet.eintraege.size} ${if (zielSet.eintraege.size == 1) "Song" else "Songs"}" else "Archiv"
     Rahmen(navi, ober, titel, rechts = {
         if (zielSet != null) WeisserKnopfImBand("Fertig") { navi.zurueck() }
@@ -120,12 +121,19 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?) {
                 }
             }
         ) { _, s ->
-            // Im Set-Modus öffnet ein Tipp die Auswahl "Jetzt spielen / Danach spielen / Ans Ende"
-            // (B19). Früher schaltete ein Tipp den Song ein UND aus: live nahm man so aus Versehen
-            // Songs aus dem Set. Herausnehmen geht jetzt nur noch über die Einstellungen mit Rückfrage.
+            // Live (Wunschsong): Antippen = kommt als Nächstes, zurück zur Bühne (Jans eine Regel).
+            // Vorbereiten: Antippen setzt den Song ans Ende vom Set. Herausnehmen geht nur über die
+            // Einstellungen mit Rückfrage (früher nahm ein zweiter Tipp live Songs aus Versehen raus).
             ArchivZeile(s, zielSet != null, s.id in imSet) {
-                if (zielSet == null) navi.zu(Seite.Editor(s.id))
-                else navi.zu(Seite.SongWahl(zielSet.id, s.id))
+                when {
+                    zielSet == null -> navi.zu(Seite.Editor(s.id))
+                    wunsch -> { App.buehne.vorziehen(zielSet.id, s.id); navi.zurBuehne() }
+                    s.id in imSet -> App.buehne.hinweis("„${s.titel}“ ist schon im Set.")
+                    else -> {
+                        App.ablage.aendern { it.songsHinzufuegen(zielSet.id, listOf(s.id)) }
+                        App.buehne.hinweis("„${s.titel}“ steht jetzt am Ende vom Set.")
+                    }
+                }
             }
         }
     }
