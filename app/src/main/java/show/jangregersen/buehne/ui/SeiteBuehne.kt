@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import show.jangregersen.buehne.App
 import show.jangregersen.buehne.daten.Ende
 import show.jangregersen.buehne.daten.Song
+import show.jangregersen.buehne.daten.pauseDanach
 import show.jangregersen.buehne.daten.ersterOffener
 import show.jangregersen.buehne.daten.naechsterNach
 import show.jangregersen.buehne.daten.wasKommt
@@ -150,8 +151,7 @@ fun BuehneSeite(navi: Navi) {
             naechster == null -> "Dann ist das Set zu Ende."
             endeHier == Ende.ANHALTEN -> "Dann liegt „${naechster.titel}“ bereit."
             song.ansageNachher.isNotBlank() || naechster.ansageVorher.isNotBlank() -> "Dann Ansage und „${naechster.titel}“."
-            (song.pauseSek.takeIf { it > 0 } ?: naechster.pauseSek) > 0 -> "Dann Pause ${pauseText(song.pauseSek.takeIf { it > 0 } ?: naechster.pauseSek)} und „${naechster.titel}“."
-            else -> "Dann startet gleich „${naechster.titel}“."
+            else -> "Dann Pause ${pauseText(song.pauseDanach)} und „${naechster.titel}“."
         }
         Column(Modifier.fillMaxSize().padding(bottom = 84.dp), verticalArrangement = Arrangement.Bottom) {
             Box(Modifier.fillMaxWidth().padding(horizontal = 10.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz).tipp { bestaetigen = false }.padding(14.dp)) {
@@ -193,7 +193,7 @@ private fun OhneText(song: Song, dann: List<show.jangregersen.buehne.daten.Eintr
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         T(if (nr > 0) "$nr" else "", titelStil(22.sp), Modifier.width(26.dp), zeilen = 1)
-                        T(s.titel, textStil(24.sp), Modifier.weight(1f), zeilen = 1)
+                        PassenderTitel(s.titel, { textStil(it) }, 24, 16, Modifier.weight(1f))
                         T(zeit(s.dauerMs), titelStil(20.sp, gewicht = FontWeight.SemiBold), zeilen = 1)
                     }
                     Linie(Modifier.padding(horizontal = 10.dp))
@@ -268,8 +268,7 @@ private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boo
                     ende == Ende.ANHALTEN -> Sym.STOP to "hält an"
                     aktuell.ansageNachher.isNotBlank() -> Sym.MIKRO to "Ansage ${zeit(aktuell.ansageNachherMs)}"
                     naechster.ansageVorher.isNotBlank() -> Sym.MIKRO to "Ansage ${zeit(naechster.ansageVorherMs)}"
-                    (aktuell.pauseSek.takeIf { it > 0 } ?: naechster.pauseSek) > 0 -> null to "Pause ${pauseText(aktuell.pauseSek.takeIf { it > 0 } ?: naechster.pauseSek)}"
-                    else -> null to "ohne Pause"
+                    else -> null to "Pause ${pauseText(aktuell.pauseDanach)}"
                 }
                 Row(
                     Modifier.border(2.dp, Schwarz, RoundedCornerShape(10.dp)).padding(horizontal = 9.dp, vertical = 3.dp),

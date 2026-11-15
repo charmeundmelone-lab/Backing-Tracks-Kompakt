@@ -38,7 +38,9 @@ import kotlinx.coroutines.withContext
 import show.jangregersen.buehne.App
 import show.jangregersen.buehne.audio.Import
 import show.jangregersen.buehne.daten.Song
+import show.jangregersen.buehne.daten.schonImGig
 import show.jangregersen.buehne.daten.songsHinzufuegen
+import show.jangregersen.buehne.daten.wiederholungsFrage
 import show.jangregersen.buehne.daten.Tempo
 import java.text.Normalizer
 
@@ -67,6 +69,8 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
     val songs = alle.filter { tempo == 0 || it.tempo == tempo }
     val zielSet = b.set(zielSetId)
     val imSet = zielSet?.eintraege?.map { it.songId }?.toSet() ?: emptySet()
+    // Jans Wunsch 15.11.: Was im Gig schon eingeplant ist, steht grau da; nochmal nur mit Rückfrage.
+    val imGig = if (zielSet != null) b.schonImGig(zielSet.id) else emptyMap()
 
     val waehler = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
         if (uri != null) {
@@ -124,11 +128,22 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
             // Live (Wunschsong): Antippen = kommt als Nächstes, zurück zur Bühne (Jans eine Regel).
             // Vorbereiten: Antippen setzt den Song ans Ende vom Set. Herausnehmen geht nur über die
             // Einstellungen mit Rückfrage (früher nahm ein zweiter Tipp live Songs aus Versehen raus).
-            ArchivZeile(s, zielSet != null && !wunsch, s.id in imSet) {
+            val fund = imGig[s.id]
+            val wo = fund?.let { f -> f.firstOrNull { it.gespielt }?.let { "gespielt · ${it.setName}" } ?: "eingeplant · ${f.joinToString(", ") { it.setName }}" }
+            ArchivZeile(s, zielSet != null && !wunsch, s.id in imSet, wo) {
+                val frage = zielSet?.let { b.wiederholungsFrage(it.id, s.id) }
                 when {
                     zielSet == null -> navi.zu(Seite.Editor(s.id))
+                    wunsch && frage != null -> navi.zu(Seite.Frage("Nochmal spielen?", "„${s.titel}“ $frage. Willst du ihn trotzdem nochmal spielen?", "Ja, nochmal spielen") {
+                        App.buehne.vorziehen(zielSet.id, s.id); navi.zurBuehne()
+                    })
                     wunsch -> { App.buehne.vorziehen(zielSet.id, s.id); navi.zurBuehne() }
-                    s.id in imSet -> App.buehne.hinweis("„${s.titel}“ ist schon im Set.")
+                    s.id in imSet -> App.buehne.hinweis("„${s.titel}“ ist schon in diesem Set.")
+                    frage != null -> navi.zu(Seite.Frage("Nochmal einplanen?", "„${s.titel}“ $frage. Willst du ihn trotzdem auch in „${zielSet.name}“ haben?", "Ja, auch hier") {
+                        App.ablage.aendern { it.songsHinzufuegen(zielSet.id, listOf(s.id)) }
+                        navi.zurueck()
+                        App.buehne.hinweis("„${s.titel}“ steht jetzt am Ende vom Set.")
+                    })
                     else -> {
                         App.ablage.aendern { it.songsHinzufuegen(zielSet.id, listOf(s.id)) }
                         App.buehne.hinweis("„${s.titel}“ steht jetzt am Ende vom Set.")
@@ -140,17 +155,18 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
 }
 
 @Composable
-private fun ArchivZeile(s: Song, waehlen: Boolean, drin: Boolean, onClick: () -> Unit) {
+private fun ArchivZeile(s: Song, waehlen: Boolean, drin: Boolean, schonIm: String?, onClick: () -> Unit) {
+    val farbe = if (schonIm != null) Grau else Schwarz
     Row(
         Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(61.dp).tipp(onClick = onClick).padding(start = 8.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Column(Modifier.weight(1f)) {
-            T(s.titel, textStil(21.sp), zeilen = 1)
-            listOf(songInfo(s), if (s.lyrics.isBlank()) "ohne Text" else "").filter { it.isNotBlank() }.joinToString(" · ")
-                .takeIf { it.isNotBlank() }?.let { T(it, textStil(14.sp, gewicht = FontWeight.Medium), zeilen = 1) }
+            PassenderTitel(s.titel, { textStil(it, farbe) }, 21, 15)
+            (schonIm ?: listOf(songInfo(s), if (s.lyrics.isBlank()) "ohne Text" else "").filter { it.isNotBlank() }.joinToString(" · "))
+                .takeIf { it.isNotBlank() }?.let { T(it, textStil(14.sp, farbe, if (schonIm != null) FontWeight.Bold else FontWeight.Medium), zeilen = 1) }
         }
-        T(if (s.dauerMs > 0) zeit(s.dauerMs) else "", titelStil(19.sp, gewicht = FontWeight.SemiBold))
+        T(if (s.dauerMs > 0) zeit(s.dauerMs) else "", titelStil(19.sp, farbe, FontWeight.SemiBold))
         if (waehlen) {
             val form = RoundedCornerShape(12.dp)
             Box(Modifier.size(48.dp).clip(form).background(if (drin) Schwarz else Weiss).border(2.5.dp, Schwarz, form), contentAlignment = Alignment.Center) {

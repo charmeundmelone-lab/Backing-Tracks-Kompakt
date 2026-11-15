@@ -21,6 +21,7 @@ import show.jangregersen.buehne.audio.Warnton
 import show.jangregersen.buehne.daten.Ablage
 import show.jangregersen.buehne.daten.Ende
 import show.jangregersen.buehne.daten.Song
+import show.jangregersen.buehne.daten.pauseDanach
 import show.jangregersen.buehne.daten.eintragAendern
 import show.jangregersen.buehne.daten.ersterOffener
 import show.jangregersen.buehne.daten.naechsterNach
@@ -185,8 +186,9 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
             var lief = false
             if (segment(fertig.ansageNachher, "Ansage nach „${fertig.titel}“")) lief = true
             if (segment(kommt.ansageVorher, "Ansage vor „${kommt.titel}“")) lief = true
-            val sek = fertig.pauseSek.takeIf { it > 0 } ?: kommt.pauseSek
-            if (!lief && sek > 0) {
+            // Seit 15.11.: Jeder Song hat eine Pause danach (10 s, 30 s, 1 min, 2 min; ohne Eintrag 10 s).
+            val sek = fertig.pauseDanach
+            if (!lief) {
                 val gesamtMs = sek * 1000L
                 val warnVorMs = (gesamtMs / 3).coerceAtMost(5 * 60_000L)
                 var warnGespielt = false

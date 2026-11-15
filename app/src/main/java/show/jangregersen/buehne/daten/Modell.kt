@@ -52,6 +52,16 @@ data class Song(
     val mix: Map<String, Int> = emptyMap()
 )
 
+/** Jans Wahl 15.11.: vier Pausen zum Umschalten. Ohne Eintrag (0) gelten 10 s. */
+val PAUSE_WAHL = listOf(10, 30, 60, 120)
+const val PAUSE_STANDARD = 10
+
+/** Stille Pause nach diesem Song, so wie die Automatik sie nimmt (0 = Standard 10 s). */
+val Song.pauseDanach: Int get() = if (pauseSek > 0) pauseSek else PAUSE_STANDARD
+
+/** Nächster Wert im Umschalter: 10 s → 30 s → 1 min → 2 min → wieder 10 s. */
+fun naechstePause(sek: Int): Int = PAUSE_WAHL.firstOrNull { it > sek } ?: PAUSE_WAHL.first()
+
 data class Eintrag(
     val songId: Long,
     val gespielt: Boolean = false,

@@ -59,6 +59,8 @@ import show.jangregersen.buehne.R
 
 val Schwarz = Color.Black
 val Weiss = Color.White
+/** Für Songs, die im Gig schon eingeplant sind (Jans Wunsch 15.11.). */
+val Grau = Color(0xFF8C8C8C)
 
 val Schmal = FontFamily(
     Font(R.font.barlow_cond_semibold, FontWeight.SemiBold),
@@ -117,6 +119,28 @@ fun T(text: String, stil: TextStyle, modifier: Modifier = Modifier, zeilen: Int 
         maxLines = zeilen,
         overflow = if (zeilen == Int.MAX_VALUE) TextOverflow.Clip else TextOverflow.Ellipsis
     )
+}
+
+/**
+ * Jans Wunsch 15.11.: Ein Songtitel steht immer ganz da, in einer Zeile. Ist er zu lang, wird die
+ * Schrift kleiner (von [gross] bis [klein] sp), die Zeile bleibt gleich hoch, damit nichts springt.
+ */
+@Composable
+fun PassenderTitel(text: String, stil: (TextUnit) -> TextStyle, gross: Int, klein: Int, modifier: Modifier = Modifier, durchgestrichen: Boolean = false) {
+    val messer = rememberTextMeasurer()
+    BoxWithConstraints(modifier, contentAlignment = Alignment.CenterStart) {
+        val breite = constraints.maxWidth
+        val hoehe = with(androidx.compose.ui.platform.LocalDensity.current) { stil(gross.sp).lineHeight.toDp() }
+        val groesse = remember(text, breite, gross, klein) {
+            (gross downTo klein).firstOrNull { g ->
+                !messer.measure(text, stil(g.sp), maxLines = 1, softWrap = false,
+                    constraints = androidx.compose.ui.unit.Constraints(maxWidth = breite)).hasVisualOverflow
+            } ?: klein
+        }
+        Box(Modifier.height(hoehe), contentAlignment = Alignment.CenterStart) {
+            T(text, stil(groesse.sp), zeilen = 1, durchgestrichen = durchgestrichen)
+        }
+    }
 }
 
 @Composable

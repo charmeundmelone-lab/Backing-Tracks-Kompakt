@@ -22,6 +22,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -29,8 +31,12 @@ import show.jangregersen.buehne.App
 import show.jangregersen.buehne.daten.Eintrag
 import show.jangregersen.buehne.daten.Ende
 import show.jangregersen.buehne.daten.Song
+import show.jangregersen.buehne.daten.PAUSE_WAHL
 import show.jangregersen.buehne.daten.dauerMs
+import show.jangregersen.buehne.daten.naechstePause
+import show.jangregersen.buehne.daten.pauseDanach
 import show.jangregersen.buehne.daten.schieben
+import show.jangregersen.buehne.daten.songAendern
 import show.jangregersen.buehne.daten.verschieben
 import show.jangregersen.buehne.daten.wasKommt
 
@@ -106,7 +112,11 @@ fun SetlisteSeite(navi: Navi) {
                     angefangen -> "angehalten"
                     else -> "bereit"
                 }
-                SetZeile(nr, s, x, aktuell = x.songId == z.songId, status = status, haeltAnZeigen = mitAutomatik) { antippen(navi, set.id, s.id) }
+                SetZeile(nr, s, x, aktuell = x.songId == z.songId, status = status, haeltAnZeigen = mitAutomatik) {
+                    // Jans Wunsch 15.11.: Schon gespielt? Erst fragen, dann nochmal einplanen.
+                    if (x.gespielt && x.songId != z.songId) navi.zu(Seite.Frage("Nochmal spielen?", "„${s.titel}“ wurde heute schon gespielt. Willst du ihn trotzdem nochmal spielen?", "Ja, nochmal spielen") { antippen(navi, set.id, s.id) })
+                    else antippen(navi, set.id, s.id)
+                }
             } else GespieltZeile(gespielt, b.songs) { gespieltZeigen = true }
         }
     }
@@ -143,7 +153,7 @@ private fun SetZeile(nr: Int, s: Song, e: Eintrag, aktuell: Boolean, status: Str
         ) {
             Box(Modifier.width(26.dp), contentAlignment = Alignment.Center) { Symbol(Sym.PLAY, Weiss, 22.dp) }
             Column(Modifier.weight(1f)) {
-                T(s.titel, textStil(22.sp, Weiss, FontWeight.Bold), zeilen = 1)
+                PassenderTitel(s.titel, { textStil(it, Weiss, FontWeight.Bold) }, 22, 15)
                 T(status, textStil(15.sp, Weiss, FontWeight.Medium), zeilen = 1)
             }
             T(zeit(s.dauerMs), titelStil(22.sp, Weiss))
@@ -190,7 +200,20 @@ private fun GespieltZeile(gespielt: List<Eintrag>, songs: List<Song>, onClick: (
     }
 }
 
-fun pauseText(sek: Int): String = if (sek <= 0) "keine" else if (sek < 60) "0:%02d".format(sek) else "%d:%02d".format(sek / 60, sek % 60)
+fun pauseText(sek: Int): String = when {
+    sek <= 0 -> "keine"
+    sek < 60 -> "$sek s"
+    sek % 60 == 0 -> "${sek / 60} min"
+    else -> "%d:%02d min".format(sek / 60, sek % 60)
+}
+
+/** Die vier Pausen als Knopfreihe (Jans Wahl 15.11.). Steht ein alter Wert drin, ist keiner gewählt. */
+@Composable
+fun PausenWahl(song: Song, modifier: Modifier = Modifier, hoehe: androidx.compose.ui.unit.Dp = 50.dp) {
+    Segmente(PAUSE_WAHL.map { pauseText(it) }, PAUSE_WAHL.indexOf(song.pauseDanach), modifier, hoehe = hoehe, groesse = 18.sp) { i ->
+        App.ablage.aendern { it.songAendern(song.id) { s -> s.copy(pauseSek = PAUSE_WAHL[i]) } }
+    }
+}
 
 // ── Set bearbeiten (Vorbereiten) ─────────────────────────────────────────────
 
@@ -207,7 +230,7 @@ fun SetBearbeitenSeite(navi: Navi, setId: Long) {
     Column(Modifier.fillMaxSize()) {
         KopfBand("${set.name} · ${set.eintraege.size} Songs · ${minuten(set.dauerMs(b))}", "Bearbeiten", zurueck = { navi.zurueck() },
             rechts = { WeisserKnopfImBand("Fertig") { navi.zurueck() } })
-        if (set.eintraege.isNotEmpty()) T("Antippen = Pause, Ansage, Mixer. Rechts: Pause danach.", textStil(15.sp), Modifier.padding(start = 18.dp, end = 18.dp, top = 8.dp), zeilen = 2)
+        if (set.eintraege.isNotEmpty()) T("Rechts tippen = Pause danach wechseln. Songname = Ansage, Mixer.", textStil(15.sp), Modifier.padding(start = 18.dp, end = 18.dp, top = 8.dp), zeilen = 2)
         SeitenListe(
             eintraege = set.eintraege, zeilenHoehe = 60.dp, modifier = Modifier.weight(1f), schluessel = "bearb$setId",
             fussHoehe = AKTIONSLEISTE_HOEHE,
@@ -241,11 +264,22 @@ private fun BearbeitenZeile(nr: Int, s: Song, e: Eintrag, onClick: () -> Unit) {
             if (e.gespielt) Box(Modifier.size(22.dp).clip(RoundedCornerShape(11.dp)).background(Schwarz), contentAlignment = Alignment.Center) { Symbol(Sym.HAKEN, Weiss, 13.dp) }
             else T("$nr", titelStil(22.sp))
         }
-        T(s.titel, textStil(22.sp), Modifier.weight(1f), zeilen = 1)
-        if (s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank()) Symbol(Sym.MIKRO, Schwarz, 16.dp)
-        Column(horizontalAlignment = Alignment.End) {
-            T(pauseText(s.pauseSek), titelStil(19.sp, gewicht = FontWeight.SemiBold), zeilen = 1)
-            T(if (e.ende == Ende.WEITER) "weiter" else "hält an", textStil(13.sp, gewicht = FontWeight.Bold), zeilen = 1)
+        Column(Modifier.weight(1f)) {
+            PassenderTitel(s.titel, { textStil(it) }, 22, 15)
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                if (s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank()) Symbol(Sym.MIKRO, Schwarz, 14.dp)
+                T(if (e.ende == Ende.WEITER) "dann weiter" else "hält an", textStil(13.sp, gewicht = FontWeight.Bold), zeilen = 1)
+            }
+        }
+        // Jans Wunsch 15.11.: Pause mit einem Tipp umschalten, 10 s → 30 s → 1 min → 2 min → 10 s.
+        val form = RoundedCornerShape(12.dp)
+        Box(
+            Modifier.width(78.dp).height(48.dp).clip(form).border(2.5.dp, Schwarz, form)
+                .semantics { contentDescription = "Pause umschalten" }
+                .tipp { App.ablage.aendern { it.songAendern(s.id) { x -> x.copy(pauseSek = naechstePause(x.pauseDanach)) } } },
+            contentAlignment = Alignment.Center
+        ) {
+            T(pauseText(s.pauseDanach), titelStil(22.sp), zeilen = 1)
         }
     }
     Linie(Modifier.padding(horizontal = 10.dp))
@@ -298,7 +332,7 @@ private fun VerschiebenAnsicht(setId: Long, eintraege: List<Eintrag>, songs: Lis
             ) {
                 if (hand != null) Symbol(Sym.RECHTS, Schwarz, 14.dp)
                 T("$nr", titelStil(20.sp), Modifier.width(24.dp))
-                T(s.titel, textStil(21.sp), Modifier.weight(1f), zeilen = 1, durchgestrichen = e.gespielt)
+                PassenderTitel(s.titel, { textStil(it) }, 21, 15, Modifier.weight(1f), durchgestrichen = e.gespielt)
                 if (hand != null) Etikett("davor")
             }
             Linie(Modifier.padding(horizontal = 10.dp))

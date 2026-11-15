@@ -149,6 +149,32 @@ fun Bestand.vorziehen(setId: Long, songId: Long, aktuellId: Long?, laeuft: Boole
     s.copy(eintraege = rest)
 }
 
+/** Wo ein Song im Gig schon steht (Jans Wunsch 15.11.: keine Wiederholung ohne Rückfrage). */
+data class SchonImGig(val setId: Long, val setName: String, val gespielt: Boolean)
+
+/** Alle Songs, die im Gig von [setId] schon in einem Set stehen: songId → Fundstellen. */
+fun Bestand.schonImGig(setId: Long?): Map<Long, List<SchonImGig>> {
+    val gig = gigVonSet(setId) ?: return emptyMap()
+    val m = linkedMapOf<Long, MutableList<SchonImGig>>()
+    gig.sets.forEach { s -> s.eintraege.forEach { e -> m.getOrPut(e.songId) { mutableListOf() }.add(SchonImGig(s.id, s.name, e.gespielt)) } }
+    return m
+}
+
+/**
+ * Muss vor dem Einplanen von [songId] in [setId] gefragt werden? Ja, wenn er an diesem Abend schon
+ * gespielt wurde oder in einem anderen Set steht. Ein noch offener Song im selben Set wird nur
+ * nach vorn geholt, das ist keine Wiederholung.
+ */
+fun Bestand.wiederholungsFrage(setId: Long, songId: Long): String? {
+    val fund = schonImGig(setId)[songId] ?: return null
+    val gespielt = fund.firstOrNull { it.gespielt }
+    return when {
+        gespielt != null -> "wurde heute schon gespielt (${gespielt.setName})"
+        fund.any { it.setId == setId } -> null
+        else -> "steht schon in ${fund.joinToString(", ") { it.setName }}"
+    }
+}
+
 /**
  * Reihenfolge, in der die offenen Songs wirklich drankommen: ab [aktuellId] bis zum Ende, danach
  * die offenen davor (die holt die Automatik am Schluss, siehe [naechsterNach]).

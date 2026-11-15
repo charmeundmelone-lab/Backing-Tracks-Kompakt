@@ -10,6 +10,10 @@ import show.jangregersen.buehne.daten.Gig
 import show.jangregersen.buehne.daten.SetListe
 import show.jangregersen.buehne.daten.Song
 import show.jangregersen.buehne.daten.alsNaechstes
+import show.jangregersen.buehne.daten.naechstePause
+import show.jangregersen.buehne.daten.pauseDanach
+import show.jangregersen.buehne.daten.schonImGig
+import show.jangregersen.buehne.daten.wiederholungsFrage
 import show.jangregersen.buehne.daten.naechsterNach
 import show.jangregersen.buehne.daten.schieben
 import show.jangregersen.buehne.daten.verschieben
@@ -76,6 +80,28 @@ class LogikTest {
     }
 
     private fun ids(b: Bestand) = b.set(100)!!.eintraege.map { it.songId }
+
+    /** Jans Wunsch 15.11.: Pausen 10 s / 30 s / 1 min / 2 min, ohne Eintrag 10 s. */
+    @Test fun pausenUmschalten() {
+        assertEquals(10, Song(1, "A", pfad = "p").pauseDanach)
+        assertEquals(60, Song(1, "A", pfad = "p", pauseSek = 60).pauseDanach)
+        assertEquals(listOf(30, 60, 120, 10), listOf(10, 30, 60, 120).map { naechstePause(it) })
+        assertEquals(60, naechstePause(45))
+    }
+
+    /** Jans Wunsch 15.11.: im Gig keine Wiederholung ohne Rückfrage. */
+    @Test fun wiederholungImGig() {
+        val songs = (1L..6L).map { Song(it, "S$it", pfad = "p$it") }
+        val set1 = SetListe(100, "Set 1", listOf(Eintrag(1, gespielt = true), Eintrag(2)))
+        val set2 = SetListe(101, "Set 2", listOf(Eintrag(3), Eintrag(4)))
+        val b = Bestand(songs, listOf(Gig(50, "Gig", 0, listOf(set1, set2))), 200)
+        assertEquals(setOf(1L, 2L, 3L, 4L), b.schonImGig(101).keys)
+        assertEquals("wurde heute schon gespielt (Set 1)", b.wiederholungsFrage(101, 1))
+        assertEquals("steht schon in Set 1", b.wiederholungsFrage(101, 2))
+        assertNull(b.wiederholungsFrage(101, 3)) // offen im selben Set: nur nach vorn holen
+        assertNull(b.wiederholungsFrage(101, 6)) // noch nirgends
+        assertEquals("wurde heute schon gespielt (Set 1)", b.wiederholungsFrage(100, 1))
+    }
 
     /** Jans eine Regel (15.11.): Antippen = kommt als Nächstes dran. */
     @Test fun vorziehenWaehrendSongLaeuft() {

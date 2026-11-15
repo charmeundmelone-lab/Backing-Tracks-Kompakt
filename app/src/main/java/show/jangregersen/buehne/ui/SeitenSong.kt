@@ -68,14 +68,6 @@ import show.jangregersen.buehne.lyrics.Abschnitte
 import java.io.File
 import java.text.Normalizer
 
-val PAUSEN = listOf(0, 10, 20, 30, 45, 60, 90, 120, 180, 300, 600, 900, 1200, 1800, 2700, 3600)
-
-private fun pauseSchritt(aktuell: Int, richtung: Int): Int {
-    val i = PAUSEN.indexOfFirst { it >= aktuell }.let { if (it < 0) PAUSEN.size - 1 else it }
-    val basis = if (PAUSEN.getOrNull(i) == aktuell) i else if (richtung > 0) i - 1 else i
-    return PAUSEN[(basis + richtung).coerceIn(0, PAUSEN.size - 1)]
-}
-
 private fun songAendern(id: Long, f: (Song) -> Song) = App.ablage.aendern { it.songAendern(id, f) }
 
 // ── Song-Karte im Set ────────────────────────────────────────────────────────
@@ -100,7 +92,7 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
         Row(Modifier.fillMaxWidth().padding(start = 18.dp, end = 14.dp, top = 10.dp, bottom = 8.dp), verticalAlignment = Alignment.Top) {
             Column(Modifier.weight(1f)) {
                 Etikett("Einstellungen · Platz $platz${if (e.gespielt) " · gespielt" else ""}")
-                T(song.titel, titelStil(30.sp), zeilen = 2)
+                PassenderTitel(song.titel, { titelStil(it) }, gross = 30, klein = 18)
                 T(listOf(songInfo(song), zeit(song.dauerMs)).filter { it.isNotBlank() }.joinToString(" · "), textStil(16.sp), zeilen = 1)
             }
             SymbolKnopf(Sym.KREUZ, "Schließen", Modifier.width(52.dp), hoehe = 52.dp, groesse = 16.dp) { navi.zurueck() }
@@ -125,7 +117,10 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
                     }
                 }
             }
-            Stufen(pauseText(song.pauseSek), { songAendern(songId) { it.copy(pauseSek = pauseSchritt(it.pauseSek, -1)) } }, { songAendern(songId) { it.copy(pauseSek = pauseSchritt(it.pauseSek, 1)) } }, beschriftung = "Pause\ndanach")
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                T("Pause\ndanach", etikettStil(), Modifier.width(76.dp), zeilen = 2)
+                PausenWahl(song, Modifier.weight(1f))
+            }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 T("Am\nEnde", etikettStil(), Modifier.width(76.dp), zeilen = 2)
                 Segmente(listOf("Weiter", "Anhalten"), if (e.ende == Ende.ANHALTEN) 1 else 0, Modifier.weight(1f), hoehe = 50.dp) { i ->
@@ -142,16 +137,6 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
                 })
             }
         }
-    }
-}
-
-@Composable
-fun Stufen(wert: String, minus: () -> Unit, plus: () -> Unit, beschriftung: String? = null) {
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        if (beschriftung != null) T(beschriftung, etikettStil(), Modifier.width(76.dp), zeilen = 2)
-        SymbolKnopf(Sym.MINUS, "weniger", Modifier.width(60.dp), hoehe = 50.dp, groesse = 18.dp, onClick = minus)
-        T(wert, titelStil(30.sp), Modifier.weight(1f), zeilen = 1, mitte = true)
-        SymbolKnopf(Sym.PLUS, "mehr", Modifier.width(60.dp), hoehe = 50.dp, groesse = 18.dp, onClick = plus)
     }
 }
 
@@ -204,7 +189,7 @@ fun EditorSeite(navi: Navi, songId: Long, startReiter: Int, setId: Long? = null)
         // "Fertig" ist seit 14.11. weg: Es sah nach Speichern aus, gespeichert wird aber sofort.
         Row(Modifier.fillMaxWidth().padding(start = 10.dp, end = 10.dp, top = 8.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             ZurueckKnopf(aufSchwarz = false) { navi.zurueck() }
-            T(song.titel, titelStil(26.sp), Modifier.weight(1f), zeilen = 1)
+            PassenderTitel(song.titel, { titelStil(it) }, 26, 16, Modifier.weight(1f))
         }
         Linie(dicke = 2.5.dp)
         SongPfeile(navi, songId, setId, Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp), hoehe = 46.dp)
@@ -418,7 +403,7 @@ private fun AnsageReiter(song: Song) {
         }
         Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Etikett("Stille Pause danach (nur ohne Ansage)")
-            Stufen(pauseText(song.pauseSek), { songAendern(song.id) { it.copy(pauseSek = pauseSchritt(it.pauseSek, -1)) } }, { songAendern(song.id) { it.copy(pauseSek = pauseSchritt(it.pauseSek, 1)) } })
+            PausenWahl(song)
         }
     }
 }

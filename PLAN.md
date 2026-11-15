@@ -729,3 +729,23 @@ Entwurf: `entwuerfe/einfach/` (8 Seiten, Bilder in `bilder/`), von Jan angenomme
   ein Wunschsong die Automatik gestoppt). Letzter Lauf: 17/17 OK, Jans Daten unverändert.
 - [ ] D11 Jan probiert Fassung 6 selbst (mit echtem Set, mit Ton). Ungetestet am Gerät: Bühne mit
   echtem Text während der Wiedergabe, Ansagen, Start am Gig-Tag mit einem neuen Gig.
+
+## Arbeitsliste E: Pausen, Titel, Wiederholung (15.11. mittags, Jans Rückmeldung zu Fassung 6)
+
+Jan: "Im Prinzip läuft es gar nicht schlecht." Menüführung noch hakelig (zu viele Seiten), das
+kommt später. Jetzt umsetzen:
+
+- [x] E1 Pausen schnell umschalten: nur noch 10 s · 30 s · 1 min · 2 min, ohne Eintrag gelten
+  10 s (`PAUSE_WAHL`, `Song.pauseDanach`, `naechstePause`). Einstellungen-Karte und Bearbeiten:
+  vier Knöpfe nebeneinander (`PausenWahl`). "Set bearbeiten": Pausen-Knopf rechts in jeder Zeile,
+  ein Tipp schaltet weiter. Automatik nimmt immer die Pause des fertigen Songs (früher bei 0 die
+  des nächsten). Jans Daten 15.11.: 11× 0 (→ 10 s), 24× 30 s, 7× 1 min.
+- [x] E2 Songtitel immer ganz sichtbar, Zeile gleich hoch (`PassenderTitel`: Schrift wird kleiner
+  statt "…" oder Umbruch). Einstellungen-Karte 30→18 sp, Bearbeiten, Archiv, Setliste (laufender
+  Song), Umstellen, Bühne "Dann"-Liste.
+- [x] E3 Im Gig keine Wiederholung ohne Rückfrage (`schonImGig`, `wiederholungsFrage`): Archiv
+  (Wunschsong und Songs dazu) zeigt eingeplante Songs grau mit "eingeplant · Set 2" bzw.
+  "gespielt · Set 1"; Tipp fragt "Nochmal spielen?" / "Nochmal einplanen?". Ein offener Song im
+  selben Set wird ohne Frage nach vorn geholt. Setliste: gespielten Song antippen fragt auch.
+- [ ] E4 Fassung 7 installieren (Jans Ja), `testlauf.sh ablauf`, Fotos prüfen, Schritte für
+  Pausen-Knopf und Rückfrage ins Skript.
