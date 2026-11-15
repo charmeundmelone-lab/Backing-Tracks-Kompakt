@@ -120,7 +120,7 @@ fun Wurzel(navi: Navi, beenden: () -> Unit) {
             Seite.Gigs -> GigsSeite(navi)
             is Seite.Archiv -> ArchivSeite(navi, s.zielSetId, s.wunsch)
             is Seite.GigSets -> GigSetsSeite(navi, s.gigId)
-            Seite.Setliste -> SetlisteSeite(navi)
+            Seite.Setliste -> HauptSeite(navi)
             Seite.Buehne -> BuehneSeite(navi)
             is Seite.SongKarte -> SongKarteSeite(navi, s.setId, s.songId)
             is Seite.SetBearbeiten -> SetBearbeitenSeite(navi, s.setId)
@@ -187,7 +187,8 @@ private fun Meldungen(navi: Navi) {
     if (h != null) {
         val buehne = navi.oben == Seite.Buehne || navi.oben is Seite.ProbeBuehne
         // Bühne: über "Danach" (dort ist meist Platz frei); oben säßen Kapo und Tonart darunter.
-        Column(Modifier.fillMaxSize().padding(bottom = if (buehne) 196.dp else 104.dp), verticalArrangement = Arrangement.Bottom) {
+        val unten = when { buehne -> 196.dp; navi.oben == Seite.Setliste -> PLAYER_HOEHE + 6.dp; else -> 104.dp }
+        Column(Modifier.fillMaxSize().padding(bottom = unten), verticalArrangement = Arrangement.Bottom) {
             Box(Modifier.fillMaxWidth().padding(horizontal = 10.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz).padding(14.dp)) {
                 T(h, textStil(17.sp, Weiss, FontWeight.Bold), zeilen = 3)
             }

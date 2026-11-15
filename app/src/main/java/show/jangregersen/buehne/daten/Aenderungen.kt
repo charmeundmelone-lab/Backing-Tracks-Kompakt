@@ -198,3 +198,13 @@ fun Bestand.einfuegenNach(setId: Long, songId: Long, nachId: Long?): Bestand = s
     l.add(idx, Eintrag(songId, ende = s.ueblichesEnde()))
     s.copy(eintraege = l)
 }
+
+/**
+ * Wischen nach links (Jans Wunsch 15.11., wie in der alten App): [songId] rückt ganz ans Ende vom
+ * Set und gilt wieder als offen. Steht er noch nicht im Set (Wischen im Archiv), wird er hinten
+ * aufgenommen.
+ */
+fun Bestand.ansEnde(setId: Long, songId: Long): Bestand = setAendern(setId) { s ->
+    val e = (s.eintraege.firstOrNull { it.songId == songId } ?: Eintrag(songId, ende = s.ueblichesEnde())).copy(gespielt = false)
+    s.copy(eintraege = s.eintraege.filterNot { it.songId == songId } + e)
+}

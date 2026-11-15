@@ -135,9 +135,9 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
                 when {
                     zielSet == null -> navi.zu(Seite.Editor(s.id))
                     wunsch && frage != null -> navi.zu(Seite.Frage("Nochmal spielen?", "„${s.titel}“ $frage. Willst du ihn trotzdem nochmal spielen?", "Ja, nochmal spielen") {
-                        App.buehne.vorziehen(zielSet.id, s.id); navi.zurBuehne()
+                        App.buehne.vorziehen(zielSet.id, s.id); navi.zurSetliste()
                     })
-                    wunsch -> { App.buehne.vorziehen(zielSet.id, s.id); navi.zurBuehne() }
+                    wunsch -> { App.buehne.vorziehen(zielSet.id, s.id); navi.zurSetliste() }
                     s.id in imSet -> App.buehne.hinweis("„${s.titel}“ ist schon in diesem Set.")
                     frage != null -> navi.zu(Seite.Frage("Nochmal einplanen?", "„${s.titel}“ $frage. Willst du ihn trotzdem auch in „${zielSet.name}“ haben?", "Ja, auch hier") {
                         App.ablage.aendern { it.songsHinzufuegen(zielSet.id, listOf(s.id)) }
@@ -155,7 +155,7 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
 }
 
 @Composable
-private fun ArchivZeile(s: Song, waehlen: Boolean, drin: Boolean, schonIm: String?, onClick: () -> Unit) {
+fun ArchivZeile(s: Song, waehlen: Boolean, drin: Boolean, schonIm: String?, onClick: () -> Unit) {
     val farbe = if (schonIm != null) Grau else Schwarz
     Row(
         Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(61.dp).tipp(onClick = onClick).padding(start = 8.dp, end = 4.dp),
@@ -180,7 +180,7 @@ private fun ArchivZeile(s: Song, waehlen: Boolean, drin: Boolean, schonIm: Strin
 }
 
 @Composable
-private fun Sprung(songs: List<Song>, wahl: (Int) -> Unit) {
+fun Sprung(songs: List<Song>, wahl: (Int) -> Unit) {
     val zeichen = ('A'..'Z').toList() + '#'
     val zahl = songs.groupingBy { buchstabe(it.titel) }.eachCount()
     Lautstaerketasten { }

@@ -240,10 +240,9 @@ fun GigSetsSeite(navi: Navi, gigId: Long) {
             }
         ) { i, set ->
             SetKarte(i + 1, set, aktiv = set.id == z.setId, laeuft = set.id == z.setId && z.spielt, danach = set.id == z.setDanach, onMenue = { setMenue = set.id }) {
-                // Läuft ein Song, beginnt das gewählte Set erst danach (Buehne.setWaehlen); dann zur Bühne.
-                val lief = App.buehne.angespielt()
+                // Läuft ein Song, beginnt das gewählte Set erst danach (Buehne.setWaehlen).
                 App.buehne.setWaehlen(set.id)
-                if (lief && set.id != z.setId) navi.zurBuehne() else navi.zurSetliste()
+                navi.zurSetliste()
             }
         }
     }

@@ -21,6 +21,7 @@ import show.jangregersen.buehne.daten.schieben
 import show.jangregersen.buehne.daten.verschieben
 import show.jangregersen.buehne.daten.eintragAendern
 import show.jangregersen.buehne.daten.vorziehen
+import show.jangregersen.buehne.daten.ansEnde
 import show.jangregersen.buehne.daten.wasKommt
 import show.jangregersen.buehne.daten.testlauf
 import show.jangregersen.buehne.daten.setAendern
@@ -109,6 +110,18 @@ class LogikTest {
     }
 
     /** Jans eine Regel (15.11.): Antippen = kommt als Nächstes dran. */
+    /** Wischen nach links: ganz ans Ende, gespielt wird wieder offen, fremde Songs kommen hinten dazu. */
+    @Test fun ansEndeWischen() {
+        var b = bestand().ansEnde(100, 3)
+        assertEquals(listOf(1L, 2L, 4L, 5L, 3L), ids(b))
+        assertEquals(3L, b.eintragAendern(100, 1) { it.copy(gespielt = true) }.set(100)!!.wasKommt(2).last().songId)
+        b = b.eintragAendern(100, 1) { it.copy(gespielt = true) }.ansEnde(100, 1)
+        assertEquals(listOf(2L, 4L, 5L, 3L, 1L), ids(b))
+        assertEquals(false, b.set(100)!!.eintraege.last().gespielt)
+        b = b.copy(songs = b.songs + Song(9, "Wunsch", pfad = "p9")).ansEnde(100, 9)
+        assertEquals(9L, ids(b).last())
+    }
+
     @Test fun vorziehenWaehrendSongLaeuft() {
         // Song 2 läuft: der angetippte (5) kommt direkt danach.
         val b = bestand().vorziehen(100, 5, 2, laeuft = true)

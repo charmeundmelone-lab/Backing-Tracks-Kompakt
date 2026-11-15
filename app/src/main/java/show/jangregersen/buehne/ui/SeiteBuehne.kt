@@ -62,15 +62,23 @@ fun ProbeBuehneSeite(navi: Navi, songId: Long) {
     // Erst starten, wenn die vorige Seite weg ist (die beendet beim Verlassen ihre eigene Probe).
     LaunchedEffect(songId) { App.buehne.probe(songId) }
     DisposableEffect(Unit) { onDispose { App.buehne.probeEnde() } }
-    BuehneSeite(navi)
+    BuehneSeite(navi, zurueckAmEnde = false)
 }
 
 @Composable
-fun BuehneSeite(navi: Navi) {
+fun BuehneSeite(navi: Navi, zurueckAmEnde: Boolean = true) {
     val b by App.ablage.stand.collectAsState()
     val z by App.buehne.zustand.collectAsState()
     val song = b.song(z.songId)
     val set = b.set(z.setId)
+
+    // Wie in der alten App: Ist der Song zu Ende (Pause beginnt oder der nächste liegt bereit),
+    // geht es von selbst zurück zum Hauptbildschirm. Seit 15.11. abends ist die Bühne nur noch
+    // die Text-Ansicht; alles andere zeigt der Hauptbildschirm.
+    val start = remember { z.songId to (z.pause != null) }
+    LaunchedEffect(z.songId, z.pause != null) {
+        if (zurueckAmEnde && !z.probe && (z.songId != start.first || (z.pause != null && !start.second))) navi.zurSetliste()
+    }
 
     val pause = z.pause
     if (pause != null && song != null) { AnsageAnsicht(navi, pause, song); return }
@@ -239,7 +247,7 @@ private fun BuehnenKopf(song: Song, ober: String, dauerMs: Long, spielt: Boolean
 
 /** Bleibt stehen, bis wieder gespielt oder ein anderes Set gewählt wird. */
 @Composable
-private fun SetEndeHinweis(text: String) {
+fun SetEndeHinweis(text: String) {
     Row(
         Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp).fillMaxWidth()
             .border(3.dp, Schwarz, RoundedCornerShape(14.dp)).padding(horizontal = 14.dp, vertical = 10.dp),

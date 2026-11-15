@@ -27,6 +27,7 @@ import show.jangregersen.buehne.daten.ersterOffener
 import show.jangregersen.buehne.daten.naechsterNach
 import show.jangregersen.buehne.daten.setAendern
 import show.jangregersen.buehne.daten.vorziehen
+import show.jangregersen.buehne.daten.ansEnde
 import java.io.File
 
 private const val TAG = "Buehne"
@@ -373,7 +374,27 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
             _zustand.update { it.copy(setDurch = null, setDanach = null) }
             text = if (z.pause != null) "„${song.titel}“ kommt nach der Pause." else "„${song.titel}“ liegt bereit."
         }
-        vorher = Vorher(setId, vorEintraege, z.songId, laeuft, _zustand.value.songId)
+        merken(Vorher(setId, vorEintraege, z.songId, laeuft, _zustand.value.songId), text)
+    }
+
+    /**
+     * Wischen nach links (Jans Wunsch 15.11.): Song ganz ans Ende vom Set. Der laufende oder
+     * bereite Song bleibt, wie er ist; nur was danach kommt, ändert sich. 8 s "Rückgängig".
+     */
+    fun ansEnde(setId: Long, songId: Long) {
+        val z = _zustand.value
+        if (z.probe) { hinweis("Erst das Probehören beenden."); return }
+        if (songId == z.songId && setId == z.setId) { hinweis("Dieser Song ist gerade dran."); return }
+        val song = ablage.jetzt.song(songId) ?: return
+        val vorEintraege = ablage.jetzt.set(setId)?.eintraege ?: return
+        ablage.aendern { it.ansEnde(setId, songId) }
+        if (z.setId == setId) z.songId?.let { vorladen(setId, it) }
+        // laeuft = true: Rückgängig stellt nur die Reihenfolge zurück und lädt den aktuellen Song nicht neu.
+        merken(Vorher(setId, vorEintraege, z.songId, true, z.songId), "„${song.titel}“ steht jetzt am Ende.")
+    }
+
+    private fun merken(v: Vorher, text: String) {
+        vorher = v
         _zustand.update { it.copy(rueckgaengig = text, hinweis = null) }
         rueckJob?.cancel()
         rueckJob = haupt.launch { delay(8000); vorher = null; _zustand.update { it.copy(rueckgaengig = null) } }

@@ -27,8 +27,8 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navi = remember { Navi() }
             val z by App.buehne.zustand.collectAsState()
-            // Am Gig-Tag (oder wenn gerade etwas läuft) gleich auf der Bühne öffnen, erstes Set bereit (15.11.).
-            LaunchedEffect(Unit) { if (App.buehne.gigHeute()) navi.zurBuehne() }
+            // Am Gig-Tag (oder wenn gerade etwas läuft) gleich auf dem Hauptbildschirm öffnen, erstes Set bereit.
+            LaunchedEffect(Unit) { if (App.buehne.gigHeute()) navi.zurSetliste() }
             // Post vom Laptop (Werkstatt "Zum Mudita senden"): alle 2 s nachsehen, aber nur, wenn die
             // App zu sehen ist, nichts spielt und Jan gerade nicht an einem Text oder Song arbeitet.
             LaunchedEffect(Unit) {
@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
                     delay(2000)
                 }
             }
-            val bildschirmAn = z.spielt || z.pause != null || navi.oben == Seite.Buehne
+            val bildschirmAn = z.spielt || z.pause != null || navi.oben == Seite.Buehne || navi.oben == Seite.Setliste
             LaunchedEffect(bildschirmAn) {
                 if (bildschirmAn) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
