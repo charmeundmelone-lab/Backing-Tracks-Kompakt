@@ -750,5 +750,11 @@ kommt später. Jetzt umsetzen:
   (Wunschsong und Songs dazu) zeigt eingeplante Songs grau mit "eingeplant · Set 2" bzw.
   "gespielt · Set 1"; Tipp fragt "Nochmal spielen?" / "Nochmal einplanen?". Ein offener Song im
   selben Set wird ohne Frage nach vorn geholt. Setliste: gespielten Song antippen fragt auch.
-- [ ] E4 Fassung 7 installieren (Jans Ja), `testlauf.sh ablauf`, Fotos prüfen, Schritte für
-  Pausen-Knopf und Rückfrage ins Skript.
+- [x] E4 Fassung 7 installiert (Jans Ja, 15.11. ~09:25), `testlauf.sh ablauf` 25/25 OK, neue
+  Schritte: Pausen-Knopf rundum, Karte mit fünf Pausen, Archiv grau, Rückfrage. Danach auf Jans
+  Wunsch die 3 El-Circo-Sets wie am Abend zurückgeholt (Stand 15.11. 00:41, alle ungespielt; seine
+  6 nachts in Set 1 ergänzten Songs sind raus) über `eingang.json` mit `"ganz": true`; Stand davor
+  auf dem Mudita als `bestand-vor-wiederherstellung-1794731333417.json` und in
+  `.geraet/bestand-vor-sets-zurueck.json`.
+- [ ] E5 Menüführung schlanker (Jan: "zu viele Menüs, zwischen denen man hin und her schaltet"),
+  später. Erst Vorschläge mit Favorit.

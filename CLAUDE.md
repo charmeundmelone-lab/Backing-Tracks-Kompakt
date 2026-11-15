@@ -29,7 +29,17 @@ Ablauf-Code.
   Dateien lesen, am Gerät meist `geraet.sh texte` statt Fotos.
 - Das Repo ist **öffentlich**: nie Songtexte, `bestand.json` oder Jans Daten einchecken.
 
-## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:55; Nachtrag D unten drüber)
+## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:55; Nachträge D und E unten drüber)
+
+**Neu 15.11. vormittags (Arbeitsliste E, PLAN.md): Fassung 7 (versionCode 7) INSTALLIERT,
+`testlauf.sh ablauf` 25/25 OK.** Pausen nur noch 0 s · 10 s · 30 s · 1 min · 2 min, jeder Song ohne
+Eintrag 10 s (gespeichert 0 = Standard 10 s, -1 = 0 s); "Set bearbeiten" hat rechts je Zeile einen
+Pausen-Knopf (ein Tipp = nächster Wert). Songtitel schrumpfen statt umzubrechen (`PassenderTitel`).
+Im Gig eingeplante Songs stehen im Archiv grau, nochmal einplanen/spielen nur nach Rückfrage.
+El-Circo-Sets auf Jans Wunsch auf den Stand vom Abend zurückgesetzt (alle ungespielt).
+Werkstatt: `Main.kt` rechnet die Pause jetzt mit `pauseDanach`, `installDist` steht noch aus
+(nur wenn Jans Werkstatt aus ist). Offen: E5 Menüführung schlanker (später, erst Vorschläge).
+Rückwege App: `.geraet/fassung7-2026-11-15.apk` (jetzt installiert), `.geraet/fassung5-2026-11-14.apk` (Fassung 6 nicht gesichert).
 
 **Neu 15.11. (Arbeitsliste D, PLAN.md): "TrikTrak einfach", Fassung 6 (versionCode 6), auf dem
 Mudita INSTALLIERT (15.11. ~02:00, Stand nach D10), `testlauf.sh ablauf` 17/17 OK.** Rückweg:
