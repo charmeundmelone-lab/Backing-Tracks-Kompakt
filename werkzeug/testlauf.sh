@@ -147,7 +147,7 @@ ablauf() {
   pruefe rueckgaengig 5 "Zurückgenommen"
   # 4 Beenden mit zweitem Tipp
   tippe "Song beenden"
-  pruefe beenden-erster-tipp 4 "Nochmal" "Pause 0:20"
+  pruefe beenden-erster-tipp 4 "Nochmal" "Pause 20 s"
   # Nach 4 s klappt der Knopf wieder zurück: abwarten, dann beide Tipps direkt hintereinander.
   v=8; while [ $v -gt 0 ] && texte | grep -q "Nochmal"; do v=$((v - 1)); done
   tippe_zweimal "Song beenden"
@@ -178,8 +178,27 @@ ablauf() {
   # 9 Vorbereiten ist getrennt: Set bearbeiten
   tippe "Zur Setliste"; tippe "Set B"; tippe "Set-Menü" 1
   tippe "Set bearbeiten"
-  pruefe set-bearbeiten 5 "Bearbeiten" "Umstellen" "Songs" "0:20" "weiter"
-  tippe "Fertig"
+  pruefe set-bearbeiten 5 "Bearbeiten" "Umstellen" "Songs" "20 s" "dann weiter"
+  # 10 Pause mit einem Tipp umschalten (Take on Me steht auf 30 s): 1 min, 2 min, 0 s, 10 s
+  tippe "Pause umschalten"
+  pruefe pause-umschalten 4 "1 min"
+  tippe "Pause umschalten"; tippe "Pause umschalten"; tippe "Pause umschalten"
+  pruefe pause-rundum 4 "10 s" "20 s"
+  # 11 Karte: fünf Pausen-Knöpfe, Titel ganz
+  tippe "Take on Me"
+  pruefe karte-pausen 5 "Take on Me" "0 s" "10 s" "30 s" "1 min" "2 min"
+  tippe "Schließen"
+  # 12 Schon im Gig: grau, Rückfrage vor dem Einplanen
+  tippe "Songs"
+  pruefe archiv-songs-dazu 5 "Songs dazu für"
+  tippe "tippen zum Springen"; tippe "T"
+  pruefe archiv-grau 5 "Take on Me" "eingeplant · Set B"
+  $G key 25 >/dev/null   # eine Seite weiter (Lautstärke leiser = vor)
+  warte 5 "Test Zwei" >/dev/null
+  tippe "Test Zwei"
+  pruefe rueckfrage 5 "Nochmal einplanen?" "Test Zwei" "Ja, auch hier" "Abbrechen"
+  tippe "Abbrechen"
+  pruefe abbrechen 5 "Songs dazu für"
 
   aufraeumen
   bericht

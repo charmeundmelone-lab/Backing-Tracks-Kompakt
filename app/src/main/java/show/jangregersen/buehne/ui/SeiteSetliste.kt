@@ -211,7 +211,7 @@ fun pauseText(sek: Int): String = when {
 /** Die fünf Pausen als Knopfreihe (Jans Wahl 15.11.). Steht ein alter Wert drin, ist keiner gewählt. */
 @Composable
 fun PausenWahl(song: Song, modifier: Modifier = Modifier, hoehe: androidx.compose.ui.unit.Dp = 50.dp) {
-    Segmente(PAUSE_WAHL.map { pauseText(it) }, PAUSE_WAHL.indexOf(song.pauseDanach), modifier, hoehe = hoehe, groesse = 17.sp) { i ->
+    Segmente(PAUSE_WAHL.map { pauseText(it) }, PAUSE_WAHL.indexOf(song.pauseDanach), modifier, hoehe = hoehe, groesse = 16.sp) { i ->
         App.ablage.aendern { it.songAendern(song.id) { s -> s.copy(pauseSek = pauseSpeichern(PAUSE_WAHL[i])) } }
     }
 }

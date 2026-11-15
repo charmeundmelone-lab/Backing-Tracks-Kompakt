@@ -118,7 +118,7 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
                 }
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                T("Pause\ndanach", etikettStil(), Modifier.width(76.dp), zeilen = 2)
+                T("Pause\ndanach", etikettStil(), Modifier.width(64.dp), zeilen = 2)
                 PausenWahl(song, Modifier.weight(1f))
             }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
