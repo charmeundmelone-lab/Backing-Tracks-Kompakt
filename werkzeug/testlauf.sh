@@ -8,6 +8,7 @@
 #                                          Spielwiese (Gig "Testlauf"), Jans Daten bleiben unberührt.
 #                                          Fotos + Bericht nach .geraet/testlauf/ (uebersicht.html)
 #   sh werkzeug/testlauf.sh alles          bauen, dann ablauf (installiert NICHT)
+#   sh werkzeug/testlauf.sh schnell        bauen, installieren, ablauf in einem Rutsch (nur mit Jans Ja)
 #
 # Der Ablauf bricht sofort ab, wenn TrikTrak gerade einen Song spielt, wenn eine andere App nach
 # vorne kommt (Jan benutzt den Mudita) oder wenn der Bildschirm gesperrt ist. Am Ende werden
@@ -106,11 +107,17 @@ pruefe() {
 aufraeumen() {
   # Nie mitten in einem Song beenden: erst anhalten (Pause-Knopf), dann App schließen.
   if spielt && vorne; then $G tap "Pause" >/dev/null 2>&1; fi
+  # Erst Home: TrikTrak verlässt sich normal und gibt dabei "Bitte nicht stören" und die
+  # Lautstärke zurück. (Lehre 15.11.: Ein hartes force-stop ließ "Bitte nicht stören" an,
+  # Anrufe kamen nicht mehr durch.) Erst danach hart beenden.
+  adbs shell input keyevent 3
+  ping -n 3 127.0.0.1 >/dev/null 2>&1 || sleep 2
   adbs shell am force-stop $PKG
   runas cp files/protokoll-test.txt files/protokoll-test-letzter.txt 2>/dev/null
   adbs exec-out run-as $PKG cat files/protokoll-test.txt > "$O/protokoll-test.txt" 2>/dev/null
   runas rm -f files/testmodus files/test-leise files/test-bestand.json files/protokoll-test.txt
-  adbs shell input keyevent 3
+  if adbs shell dumpsys notification | grep -q "mZenMode=ZEN_MODE_OFF"; then echo "OK    „Bitte nicht stören“ ist aus"
+  else echo "ACHTUNG: „Bitte nicht stören“ ist noch an – TrikTrak öffnen und mit Home verlassen"; FEHLER=$((FEHLER + 1)); fi
   sichern "$O/nachher.json"
   if cmp -s "$O/vorher.json" "$O/nachher.json"; then echo "OK    Jans Daten unverändert (bestand.json vorher = nachher)"
   else echo "ACHTUNG: bestand.json hat sich verändert (Jan hat parallel gearbeitet?) – vorher.json/nachher.json vergleichen"; FEHLER=$((FEHLER + 1)); fi
@@ -140,7 +147,7 @@ ablauf() {
 
   # Hauptbildschirm wie die alte App (15.11. abends): Reiter Set/Archiv, Player-Leiste, Wischen.
   # 1 Öffnen am Gig-Tag = Hauptbildschirm, erstes Set, erster Song bereit
-  pruefe start 10 "Set A" "Archiv" "Test Eins" "Bereit" "Test Zwei" "Als Nächstes" "Abspielen"
+  pruefe start 10 "Set A" "Archiv" "Test Eins" "Bereit" "Test Zwei" "Nächster" "Abspielen"
   vorne || abbruch "TrikTrak kam nicht nach vorne (Bildschirm gesperrt?)."
   # 2 Play, dann anhalten (die Testsongs sind nur 8 s lang)
   tippe "Abspielen"; tippe "Pause"
@@ -187,9 +194,8 @@ ablauf() {
   tippe "$fuss"; tippe "T"
   wische "Take on Me" rechts
   pruefe archiv-wisch-rechts 5 "Take on Me" "liegt bereit" "Rückgängig"
-  # 11 Lautstärketaste blättert im Archiv; schon eingeplant = Rückfrage
-  $G key 25 >/dev/null
-  warte 5 "Test Zwei" >/dev/null
+  # 11 Lautstärketaste blättert im Archiv (bis Test Zwei zu sehen ist); schon eingeplant = Rückfrage
+  v=4; while [ $v -gt 0 ] && ! texte | grep -qF "Test Zwei"; do $G key 25 >/dev/null; v=$((v - 1)); done
   wische "Test Zwei" links
   pruefe rueckfrage 5 "Nochmal einplanen?" "Test Zwei" "Ja, ans Ende" "Abbrechen"
   tippe "Abbrechen"
@@ -218,5 +224,6 @@ case "${1:-}" in
   installieren) installieren ;;
   ablauf) ablauf ;;
   alles) bauen; ablauf ;;
-  *) sed -n 2,14p "$0" ;;
+  schnell) bauen; installieren; ablauf ;;
+  *) sed -n 2,15p "$0" ;;
 esac

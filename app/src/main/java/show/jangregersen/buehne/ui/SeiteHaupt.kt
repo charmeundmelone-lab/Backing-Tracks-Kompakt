@@ -222,6 +222,8 @@ private fun LiveZeile(nr: Int, s: Song, e: Eintrag, naechster: Boolean, haeltAnZ
         ) {
             Box(Modifier.width(26.dp), contentAlignment = Alignment.Center) {
                 if (e.gespielt) Box(Modifier.size(22.dp).clip(RoundedCornerShape(11.dp)).background(Schwarz), contentAlignment = Alignment.Center) { Symbol(Sym.HAKEN, Weiss, 13.dp) }
+                // Der nächste Song: Nummer schwarz hinterlegt, damit man ihn auch ohne Schild sofort findet.
+                else if (naechster) Box(Modifier.size(28.dp).clip(RoundedCornerShape(7.dp)).background(Schwarz), contentAlignment = Alignment.Center) { T("$nr", titelStil(21.sp, Weiss), zeilen = 1) }
                 else T("$nr", titelStil(22.sp))
             }
             // Zweite Zeile: das Pausen-Kästchen (Tipp = nächste Pause), dazu Ansage und "hält an",
@@ -236,8 +238,9 @@ private fun LiveZeile(nr: Int, s: Song, e: Eintrag, naechster: Boolean, haeltAnZ
                     if (ansage) Symbol(Sym.MIKRO, Schwarz, 15.dp)
                     if (!e.gespielt) PausenKaestchen(s, Schwarz)
                     if (haeltAn) Box(Modifier.border(1.5.dp, Schwarz, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) { T("hält an", textStil(14.sp, gewicht = FontWeight.Bold), zeilen = 1) }
-                    if (naechster) Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Schwarz).padding(horizontal = 6.dp, vertical = 1.dp)) {
-                        T("ALS NÄCHSTES", etikettStil(Weiss, 12.sp), zeilen = 1)
+                    // Das Schild nur, wenn es ganz hinpasst (neben "hält an" oder Ansage wäre es abgeschnitten).
+                    if (naechster && !haeltAn && !ansage) Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Schwarz).padding(horizontal = 6.dp, vertical = 1.dp)) {
+                        T("NÄCHSTER", etikettStil(Weiss, 12.sp), zeilen = 1)
                     }
                 }
             }
@@ -487,7 +490,7 @@ private fun PlayerLeiste(navi: Navi) {
                 else -> (if (z.spielt) "Läuft" else if (angefangen) "Angehalten" else "Bereit") + (platz?.let { " · $it" } ?: "")
             }
             Etikett(wort, Modifier.weight(1f).padding(bottom = 4.dp), Weiss)
-            if (song != null && pause != null) T(zeit(pause.restSek * 1000L), zeitStil(46.sp), zeilen = 1)
+            if (song != null && pause != null) T(zeit(pause.restSek * 1000L), zeitStil(40.sp), zeilen = 1)
             else if (song != null) {
                 Etikett(if (angespielt) "noch" else "Länge", Modifier.padding(end = 8.dp, bottom = 4.dp), Weiss)
                 Restzeit(song, z.dauerMs, angespielt)
