@@ -169,8 +169,8 @@ fun Knopf(
 }
 
 @Composable
-fun TextKnopf(text: String, modifier: Modifier = Modifier, art: Art = Art.UMRISS, hoehe: Dp = 56.dp, groesse: TextUnit = 17.sp, symbol: Sym? = null, aktiv: Boolean = true, onClick: () -> Unit) {
-    Knopf(modifier, art, hoehe, aktiv = aktiv, onClick = onClick) { f ->
+fun TextKnopf(text: String, modifier: Modifier = Modifier, art: Art = Art.UMRISS, hoehe: Dp = 56.dp, groesse: TextUnit = 17.sp, symbol: Sym? = null, aktiv: Boolean = true, radius: Dp = 14.dp, onClick: () -> Unit) {
+    Knopf(modifier, art, hoehe, radius, aktiv = aktiv, onClick = onClick) { f ->
         if (symbol != null) Symbol(symbol, f, 20.dp)
         T(text, textStil(groesse, f, FontWeight.Bold), zeilen = 1)
     }

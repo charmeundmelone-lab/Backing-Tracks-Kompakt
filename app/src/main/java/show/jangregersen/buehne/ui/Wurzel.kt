@@ -133,7 +133,7 @@ fun Wurzel(navi: Navi, beenden: () -> Unit) {
             is Seite.Eingabe -> EingabeSeite(navi, s)
             is Seite.Frage -> FrageSeite(navi, s)
         }
-        Meldungen()
+        Meldungen(navi)
         DrosselHinweis()
     }
 }
@@ -160,7 +160,7 @@ private fun DrosselHinweis() {
 }
 
 @Composable
-private fun Meldungen() {
+private fun Meldungen(navi: Navi) {
     val z by App.buehne.zustand.collectAsState()
     Column(Modifier.fillMaxSize().padding(top = 40.dp), verticalArrangement = Arrangement.Top) {
         val fehler = z.fehler
@@ -178,27 +178,20 @@ private fun Meldungen() {
             }
         }
     }
-    // Hinweise unten über der Bedienleiste: sie verdecken so nie Kopfband, Zurück oder "Fertig".
-    // Kein Klick-Empfänger, Tipps gehen durch.
+    // Hinweise: auf den meisten Seiten unten über der Bedienleiste (verdecken nie Kopfband, Zurück
+    // oder "Fertig"). Auf der Bühne oben unter dem Kopf (15.11.): unten stehen dort "Danach" und
+    // die Knöpfe, genau das, was man nach einem Tipp sehen will. Nach dem Antippen eines Songs
+    // gibt es keinen Hinweis: das Ergebnis steht bei "Danach", dort sitzt auch "Rückgängig".
+    // Kein Klick-Empfänger.
     val h = z.hinweis
     if (h != null) {
-        Column(Modifier.fillMaxSize().padding(bottom = 104.dp), verticalArrangement = Arrangement.Bottom) {
+        val buehne = navi.oben == Seite.Buehne || navi.oben is Seite.ProbeBuehne
+        Column(
+            Modifier.fillMaxSize().padding(top = if (buehne) 136.dp else 0.dp, bottom = if (buehne) 0.dp else 104.dp),
+            verticalArrangement = if (buehne) Arrangement.Top else Arrangement.Bottom
+        ) {
             Box(Modifier.fillMaxWidth().padding(horizontal = 10.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz).padding(14.dp)) {
-                T(h, textStil(16.sp, Weiss, FontWeight.Bold))
-            }
-        }
-    }
-    // Nach dem Antippen eines Songs (15.11.): 8 s lang mit Knopf "Rückgängig". Nur der Knopf nimmt Tipps an.
-    val r = z.rueckgaengig
-    if (r != null) {
-        Column(Modifier.fillMaxSize().padding(bottom = 84.dp), verticalArrangement = Arrangement.Bottom) {
-            Row(
-                // tipp {}: Ein Tipp neben "Rückgängig" darf nicht auf den Song darunter durchgehen.
-                Modifier.fillMaxWidth().padding(horizontal = 10.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz).tipp { }.padding(start = 14.dp, end = 8.dp, top = 8.dp, bottom = 8.dp),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                T(r, textStil(17.sp, Weiss, FontWeight.Bold), Modifier.weight(1f), zeilen = 3)
-                TextKnopf("Rückgängig", Modifier.width(128.dp), Art.UMRISS, 50.dp, 17.sp) { App.buehne.rueckgaengig() }
+                T(h, textStil(17.sp, Weiss, FontWeight.Bold), zeilen = 3)
             }
         }
     }

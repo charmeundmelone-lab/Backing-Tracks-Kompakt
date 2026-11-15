@@ -314,7 +314,7 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         dienstAus()
         setWaehlen(danach)
         val name = ablage.jetzt.set(danach)?.name ?: "Set"
-        _zustand.update { it.copy(setDurch = "„$name“ liegt bereit.") }
+        hinweis("„$name“ beginnt, der erste Song liegt bereit.")
         return true
     }
 

@@ -104,7 +104,8 @@ fun BuehneSeite(navi: Navi) {
 
     Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize()) {
-        BuehnenKopf(song, if (z.probe) "Probe" else if (z.spielt) "Jetzt${platz?.let { " · $it" } ?: ""}" else "Bereit${platz?.let { " · $it" } ?: ""}", z.dauerMs, z.spielt)
+        val zustandWort = if (z.probe) "Probe" else if (z.spielt) "Jetzt" else if (pos > 0) "Angehalten" else "Bereit"
+        BuehnenKopf(song, if (z.probe) zustandWort else "$zustandWort${platz?.let { " · $it" } ?: ""}", z.dauerMs, z.spielt)
         z.setDurch?.let { SetEndeHinweis(it) }
         // B21: Solange der Song nur bereitliegt, stehen Kapo und Tonart groß oben (zum Vorbereiten).
         // Beim Start verschwinden sie einmal, danach bleibt die Seite ruhig.
@@ -114,7 +115,7 @@ fun BuehneSeite(navi: Navi) {
             if (song.lyrics.isNotBlank()) LyricsBereich(song, z.dauerMs)
             else OhneText(song, if (z.probe || folgeSet != null) emptyList() else set?.wasKommt(song.id)?.drop(2).orEmpty(), set?.id)
         }
-        if (!z.probe) DanachBlock(naechster, song, endeHier, naechster == null, folgeSet?.name)
+        if (!z.probe) DanachBlock(naechster, song, endeHier, naechster == null, folgeSet?.name, z.rueckgaengig != null)
         // Drei Knöpfe, immer an derselben Stelle (15.11.): Liste · Play/Pause · Beenden bzw. Überspringen.
         Row(Modifier.fillMaxWidth().padding(start = 14.dp, end = 14.dp, bottom = 14.dp, top = 2.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Knopf(Modifier.weight(1f), hoehe = 62.dp, beschreibung = "Zur Setliste", onClick = { if (z.probe) navi.zurueck() else navi.zurSetliste() }) { f ->
@@ -225,7 +226,7 @@ private fun BuehnenKopf(song: Song, ober: String, dauerMs: Long, spielt: Boolean
     Column(Modifier.fillMaxWidth().background(Schwarz).padding(start = 18.dp, end = 18.dp, top = 10.dp, bottom = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Row(verticalAlignment = Alignment.Bottom) {
             Etikett(ober, Modifier.weight(1f).padding(bottom = 4.dp), Weiss)
-            Etikett(if (spielt) "noch" else "Länge", Modifier.padding(end = 8.dp, bottom = 4.dp), Weiss)
+            Etikett(if (spielt || pos > 0) "noch" else "Länge", Modifier.padding(end = 8.dp, bottom = 4.dp), Weiss)
             Box(Modifier.width(zeitBreite), contentAlignment = Alignment.BottomEnd) {
                 T(zeit(if (spielt || pos > 0) rest else dauer), zeitStil, zeilen = 1)
             }
@@ -252,14 +253,17 @@ private fun SetEndeHinweis(text: String) {
 }
 
 @Composable
-private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boolean, folgeSet: String? = null) {
+private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boolean, folgeSet: String? = null, rueckgaengig: Boolean = false) {
     // Immer sichtbar, immer an derselben Stelle. Der nächste Titel bekommt die volle Breite und
     // bricht lieber um, als abgeschnitten zu werden (Jan: "wirklich gut lesbar").
     Column(Modifier.padding(start = 18.dp, end = 18.dp, bottom = 6.dp)) {
         Linie(dicke = 2.5.dp)
-        Row(Modifier.fillMaxWidth().padding(top = 6.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        // Feste Höhe: Ob rechts der Pausen-Hinweis oder "Rückgängig" steht, nichts verschiebt sich.
+        Row(Modifier.fillMaxWidth().padding(top = 5.dp).height(34.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Etikett(if (folgeSet != null) "Danach · $folgeSet" else "Danach", Modifier.weight(1f))
-            if (naechster != null) {
+            // Nach dem Antippen eines Songs (8 s): Rückgängig genau dort, wo man das Ergebnis sieht.
+            if (rueckgaengig) TextKnopf("Rückgängig", Modifier, Art.VOLL, 34.dp, 16.sp, radius = 10.dp) { App.buehne.rueckgaengig() }
+            else if (naechster != null) {
                 val (sym, text) = when {
                     ende == Ende.ANHALTEN -> Sym.STOP to "hält an"
                     aktuell.ansageNachher.isNotBlank() -> Sym.MIKRO to "Ansage ${zeit(aktuell.ansageNachherMs)}"
@@ -477,14 +481,18 @@ private fun AnsageAnsicht(navi: Navi, pause: show.jangregersen.buehne.spiel.Bueh
             Etikett("Gleich geht es weiter in")
             T(zeit(pause.restSek * 1000L), titelStil(92.sp).copy(lineHeight = 90.sp, fontFeatureSettings = "tnum"), zeilen = 1)
             val voll = if (pause.gesamtSek > 0) (((pause.gesamtSek - pause.restSek) * 10) / pause.gesamtSek).coerceIn(0, 10) else 0
+            // Die Beschreibungszeile darunter ist seit 15.11. weg: Sie wiederholte nur den Kopf und
+            // klebte bei wenig Platz an der Trennlinie.
             Kaestchen(10, voll, Schwarz, Modifier.width(250.dp), 8.dp)
-            Abstand(6.dp)
-            T(pause.beschreibung, textStil(14.sp), Modifier.padding(horizontal = 18.dp), zeilen = 1, mitte = true)
         }
         Column(Modifier.padding(horizontal = 18.dp)) {
             Linie(dicke = 2.5.dp)
-            Abstand(10.dp)
-            Etikett("Als Nächstes${if (platz.isNotEmpty()) " · $platz" else ""} · ${zeit(kommt.dauerMs)}")
+            val rueck by App.buehne.zustand.collectAsState()
+            // Feste Höhe: "Rückgängig" (8 s nach "Anderer Song") verschiebt nichts.
+            Row(Modifier.fillMaxWidth().padding(top = 4.dp).height(36.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Etikett("Als Nächstes${if (platz.isNotEmpty()) " · $platz" else ""} · ${zeit(kommt.dauerMs)}", Modifier.weight(1f))
+                if (rueck.rueckgaengig != null) TextKnopf("Rückgängig", Modifier, Art.VOLL, 34.dp, 16.sp, radius = 10.dp) { App.buehne.rueckgaengig() }
+            }
             T(kommt.titel, titelStil(34.sp).copy(lineHeight = 35.sp), zeilen = 2)
             Abstand(10.dp)
             KapoTonart(kommt)

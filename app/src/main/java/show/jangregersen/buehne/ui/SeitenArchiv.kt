@@ -90,11 +90,11 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
         return
     }
 
-    val ober = if (zielSet != null && wunsch) "Wunschsong · kommt als Nächstes" else if (zielSet != null) "Songs dazu für" else "Archiv · ${b.songs.size} Songs"
-    val titel = if (zielSet != null) "${zielSet.name} · ${zielSet.eintraege.size} ${if (zielSet.eintraege.size == 1) "Song" else "Songs"}" else "Archiv"
+    val ober = if (zielSet != null && wunsch) "Wunschsong für ${zielSet.name}" else if (zielSet != null) "Songs dazu für" else "Archiv · ${b.songs.size} Songs"
+    val titel = if (zielSet != null && wunsch) "Antippen = als Nächstes" else if (zielSet != null) "${zielSet.name} · ${zielSet.eintraege.size} ${if (zielSet.eintraege.size == 1) "Song" else "Songs"}" else "Archiv"
     Rahmen(navi, ober, titel, rechts = {
-        if (zielSet != null) WeisserKnopfImBand("Fertig") { navi.zurueck() }
-        else WeisserKnopfImBand("Songs holen", Sym.ORDNER) { waehler.launch(null) }
+        if (zielSet != null && !wunsch) WeisserKnopfImBand("Fertig") { navi.zurueck() }
+        else if (zielSet == null) WeisserKnopfImBand("Songs holen", Sym.ORDNER) { waehler.launch(null) }
     }) {
         if (sprung) {
             Sprung(songs) { i -> if (i >= 0) zeige = Zeige(i); sprung = false }
@@ -124,7 +124,7 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
             // Live (Wunschsong): Antippen = kommt als Nächstes, zurück zur Bühne (Jans eine Regel).
             // Vorbereiten: Antippen setzt den Song ans Ende vom Set. Herausnehmen geht nur über die
             // Einstellungen mit Rückfrage (früher nahm ein zweiter Tipp live Songs aus Versehen raus).
-            ArchivZeile(s, zielSet != null, s.id in imSet) {
+            ArchivZeile(s, zielSet != null && !wunsch, s.id in imSet) {
                 when {
                     zielSet == null -> navi.zu(Seite.Editor(s.id))
                     wunsch -> { App.buehne.vorziehen(zielSet.id, s.id); navi.zurBuehne() }

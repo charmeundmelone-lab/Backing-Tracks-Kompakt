@@ -49,6 +49,9 @@ fun SetlisteSeite(navi: Navi) {
     val set = b.set(z.setId)
     val gig = b.gigVonSet(z.setId)
     var gespieltZeigen by remember { mutableStateOf(false) }
+    // Nur "angefangen ja/nein" beobachten, nicht jede Position (sonst zeichnet die Liste alle 200 ms neu).
+    val pos = App.buehne.position.collectAsState()
+    val angefangen by remember { androidx.compose.runtime.derivedStateOf { pos.value > 0 } }
     // Jeder Besuch beginnt auf Seite 1, also beim laufenden Song (nicht dort, wo man zuletzt war).
     val besuch = remember { System.nanoTime() }
 
@@ -100,6 +103,7 @@ fun SetlisteSeite(navi: Navi) {
                 val status = when {
                     z.pause != null -> "kommt nach der Pause"
                     z.spielt -> "läuft"
+                    angefangen -> "angehalten"
                     else -> "bereit"
                 }
                 SetZeile(nr, s, x, aktuell = x.songId == z.songId, status = status, haeltAnZeigen = mitAutomatik) { antippen(navi, set.id, s.id) }
