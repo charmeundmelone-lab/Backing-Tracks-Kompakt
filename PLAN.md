@@ -681,3 +681,11 @@ Gig "El Circo" Sa 14.11. abends (C4–C6):
   Parken der 4 Dateien in `/sdcard/Download/TrikTrak-geparkt` (danach zurück, Ordner weg).
   Offen (Verbesserung): App sollte beim Neu-Einlesen bekannte, gelöschte Dateien nicht wieder
   anlegen (z. B. Liste "gelöscht" im Bestand) – mit Jan klären.
+
+15.11. nachts:
+- [x] C7 Werkstatt überschreibt Songdaten vom Mudita nicht mehr (Jan: "Was ich am Mudita einstelle,
+  bleibt"; Anlass: Bed of Roses Kapo 2 am Mudita, Laptop-Fassung Kapo 0, Song am Laptop offen).
+  `Arbeit.songBasis` + `songdatenMischen`: pro Feld Laptop nur, wenn dort geändert. Alte offene
+  Songs ohne Basis nehmen die Mudita-Werte. 3 neue Tests. Jans Werkstatt einmal geholt: Songs 3/14
+  waren nur wegen Kapo "offen" (Text längst angekommen), jetzt nichts offen.
+- [x] Automatische Mudita-Sicherung (Windows-Aufgabe "TrikTrak-Sicherung", alle 5 Min., siehe CLAUDE.md).

@@ -38,6 +38,17 @@ und einen Test mit einer wirklich neuen Datei; Arbeitsliste C (C1–C6, Ende von
 von `94cb219`, App-Code seither unverändert), installiert 14.11. 17:08. Die Werkstatt hinter
 Jans Desktop-Symbol ist auf dem neuesten Stand (`installDist` nach `94cb219`).
 
+**Neu am 15.11. nachts (C7):** Werkstatt überschreibt Songdaten vom Mudita nicht mehr (Jans
+Regel: "Was ich am Mudita einstelle, bleibt"). Pro offenem Song merkt sie sich die Songdaten
+vom Mudita als Basis (`Arbeit.songBasis`, in `zustand.json`); beim Holen/Senden gilt pro Feld
+(Titel, Tonart, Kapo, BPM, Tempo): am Laptop geändert → Laptop, sonst → Mudita
+(`songdatenMischen`). Text und Teile weiter vom Laptop. Tests in `WerkstattTest` (27 grün).
+Nebenbefund: Songs 3/14 waren nur wegen Kapo scheinbar offen, ihr Text war längst auf dem
+Mudita; in Jans Werkstatt ist jetzt nichts mehr offen, Bed of Roses dort Kapo 2. Werkstatt
+eingespielt (`installDist`). Restlücke: Ändert Jan am Mudita einen Wert, während eine Sendung
+dort noch unübernommen liegt (z. B. Bearbeiten-Seite offen), gilt beim Übernehmen der Stand vom
+Senden; dafür müsste die App selbst mischen (nicht gebaut).
+
 **Neu am 15.11. nachts:** Automatische Mudita-Sicherung (Windows-Aufgabe "TrikTrak-Sicherung",
 alle 5 Minuten, nur bei Änderung, nur lesend) nach `TrikTrak-Werkstatt\sicherungen\mudita-*.json`,
 Log `TrikTrak-Werkstatt\sicherung.log`. Eingerichtet und getestet, Details unten bei "TrikTrak
@@ -75,12 +86,7 @@ in Set 1 und 2 nichts. Jan hat "Englishman in New York" an den Anfang von Set 1 
    Text ab hier ↓). Zuschauen, wo er hängt; erst Vorschläge mit Favorit, dann bauen.
 4. "Perfect K1.wav": Band-Kanal links stumm (−108 dB), Jan muss neu exportieren; dann über
    "Neue Songs" (mit Parken, siehe C6) kopieren.
-5. Offen, nicht dringend: Grundproblem Werkstatt – bei Songs, die am Laptop "geändert, nicht
-   gesendet" sind (in Jans Werkstatt: 3 Bed of Roses, 14 Here I go again, Text vom 13.11.),
-   überschreiben die Laptop-Songdaten (BPM, Tempo, Kapo, Tonart, Titel) beim Senden die Werte
-   vom Mudita. Jans Kapo-Korrekturen vom 14.11. (Bed of Roses Kapo 2!) würden so verloren gehen,
-   bevor Jan sendet: vorher holen und prüfen bzw. Abgleich nur geänderte Felder nehmen lassen.
-   Außerdem: "Timer anhalten" am Gerät ansehen (B20); OK-Fenster bei "Ton freigeben" (B24);
+5. Offen, nicht dringend: "Timer anhalten" am Gerät ansehen (B20); OK-Fenster bei "Ton freigeben" (B24);
    Testsongs "Test Eins/Zwei/Drei" (nur mit Jans OK löschen); tote Seiten
    TexteHolen/TeileUndAblauf.
 

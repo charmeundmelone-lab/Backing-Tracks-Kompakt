@@ -27,6 +27,53 @@ class WerkstattTest {
         assertTrue(!BestandJson.eingangJson(emptyList()).has("gigs"))
     }
 
+    private fun muditaJson(vararg s: Song) = BestandJson.alsJson(Bestand(songs = s.toList())).toString()
+
+    @Test fun kapoVomMuditaBleibtWennAmLaptopNurDerTextGeaendertWurde() {
+        // Wie "Bed of Roses" 14.11.: Text am Laptop geändert (nicht gesendet), Kapo am Mudita auf 2.
+        val ordner = kotlin.io.path.createTempDirectory("arbeit").toFile()
+        val a = Arbeit(ordner)
+        val start = Song(3, "Bed of Roses", pfad = "p", lyrics = "[Strophe 1]\nalt", bpm = 160, tempo = 1)
+        a.vomGeraet(muditaJson(start))
+        a.aendern(3) { it.copy(lyrics = "[Strophe 1]\nneu") }
+        a.vomGeraet(muditaJson(start.copy(kapo = 2, tonart = "D")))
+        val s = a.bestand.song(3)!!
+        assertEquals(2, s.kapo); assertEquals("D", s.tonart); assertEquals("[Strophe 1]\nneu", s.lyrics)
+        val gesendet = BestandJson.eingangAus(JSONObject(a.zumSenden())).single()
+        assertEquals(2, gesendet.kapo); assertEquals("[Strophe 1]\nneu", gesendet.lyrics)
+        // Auch nach einem Neustart der Werkstatt (Basis steht in zustand.json).
+        val b = Arbeit(ordner)
+        b.vomGeraet(muditaJson(start.copy(kapo = 3)))
+        assertEquals(3, b.bestand.song(3)!!.kapo)
+    }
+
+    @Test fun amLaptopGeaenderterKapoGehtZumMudita() {
+        val a = Arbeit(kotlin.io.path.createTempDirectory("arbeit").toFile())
+        val start = Song(5, "Riptide", pfad = "p", kapo = 0, bpm = 100)
+        a.vomGeraet(muditaJson(start))
+        a.aendern(5) { it.copy(kapo = 5) }
+        // Am Mudita inzwischen nur das Tempo geändert: Kapo vom Laptop, Tempo vom Mudita.
+        a.vomGeraet(muditaJson(start.copy(tempo = 2)))
+        val s = BestandJson.eingangAus(JSONObject(a.zumSenden())).single()
+        assertEquals(5, s.kapo); assertEquals(2, s.tempo)
+        // Zurück auf den alten Wert am Laptop: dann gilt wieder der Mudita.
+        a.aendern(5) { it.copy(kapo = 0) }
+        a.vomGeraet(muditaJson(start.copy(kapo = 1)))
+        assertEquals(1, a.bestand.song(5)!!.kapo)
+    }
+
+    @Test fun alterOffenerSongOhneBasisNimmtDieMuditaWerte() {
+        // Jans Werkstatt: Songs 3 und 14 sind seit 13.11. offen, eine Basis gibt es dafür nicht.
+        val ordner = kotlin.io.path.createTempDirectory("arbeit").toFile()
+        val laptop = Song(3, "Bed of Roses", pfad = "p", lyrics = "[Strophe 1]\nneu")
+        java.io.File(ordner, "bestand.json").writeText(muditaJson(laptop))
+        java.io.File(ordner, "zustand.json").writeText("""{"geaendert":[3],"s1":{}}""")
+        val a = Arbeit(ordner)
+        a.vomGeraet(muditaJson(laptop.copy(lyrics = "[Strophe 1]\nalt", kapo = 2)))
+        val s = a.bestand.song(3)!!
+        assertEquals(2, s.kapo); assertEquals("[Strophe 1]\nneu", s.lyrics); assertTrue(3L in a.geaendert)
+    }
+
     @Test fun songdatenMitTempoStempelKommenAufDenMudita() {
         // 14.11.: BPM und Tempo-Stempel vom Laptop, Ansage und Mixer bleiben wie am Mudita.
         val geraet = Song(1, "Riptide", pfad = "p", ansageVorher = "a.m4a", mix = mapOf("band" to 7))

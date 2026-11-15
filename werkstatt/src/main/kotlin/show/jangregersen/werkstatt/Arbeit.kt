@@ -46,6 +46,17 @@ class Arbeit(private val ordner: File) {
     /** Beim letzten Holen nicht übernommene Laptop-Gigs (Mudita war geändert), für die Meldung. */
     var gigKonflikte: List<String> = emptyList(); private set
 
+    /**
+     * 15.11. (Jans Wunsch "Was ich am Mudita einstelle, bleibt"): Songdaten eines offenen Songs so,
+     * wie sie vom Mudita kamen, als die Laptop-Änderung begann. Beim Holen gilt pro Feld: am Laptop
+     * gegenüber dieser Basis geändert → Laptop, sonst → Mudita. So überschreibt ein am Laptop nur
+     * im Text geänderter Song nicht mehr Kapo, Tonart, BPM, Tempo oder Titel vom Mudita.
+     */
+    data class Songdaten(val titel: String, val tonart: String, val kapo: Int, val bpm: Int, val tempo: Int) {
+        constructor(s: Song) : this(s.titel, s.tonart, s.kapo, s.bpm, s.tempo)
+    }
+    val songBasis = sortedMapOf<Long, Songdaten>()
+
     init {
         ordner.mkdirs()
         if (datei.exists()) runCatching { bestand = BestandJson.ausJson(JSONObject(datei.readText())) }
@@ -55,6 +66,9 @@ class Arbeit(private val ordner: File) {
             o.optJSONObject("s1")?.let { m -> m.keys().forEach { k -> s1[k.toLong()] = m.getString(k) } }
             o.optJSONObject("gigsGeaendert")?.let { m -> m.keys().forEach { k -> gigsGeaendert[k.toLong()] = if (m.isNull(k)) null else m.getString(k) } }
             o.optJSONArray("gigsGesendet")?.let { a -> (0 until a.length()).forEach { gigsGesendet += a.getLong(it) } }
+            o.optJSONObject("songBasis")?.let { m ->
+                m.keys().forEach { k -> val x = m.getJSONObject(k); songBasis[k.toLong()] = Songdaten(x.optString("titel"), x.optString("tonart"), x.optInt("kapo"), x.optInt("bpm"), x.optInt("tempo")) }
+            }
             geholtAm = o.optLong("geholtAm")
         }
     }
@@ -69,6 +83,9 @@ class Arbeit(private val ordner: File) {
             put("s1", JSONObject().apply { s1.forEach { (k, v) -> put(k.toString(), v) } })
             put("gigsGeaendert", JSONObject().apply { gigsGeaendert.forEach { (k, v) -> put(k.toString(), v ?: JSONObject.NULL) } })
             put("gigsGesendet", JSONArray(gigsGesendet.toList()))
+            put("songBasis", JSONObject().apply {
+                songBasis.forEach { (k, d) -> put(k.toString(), JSONObject().put("titel", d.titel).put("tonart", d.tonart).put("kapo", d.kapo).put("bpm", d.bpm).put("tempo", d.tempo)) }
+            })
             put("geholtAm", geholtAm)
         }.toString(1))
     }
@@ -112,12 +129,17 @@ class Arbeit(private val ordner: File) {
         // Hat der Mudita den Laptop-Stand schon (gesendet und übernommen), gilt der Song nicht mehr als offen.
         val angekommen = mutableSetOf<Long>()
         for (id in geaendert) {
-            val hier = bestand.song(id) ?: continue
+            val roh = bestand.song(id) ?: continue
             val dort = neu.song(id) ?: continue
+            // Ohne Basis (offen seit vor dem 15.11.): Songdaten gelten als am Laptop unverändert.
+            val basis = songBasis[id] ?: Songdaten(roh)
+            val (hier, neueBasis) = songdatenMischen(roh, dort, basis)
+            songBasis[id] = neueBasis
             val zusammen = Abgleich.textUndTeile(dort, hier)
             if (zusammen == dort) angekommen += id else neu = neu.songAendern(id) { zusammen }
         }
         geaendert.removeAll(angekommen)
+        songBasis.keys.retainAll(geaendert)
         neu = gigsDarauflegen(neu, eingangOffen)
         bestand = neu
         verlauf.clear()
@@ -133,6 +155,7 @@ class Arbeit(private val ordner: File) {
         if (neu == alt) return false
         verlauf.getOrPut(id) { ArrayDeque() }.apply { addLast(alt); if (size > 50) removeFirst() }
         bestand = bestand.songAendern(id) { neu }
+        if (id !in geaendert || id !in songBasis) songBasis[id] = Songdaten(alt)
         geaendert += id
         speichern()
         return true
@@ -233,6 +256,28 @@ class Arbeit(private val ordner: File) {
 
     @Synchronized
     fun s1Setzen(id: Long, pfad: String) { s1[id] = pfad; speichern() }
+}
+
+/**
+ * Songdaten pro Feld mischen: am Laptop gegenüber [basis] geändert → Laptop ([hier]), sonst der
+ * Mudita ([dort]). Ergebnis: Laptop-Song mit gemischten Songdaten und die neue Basis (für
+ * unveränderte Felder der Mudita-Wert, damit spätere Mudita-Änderungen weiter durchkommen).
+ */
+fun songdatenMischen(hier: Song, dort: Song, basis: Arbeit.Songdaten): Pair<Song, Arbeit.Songdaten> {
+    fun <T> feld(h: T, b: T, d: T) = if (h != b) h else d
+    val titel = feld(hier.titel, basis.titel, dort.titel)
+    val tonart = feld(hier.tonart, basis.tonart, dort.tonart)
+    val kapo = feld(hier.kapo, basis.kapo, dort.kapo)
+    val bpm = feld(hier.bpm, basis.bpm, dort.bpm)
+    val tempo = feld(hier.tempo, basis.tempo, dort.tempo)
+    val neueBasis = Arbeit.Songdaten(
+        if (hier.titel != basis.titel) basis.titel else dort.titel,
+        if (hier.tonart != basis.tonart) basis.tonart else dort.tonart,
+        if (hier.kapo != basis.kapo) basis.kapo else dort.kapo,
+        if (hier.bpm != basis.bpm) basis.bpm else dort.bpm,
+        if (hier.tempo != basis.tempo) basis.tempo else dort.tempo
+    )
+    return hier.copy(titel = titel, tonart = tonart, kapo = kapo, bpm = bpm, tempo = tempo) to neueBasis
 }
 
 /** Text-Umbauten, die es nur am Laptop gibt. */
