@@ -31,6 +31,11 @@ Ablauf-Code.
 
 ## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:55; Nachträge D, E, F unten drüber)
 
+**Stand 15.11. ~17:50: Fassung 8 INSTALLIERT (17:43, Jans Ja), `testlauf.sh schnell` 23/23 OK (Lauf 2;
+Lauf 3 nach der Schild-Korrektur abgebrochen, weil Jan das Telefon brauchte, App-Stand 75882a2 ist drauf).
+LEHRE: force-stop ließ „Bitte nicht stören“ an (Anrufe stumm!) – aufraeumen geht jetzt erst über Home.
+Offen: F7 Jan probiert selbst; Archiv zeigt nur 3 Songs pro Seite (14 Seiten), evtl. dichter machen.**
+
 **Neu 15.11. abends (Arbeitsliste F, PLAN.md): Bedienung wie die alte App, Fassung 8 (versionCode 8)
 GEBAUT, NOCH NICHT INSTALLIERT.** Jan konnte mit Fassung 7 "so nicht arbeiten"; die alte App war
 besser. Jetzt: ein Hauptbildschirm `ui/SeiteHaupt.kt` (Reiter "Set ⌄"/"Archiv", Liste, feste

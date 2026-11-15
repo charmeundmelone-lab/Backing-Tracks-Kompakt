@@ -785,5 +785,5 @@ Nächstes, links = ganz nach unten), "aber diesmal perfekt funktionierend". Entw
   von selbst zurück (`BuehneSeite(zurueckAmEnde)`). In der Pause ist "Text" aus.
 - [x] F5 App öffnet am Gig-Tag auf dem Hauptbildschirm; Gig-Sets und Wunschsong führen dorthin.
   `werkzeug/testlauf.sh` neu (Wischen per `geraet.sh wisch`), versionCode 8. Tests grün.
-- [ ] F6 Installieren (Jans Ja) + `testlauf.sh ablauf`, Fotos ansehen, nachbessern.
+- [x] F6 Installiert (15.11. 17:43), `testlauf.sh schnell` 23/23. Nachgebessert: Schild „Nächster“ (abgeschnitten neben „hält an“ → schwarze Nummer, Schild nur wenn es passt), Pausen-Countdown 40 sp. Testskript gibt „Bitte nicht stören“ jetzt sauber zurück.
 - [ ] F7 Jan probiert selbst mit echtem Set.
