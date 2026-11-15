@@ -141,6 +141,9 @@ ablauf() {
   # 3 Liste: eine Regel
   tippe "Zur Setliste"
   pruefe liste 5 "Set A" "Wunschsong" "Test Zwei" "Test Drei"
+  # Pausen-Kästchen in der Setliste: Tipp schaltet weiter (Test Zwei: 20 s → 30 s)
+  tippe "Pause umschalten" 1
+  pruefe liste-pause 4 "Pause 30 s"
   tippe "Test Drei"
   pruefe antippen-als-naechstes 5 "Danach" "Test Drei" "Rückgängig"
   tippe "Rückgängig"

@@ -155,7 +155,10 @@ private fun SetZeile(nr: Int, s: Song, e: Eintrag, aktuell: Boolean, status: Str
             Box(Modifier.width(26.dp), contentAlignment = Alignment.Center) { Symbol(Sym.PLAY, Weiss, 22.dp) }
             Column(Modifier.weight(1f)) {
                 PassenderTitel(s.titel, { textStil(it, Weiss, FontWeight.Bold) }, 22, 15)
-                T(status, textStil(15.sp, Weiss, FontWeight.Medium), zeilen = 1)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    T(status, textStil(15.sp, Weiss, FontWeight.Medium), Modifier.weight(1f, fill = false), zeilen = 1)
+                    PausenKaestchen(s, Weiss)
+                }
             }
             T(zeit(s.dauerMs), titelStil(22.sp, Weiss))
         }
@@ -170,19 +173,42 @@ private fun SetZeile(nr: Int, s: Song, e: Eintrag, aktuell: Boolean, status: Str
             if (e.gespielt) Box(Modifier.size(22.dp).clip(RoundedCornerShape(11.dp)).background(Schwarz), contentAlignment = Alignment.Center) { Symbol(Sym.HAKEN, Weiss, 13.dp) }
             else T("$nr", titelStil(22.sp))
         }
-        // Zweite Zeile nur, wenn etwas vom Üblichen abweicht: hält an, Ansage.
+        // Zweite Zeile: das Pausen-Kästchen (Tipp = nächste Pause), dazu Ansage und "hält an",
+        // wenn es vom Üblichen abweicht. Gespielte Songs zeigen nur den Titel.
         val haeltAn = haeltAnZeigen && e.ende == Ende.ANHALTEN
         val ansage = s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank()
+        val zeile2 = !e.gespielt || haeltAn || ansage
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-            T(s.titel, textStil(22.sp).copy(lineHeight = 24.sp), zeilen = if (haeltAn || ansage) 1 else 2, durchgestrichen = e.gespielt)
-            if (haeltAn || ansage) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (zeile2) PassenderTitel(s.titel, { textStil(it).copy(lineHeight = 24.sp) }, 22, 15, durchgestrichen = e.gespielt)
+            else T(s.titel, textStil(22.sp).copy(lineHeight = 24.sp), zeilen = 2, durchgestrichen = e.gespielt)
+            if (zeile2) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 if (ansage) Symbol(Sym.MIKRO, Schwarz, 15.dp)
+                if (!e.gespielt) PausenKaestchen(s, Schwarz)
                 if (haeltAn) Box(Modifier.border(1.5.dp, Schwarz, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) { T("hält an", textStil(14.sp, gewicht = FontWeight.Bold), zeilen = 1) }
             }
         }
         T(zeit(s.dauerMs), titelStil(20.sp, gewicht = FontWeight.SemiBold), Modifier.width(44.dp), zeilen = 1)
     }
     Linie(Modifier.padding(horizontal = 10.dp))
+}
+
+/**
+ * Jans Wunsch 15.11.: das kleine Pausen-Kästchen aus Fassung 5 (gleiche Größe), jetzt antippbar.
+ * Jeder Tipp: 10 s → 30 s → 1 min → 2 min → 0 s → 10 s. Die Tippfläche ist etwas größer als das
+ * Kästchen (unsichtbarer Rand), damit man es mit dem Finger sicher trifft.
+ */
+@Composable
+private fun PausenKaestchen(s: Song, farbe: androidx.compose.ui.graphics.Color) {
+    val p = s.pauseDanach
+    Box(
+        Modifier.semantics { contentDescription = "Pause umschalten" }
+            .tipp { App.ablage.aendern { it.songAendern(s.id) { x -> x.copy(pauseSek = pauseSpeichern(naechstePause(x.pauseDanach))) } } }
+            .padding(horizontal = 4.dp, vertical = 3.dp)
+    ) {
+        Box(Modifier.border(1.5.dp, farbe, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) {
+            T(if (p > 0) "Pause ${pauseText(p)}" else "ohne Pause", textStil(13.sp, farbe, FontWeight.Bold), zeilen = 1)
+        }
+    }
 }
 
 @Composable

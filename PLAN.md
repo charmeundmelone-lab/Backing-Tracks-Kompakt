@@ -756,5 +756,8 @@ kommt später. Jetzt umsetzen:
   6 nachts in Set 1 ergänzten Songs sind raus) über `eingang.json` mit `"ganz": true`; Stand davor
   auf dem Mudita als `bestand-vor-wiederherstellung-1794731333417.json` und in
   `.geraet/bestand-vor-sets-zurueck.json`.
+- [x] E6 Pausen-Kästchen in der normalen Setliste (Jan fand die Pausen in "Set bearbeiten" nicht):
+  kleines umrandetes Kästchen "Pause 30 s" wie in Fassung 5 (13 sp), unter jedem offenen Song und
+  beim laufenden Song; Tipp schaltet weiter (`PausenKaestchen`), unsichtbar vergrößerte Tippfläche.
 - [ ] E5 Menüführung schlanker (Jan: "zu viele Menüs, zwischen denen man hin und her schaltet"),
   später. Erst Vorschläge mit Favorit.
