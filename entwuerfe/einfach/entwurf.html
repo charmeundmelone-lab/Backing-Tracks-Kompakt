@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>TrikTrak einfach</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<!-- Entwurf "TrikTrak einfach" (2026-11-15): weniger Seiten, weniger Tipps, eine Regel.
+     360x600 wie der Kompakt (gerendert mit Faktor 1,333 = 480x800).
+     Ohne #: Übersicht aller Seiten. Mit #1 … #8: nur diese Seite (für die Einzelbilder).
+     Liedtext auf Seite 4 frei erfunden (Platzhalter). -->
+<style>
+  body{margin:0;background:#e9e9e9;font-family:'Barlow Semi Condensed','Arial Narrow',sans-serif}
+  *{box-sizing:border-box}
+  .raster{display:flex;flex-wrap:wrap;gap:28px;padding:24px}
+  figure{margin:0;display:flex;flex-direction:column;gap:10px;width:360px}
+  figcaption{font-size:19px;font-weight:600;line-height:1.25;color:#000}
+  figcaption b{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;display:block}
+  .einzeln{background:#fff}
+  .einzeln .raster{padding:0;gap:0}
+  .einzeln figcaption{display:none}
+  .einzeln figure{display:none}
+  .einzeln figure.an{display:flex}
+  .s{width:360px;height:600px;background:#fff;color:#000;display:flex;flex-direction:column;overflow:hidden;position:relative;outline:1px solid #bbb}
+  .einzeln .s{outline:none}
+  .et{font-size:15px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;line-height:1.1}
+  .ti{font-family:'Barlow Condensed',sans-serif;font-weight:700;line-height:1.02}
+  .kopf{background:#000;color:#fff;padding:10px 18px 12px;display:flex;flex-direction:column;gap:6px}
+  .zeilen{display:flex;align-items:flex-end;gap:8px}
+  .kaest{display:flex;gap:3px}.kaest span{flex:1;height:6px;border:1.5px solid #fff;border-radius:2px}.kaest span.v{background:#fff}
+  .kaest.sw span{border-color:#000}.kaest.sw span.v{background:#000}
+  .bar{display:flex;gap:8px;padding:4px 14px 14px;margin-top:auto}
+  .kn{flex:1;height:62px;border:2.5px solid #000;border-radius:14px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:#fff;font-size:15px;font-weight:700}
+  .kn.voll{background:#000;color:#fff}
+  .kn.gross{flex:1.6}
+  .kn.duenn{border-width:1.5px}
+  .box{border:2.5px solid #000;border-radius:14px;padding:6px 12px}
+  .chip{border:2px solid #000;border-radius:8px;padding:1px 7px;font-size:15px;font-weight:700;white-space:nowrap}
+  .chip.sw{background:#000;color:#fff}
+  .zeile{height:54px;margin:0 10px;padding:0 8px;border-bottom:1px solid #000;display:flex;align-items:center;gap:10px}
+  .nr{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:22px;width:24px;text-align:center}
+  .tt{font-size:22px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dauer{font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:20px}
+  .weisskn{background:#fff;color:#000;border-radius:10px;padding:6px 12px;font-size:17px;font-weight:700;display:flex;align-items:center;gap:6px}
+  .hinweis{margin:0 10px 8px;background:#000;color:#fff;border-radius:14px;padding:10px 14px;font-size:16px;font-weight:700;line-height:1.25;display:flex;align-items:center;gap:10px}
+  .hinweis u{text-decoration:none;border:2px solid #fff;border-radius:8px;padding:2px 8px;white-space:nowrap}
+  .klein{font-size:14px;font-weight:600}
+  .text{font-size:27px;line-height:1.14;font-weight:600}
+  .text p{margin:0}
+  .refrain{border-left:6px solid #000;padding-left:12px;font-weight:700}
+  .pille{height:32px;padding:0 13px;border-radius:16px;display:inline-flex;align-items:center;font-size:17px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;background:#000;color:#fff}
+  .karte{margin:5px 14px;border:2.5px solid #000;border-radius:14px;padding:8px 14px 10px;display:flex;flex-direction:column;gap:6px}
+  .karte.sw{background:#000;color:#fff}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="liste" viewBox="0 0 20 16"><path d="M2 2h16M2 8h16M2 14h16" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></symbol>
+    <symbol id="play" viewBox="0 0 20 22"><path d="M3 2 L18 11 L3 20 Z" fill="currentColor"/></symbol>
+    <symbol id="pause" viewBox="0 0 20 22"><rect x="3" y="2" width="5" height="18" rx="1.5" fill="currentColor"/><rect x="12" y="2" width="5" height="18" rx="1.5" fill="currentColor"/></symbol>
+    <symbol id="stop" viewBox="0 0 18 18"><rect x="2" y="2" width="14" height="14" rx="2" fill="currentColor"/></symbol>
+    <symbol id="weiter" viewBox="0 0 24 20"><path d="M2 2 L14 10 L2 18 Z" fill="currentColor"/><rect x="16" y="2" width="4" height="16" rx="1" fill="currentColor"/></symbol>
+    <symbol id="haken" viewBox="0 0 16 16"><path d="M2 8.5 L6.5 13 L14 3.5" stroke="currentColor" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="runter" viewBox="0 0 16 10"><path d="M2 2 L8 8 L14 2" stroke="currentColor" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="plus" viewBox="0 0 16 16"><path d="M8 2v12M2 8h12" stroke="currentColor" stroke-width="2.8" stroke-linecap="round"/></symbol>
+    <symbol id="links" viewBox="0 0 10 16"><path d="M8 2 L2 8 L8 14" stroke="currentColor" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="rechts" viewBox="0 0 10 16"><path d="M2 2 L8 8 L2 14" stroke="currentColor" stroke-width="2.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="buehne" viewBox="0 0 20 16"><path d="M2 2h16M2 8h11M2 14h14" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" fill="none"/></symbol>
+  </defs>
+</svg>
+
+<div class="raster">
+
+<!-- 1  Bühne: Set-Anfang, bereit (App öffnet am Gig-Tag direkt hier) -->
+<figure data-n="1">
+  <figcaption><b>1 · Öffnen = bühnenbereit</b>Am Gig-Tag öffnet TrikTrak gleich hier: erstes Set, erster Song bereit. Ein Tipp auf Play, los geht's.</figcaption>
+  <div class="s">
+    <div class="kopf">
+      <div class="zeilen"><span class="et" style="flex:1">Bereit · 1 / 8 · El Circo</span><span class="et">Länge</span><span class="ti" style="font-size:36px;line-height:.9">3:41</span></div>
+      <div class="ti" style="font-size:34px">Englishman in New York</div>
+      <div class="kaest"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+    <div style="display:flex;gap:12px;padding:12px 14px 4px">
+      <div class="box" style="flex:1"><div class="et">Kapo</div><div class="ti" style="font-size:44px">ohne</div></div>
+      <div class="box" style="flex:1"><div class="et">Tonart</div><div class="ti" style="font-size:44px">Em</div></div>
+    </div>
+    <div style="padding:12px 18px 2px;display:flex;align-items:center"><span class="et" style="flex:1">Danach</span><span class="chip">Pause 0:30</span></div>
+    <div class="zeile" style="height:52px;border-top:2.5px solid #000"><span class="nr">2</span><span class="tt" style="font-size:24px;font-weight:700">Landslide</span><span class="klein">Kapo 3</span></div>
+    <div class="zeile"><span class="nr">3</span><span class="tt">Crazy</span><span class="klein">Kapo 3</span></div>
+    <div class="zeile"><span class="nr">4</span><span class="tt">Valerie</span><span class="klein">Kapo 3</span></div>
+    <div class="bar">
+      <div class="kn"><svg width="20" height="16"><use href="#liste"/></svg>Liste</div>
+      <div class="kn voll gross"><svg width="24" height="26"><use href="#play"/></svg></div>
+      <div class="kn"><svg width="24" height="20"><use href="#weiter"/></svg><span style="font-size:14px">Überspringen</span></div>
+    </div>
+  </div>
+</figure>
+
+<!-- 2  Bühne: Song läuft, ohne Text (36 von 42 Songs) -->
+<figure data-n="2">
+  <figcaption><b>2 · Song läuft (ohne Text)</b>Statt leerer Fläche: was als Nächstes kommt. Antippen holt einen Song nach vorn. Unten nur noch drei Knöpfe.</figcaption>
+  <div class="s">
+    <div class="kopf">
+      <div class="zeilen"><span class="et" style="flex:1">Jetzt · 2 / 8</span><span class="et">noch</span><span class="ti" style="font-size:36px;line-height:.9">2:41</span></div>
+      <div class="ti" style="font-size:34px">Landslide</div>
+      <div class="kaest"><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+    <div style="padding:10px 18px 0;display:flex;gap:8px"><span class="chip">Kapo 3</span><span class="chip">D</span><span class="chip">80 BPM</span></div>
+    <div style="padding:14px 18px 0;display:flex;align-items:center"><span class="et" style="flex:1">Danach</span><span class="chip">Pause 0:30</span></div>
+    <div style="margin:4px 18px 0;border-top:2.5px solid #000;padding-top:6px;display:flex;align-items:baseline;gap:10px">
+      <span class="ti" style="font-size:32px;flex:1">Crazy</span><span class="klein">Kapo 3 · Cm</span>
+    </div>
+    <div style="padding:12px 18px 2px"><span class="et">Dann</span></div>
+    <div class="zeile" style="border-top:1px solid #000"><span class="nr">4</span><span class="tt">Valerie</span><span class="dauer">4:35</span></div>
+    <div class="zeile"><span class="nr">5</span><span class="tt">Thats alright Mama</span><span class="dauer">2:50</span></div>
+    <div class="zeile"><span class="nr">6</span><span class="tt">Dont look back in anger</span><span class="dauer">4:48</span></div>
+    <div class="klein" style="padding:6px 18px 0">Song antippen = kommt als Nächstes</div>
+    <div class="bar">
+      <div class="kn"><svg width="20" height="16"><use href="#liste"/></svg>Liste</div>
+      <div class="kn voll gross"><svg width="24" height="26"><use href="#pause"/></svg></div>
+      <div class="kn"><svg width="18" height="18"><use href="#stop"/></svg>Beenden</div>
+    </div>
+  </div>
+</figure>
+
+<!-- 3  Beenden mit Sicherung -->
+<figure data-n="3">
+  <figcaption><b>3 · Beenden ist abgesichert</b>Erster Tipp: Knopf wird schwarz. Zweiter Tipp: Song ist fertig, weiter wie am normalen Songende. Ein Fehltipp schadet nicht.</figcaption>
+  <div class="s">
+    <div class="kopf">
+      <div class="zeilen"><span class="et" style="flex:1">Jetzt · 2 / 8</span><span class="et">noch</span><span class="ti" style="font-size:36px;line-height:.9">0:12</span></div>
+      <div class="ti" style="font-size:34px">Landslide</div>
+      <div class="kaest"><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span></span></div>
+    </div>
+    <div style="padding:10px 18px 0;display:flex;gap:8px"><span class="chip">Kapo 3</span><span class="chip">D</span><span class="chip">80 BPM</span></div>
+    <div style="padding:14px 18px 0;display:flex;align-items:center"><span class="et" style="flex:1">Danach</span><span class="chip">Pause 0:30</span></div>
+    <div style="margin:4px 18px 0;border-top:2.5px solid #000;padding-top:6px;display:flex;align-items:baseline;gap:10px">
+      <span class="ti" style="font-size:32px;flex:1">Crazy</span><span class="klein">Kapo 3 · Cm</span>
+    </div>
+    <div style="padding:12px 18px 2px"><span class="et">Dann</span></div>
+    <div class="zeile" style="border-top:1px solid #000"><span class="nr">4</span><span class="tt">Valerie</span><span class="dauer">4:35</span></div>
+    <div style="margin-top:auto"></div>
+    <div class="hinweis">Nochmal auf „Beenden“ tippen: Pause 0:30, dann Crazy.</div>
+    <div class="bar" style="margin-top:0">
+      <div class="kn"><svg width="20" height="16"><use href="#liste"/></svg>Liste</div>
+      <div class="kn gross"><svg width="24" height="26"><use href="#pause"/></svg></div>
+      <div class="kn voll"><svg width="18" height="18"><use href="#stop"/></svg>Nochmal</div>
+    </div>
+  </div>
+</figure>
+
+<!-- 4  Bühne mit Text: wie heute, nur die Leiste wird einfacher -->
+<figure data-n="4">
+  <figcaption><b>4 · Song läuft (mit Text)</b>Die Textseite bleibt, wie sie ist. Nur die Leiste unten hat dieselben drei Knöpfe wie überall.</figcaption>
+  <div class="s">
+    <div class="kopf">
+      <div class="zeilen"><span class="et" style="flex:1">Jetzt · 8 / 8</span><span class="et">noch</span><span class="ti" style="font-size:36px;line-height:.9">1:58</span></div>
+      <div class="ti" style="font-size:34px">Two Princes</div>
+      <div class="kaest"><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span class="v"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+    <div style="padding:8px 12px 0 14px;display:flex;align-items:center;gap:8px"><span class="pille">Refrain</span><span style="margin-left:auto;font-size:16px;font-weight:600">dann <b class="et">Strophe 2</b></span></div>
+    <div class="text refrain" style="margin:6px 12px 0 14px">
+      <p>Wir fahren durch die Nacht</p>
+      <p>bis das Licht wieder lacht</p>
+      <p>und keiner fragt warum</p>
+      <p>wir drehen uns nicht um</p>
+    </div>
+    <div style="margin:auto 18px 0;border-top:2.5px solid #000;padding:6px 0 4px;display:flex;align-items:center"><span class="et" style="flex:1">Danach</span></div>
+    <div class="ti" style="font-size:28px;padding:0 18px 4px">Set zu Ende</div>
+    <div class="bar" style="margin-top:0">
+      <div class="kn"><svg width="20" height="16"><use href="#liste"/></svg>Liste</div>
+      <div class="kn voll gross"><svg width="24" height="26"><use href="#pause"/></svg></div>
+      <div class="kn"><svg width="18" height="18"><use href="#stop"/></svg>Beenden</div>
+    </div>
+  </div>
+</figure>
+
+<!-- 5  Setliste live -->
+<figure data-n="5">
+  <figcaption><b>5 · Liste: eine Regel</b>Song antippen = kommt als Nächstes dran, dann zurück zur Bühne. Kein Zwischenmenü. Gespielte rutschen weg, oben steht, was kommt.</figcaption>
+  <div class="s">
+    <div class="kopf" style="padding-bottom:10px">
+      <span class="et">El Circo · 1 von 8 gespielt · noch 30 Min</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="ti" style="font-size:30px;flex:1;display:flex;align-items:center;gap:8px">Set 1 <svg width="18" height="12" style="color:#fff"><use href="#runter"/></svg></span>
+        <span class="weisskn"><svg width="18" height="14"><use href="#buehne"/></svg>Bühne</span>
+      </div>
+    </div>
+    <div style="margin:6px 10px 2px;height:54px;background:#000;color:#fff;border-radius:12px;display:flex;align-items:center;gap:10px;padding:0 10px">
+      <svg width="18" height="20" style="color:#fff"><use href="#play"/></svg>
+      <div style="flex:1"><div style="font-size:22px;font-weight:700">Landslide</div><div class="klein">läuft · noch 2:41</div></div>
+    </div>
+    <div class="zeile"><span class="nr">3</span><span class="tt">Crazy</span><span class="dauer">4:04</span></div>
+    <div class="zeile"><span class="nr">4</span><span class="tt">Valerie</span><span class="dauer">4:35</span></div>
+    <div class="zeile"><span class="nr">5</span><span class="tt">Thats alright Mama</span><span class="dauer">2:50</span></div>
+    <div class="zeile"><span class="nr">6</span><span class="tt">Dont look back in anger</span><span class="dauer">4:48</span></div>
+    <div class="zeile"><span class="nr">7</span><span class="tt">I want it that way</span><span class="dauer">3:33</span></div>
+    <div class="zeile"><span class="nr">8</span><span class="tt">Two Princes</span><span class="chip">Text</span><span class="dauer">4:17</span></div>
+    <div class="zeile" style="border-bottom:none;gap:8px"><span style="width:22px;height:22px;border-radius:11px;background:#000;color:#fff;display:flex;align-items:center;justify-content:center"><svg width="12" height="12"><use href="#haken"/></svg></span><span class="klein" style="flex:1;font-size:16px">1 gespielt: Englishman in New York</span></div>
+    <div class="bar">
+      <div class="kn" style="flex:.55"><svg width="10" height="16"><use href="#links"/></svg></div>
+      <div class="kn" style="flex-direction:row;gap:8px;font-size:18px"><svg width="16" height="16"><use href="#plus"/></svg>Wunschsong</div>
+      <div class="kn voll" style="flex:.55"><svg width="10" height="16"><use href="#rechts"/></svg></div>
+    </div>
+  </div>
+</figure>
+
+<!-- 6  Pause -->
+<figure data-n="6">
+  <figcaption><b>6 · Pause</b>Knöpfe, die ganz lesbar sind. „Anderer Song“ tauscht nur den Song, der Countdown läuft weiter.</figcaption>
+  <div class="s">
+    <div class="kopf" style="padding:12px 18px">
+      <span class="et">Zwischen den Songs</span>
+      <span class="ti" style="font-size:26px">Stille Pause</span>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px">
+      <span class="et">Weiter in</span>
+      <span class="ti" style="font-size:96px;line-height:.9">0:24</span>
+      <div class="kaest sw" style="width:250px"><span class="v"></span><span class="v"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+    </div>
+    <div style="margin:0 18px;border-top:2.5px solid #000;padding-top:8px">
+      <span class="et">Als Nächstes · 3 / 8 · 4:04</span>
+      <div class="ti" style="font-size:34px">Crazy</div>
+    </div>
+    <div style="display:flex;gap:12px;padding:8px 18px 10px">
+      <div class="box" style="flex:1"><div class="et">Kapo</div><div class="ti" style="font-size:40px">3</div></div>
+      <div class="box" style="flex:1"><div class="et">Tonart</div><div class="ti" style="font-size:40px">Cm</div></div>
+    </div>
+    <div style="padding:0 14px 8px"><div class="kn voll" style="height:58px;flex-direction:row;gap:10px;font-size:21px"><svg width="20" height="22"><use href="#play"/></svg>Jetzt starten</div></div>
+    <div class="bar" style="margin-top:0;padding-top:0">
+      <div class="kn" style="height:52px;font-size:18px">Anderer Song</div>
+      <div class="kn" style="height:52px;font-size:18px">Anhalten</div>
+    </div>
+  </div>
+</figure>
+
+<!-- 7  Sets (Tipp auf "Set 1 ▾") -->
+<figure data-n="7">
+  <figcaption><b>7 · Set wechseln</b>Nur über den Set-Namen. Läuft ein Song, beginnt das andere Set erst danach. Gigs und Archiv liegen hier hinten, weg von der Bühne.</figcaption>
+  <div class="s">
+    <div class="kopf" style="padding-bottom:10px">
+      <span class="et">El Circo · Sa 14.11.</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="ti" style="font-size:30px;flex:1">Sets</span>
+        <span class="weisskn"><svg width="18" height="14"><use href="#buehne"/></svg>Bühne</span>
+      </div>
+    </div>
+    <div class="karte sw" style="margin-top:12px">
+      <div style="display:flex;align-items:center"><span class="ti" style="font-size:25px;flex:1">1 · Set 1</span><span class="et">läuft</span></div>
+      <div class="kaest"><span class="v"></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <span style="font-size:15px">1 von 8 · noch 30 Min</span>
+    </div>
+    <div class="karte">
+      <div style="display:flex;align-items:center"><span class="ti" style="font-size:25px;flex:1">2 · Set 2</span></div>
+      <div class="kaest sw"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <span style="font-size:15px">9 Songs · 38 Min · beginnt mit Jolene</span>
+    </div>
+    <div class="karte">
+      <div style="display:flex;align-items:center"><span class="ti" style="font-size:25px;flex:1">3 · Set 3</span></div>
+      <div class="kaest sw"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div>
+      <span style="font-size:15px">8 Songs · 33 Min</span>
+    </div>
+    <div class="klein" style="padding:8px 18px 0;font-size:15px">Während ein Song läuft: Das gewählte Set beginnt nach diesem Song.</div>
+    <div class="bar">
+      <div class="kn" style="font-size:18px">Set bearbeiten</div>
+      <div class="kn duenn" style="font-size:18px">Gigs &amp; Archiv</div>
+    </div>
+  </div>
+</figure>
+
+<!-- 8  Set bearbeiten (Vorbereiten) -->
+<figure data-n="8">
+  <figcaption><b>8 · Vorbereiten ist getrennt</b>Pausen, Ansagen, Mixer, Umstellen: alles hier, nicht auf der Bühne. Antippen öffnet die Einstellungen des Songs.</figcaption>
+  <div class="s">
+    <div class="kopf" style="padding-bottom:10px">
+      <span class="et">Set 1 · 8 Songs · 32 Min</span>
+      <div style="display:flex;align-items:center;gap:10px">
+        <span class="ti" style="font-size:30px;flex:1">Bearbeiten</span>
+        <span class="weisskn">Fertig</span>
+      </div>
+    </div>
+    <div class="zeile" style="margin-top:6px"><span class="nr">1</span><span class="tt">Englishman in New York</span><span class="klein">0:30</span></div>
+    <div class="zeile"><span class="nr">2</span><span class="tt">Landslide</span><span class="klein">0:30</span></div>
+    <div class="zeile"><span class="nr">3</span><span class="tt">Crazy</span><span class="klein">0:30</span></div>
+    <div class="zeile"><span class="nr">4</span><span class="tt">Valerie</span><span class="klein">0:30</span></div>
+    <div class="zeile"><span class="nr">5</span><span class="tt">Thats alright Mama</span><span class="klein">1:00</span></div>
+    <div class="zeile"><span class="nr">6</span><span class="tt">Dont look back in anger</span><span class="klein">0:30</span></div>
+    <div class="zeile"><span class="nr">7</span><span class="tt">I want it that way</span><span class="klein">0:30</span></div>
+    <div class="klein" style="padding:6px 18px 0">Zahl rechts = Pause danach · Antippen = Einstellungen</div>
+    <div class="bar">
+      <div class="kn" style="flex-direction:row;gap:8px;font-size:18px"><svg width="16" height="16"><use href="#plus"/></svg>Songs</div>
+      <div class="kn" style="font-size:18px">Umstellen</div>
+      <div class="kn voll" style="flex:.5"><svg width="10" height="16"><use href="#rechts"/></svg></div>
+    </div>
+  </div>
+</figure>
+
+</div>
+<script>
+  const n = location.hash.slice(1);
+  if (n) {
+    document.body.classList.add('einzeln');
+    document.querySelectorAll('figure').forEach(f => f.classList.toggle('an', f.dataset.n === n));
+  }
+</script>
+</body>
+</html>
