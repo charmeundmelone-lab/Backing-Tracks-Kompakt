@@ -5,6 +5,7 @@
 #   sh werkzeug/geraet.sh tap "Text" [n] Element mit genau diesem Text antippen (n = n-ter Treffer)
 #   sh werkzeug/geraet.sh shot name      Bildschirmfoto nach .geraet/name.png
 #   sh werkzeug/geraet.sh key 25|24      Lautstärke runter/hoch = in TrikTrak vor/zurück blättern
+#   sh werkzeug/geraet.sh wisch "Text" rechts|links   über die Zeile mit diesem Text wischen
 #   sh werkzeug/geraet.sh xy X Y         Tipp auf Koordinate (nur wenn nötig)
 ADB="$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe"
 D="-s LD20241004967"
@@ -37,7 +38,26 @@ print('%d %d'%hits[n] if len(hits)>n else '')
 " "$2" "${3:-0}")
     if [ -z "$xy" ]; then echo "NICHT GEFUNDEN: $2"; exit 1; fi
     "$ADB" $D shell input tap $xy; echo "tap $2 @ $xy" ;;
+  wisch)
+    # wisch "Text" rechts|links [n]: über die Zeile mit diesem Text wischen (Hauptbildschirm, 15.11.).
+    dump
+    y=$(py -I -X utf8 -c "
+import re,sys
+x=open(r'$W/ui.xml',encoding='utf-8').read()
+t=sys.argv[1]; n=int(sys.argv[2])
+hits=[]
+for m in re.finditer(r'<node [^>]*>',x):
+  a=m.group(0)
+  tx=re.search(r' text=\"([^\"]*)\"',a)
+  if tx and tx.group(1)==t:
+    b=re.search(r'bounds=\"\[(\d+),(\d+)\]\[(\d+),(\d+)\]\"',a)
+    hits.append((int(b.group(2))+int(b.group(4)))//2)
+print(hits[n] if len(hits)>n else '')
+" "$2" "${4:-0}")
+    if [ -z "$y" ]; then echo "NICHT GEFUNDEN: $2"; exit 1; fi
+    case "$3" in rechts) von=60; bis=420 ;; *) von=420; bis=60 ;; esac
+    "$ADB" $D shell input swipe $von $y $bis $y 350; echo "wisch $2 $3 @ $y" ;;
   xy) "$ADB" $D shell input tap $2 $3 ;;
   key) "$ADB" $D shell input keyevent $2 ;;
-  *) sed -n 2,8p "$0" ;;
+  *) sed -n 2,9p "$0" ;;
 esac

@@ -76,6 +76,9 @@ import kotlin.math.abs
 private const val REITER_SET = 0
 private const val REITER_ARCHIV = 1
 
+/** Gewählter Reiter, solange die App läuft (die Seite selbst verschwindet, wenn eine andere oben liegt). */
+object HauptZustand { var reiter by androidx.compose.runtime.mutableIntStateOf(REITER_SET) }
+
 /** Ungefähre Höhe der Player-Leiste: Hinweise erscheinen knapp darüber. */
 val PLAYER_HOEHE = 190.dp
 
@@ -88,7 +91,8 @@ private val WISCH_VERSATZ = 170.dp
 fun HauptSeite(navi: Navi) {
     val b by App.ablage.stand.collectAsState()
     val z by App.buehne.zustand.collectAsState()
-    var reiter by rememberSaveable { mutableIntStateOf(REITER_SET) }
+    // Der Reiter bleibt gewählt, auch wenn man kurz eine andere Seite öffnet (Einstellungen, Rückfrage).
+    var reiter by HauptZustand::reiter
     var klappe by remember { mutableStateOf(false) }
     val set = b.set(z.setId)
     val gig = b.gigVonSet(z.setId)

@@ -87,6 +87,12 @@ tippe_zweimal() {
   $G xy $xy >/dev/null
 }
 
+# wische "Text" rechts|links: über die Zeile mit diesem Text wischen (Hauptbildschirm).
+wische() {
+  vorne || abbruch "TrikTrak ist nicht vorne."
+  $G wisch "$1" "$2" >/dev/null || { echo "FEHLT Zeile „$1“"; FEHLER=$((FEHLER + 1)); BERICHT="$BERICHT|FEHLT Zeile $1"; return 1; }
+}
+
 # pruefe NAME VERSUCHE TEXT…: warten, Foto, Ergebnis merken.
 pruefe() {
   name=$1; shift; v=$1; shift
@@ -132,77 +138,76 @@ ablauf() {
   adbs shell am force-stop $PKG
   adbs shell monkey -p $PKG -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
 
-  # 1 Öffnen am Gig-Tag = gleich bühnenbereit
-  pruefe start 10 "Test Eins" "Bereit" "Kapo" "Weiter"
+  # Hauptbildschirm wie die alte App (15.11. abends): Reiter Set/Archiv, Player-Leiste, Wischen.
+  # 1 Öffnen am Gig-Tag = Hauptbildschirm, erstes Set, erster Song bereit
+  pruefe start 10 "Set A" "Archiv" "Test Eins" "Bereit" "Test Zwei" "Als Nächstes" "Abspielen"
   vorne || abbruch "TrikTrak kam nicht nach vorne (Bildschirm gesperrt?)."
   # 2 Play, dann anhalten (die Testsongs sind nur 8 s lang)
   tippe "Abspielen"; tippe "Pause"
-  pruefe angespielt 5 "Test Eins" "Beenden" "Danach" "Test Zwei"
-  # 3 Liste: eine Regel
-  tippe "Zur Setliste"
-  pruefe liste 5 "Set A" "Wunschsong" "Test Zwei" "Test Drei"
-  # Pausen-Kästchen in der Setliste: Tipp schaltet weiter (Test Zwei: 20 s → 30 s)
-  tippe "Pause umschalten" 1
-  pruefe liste-pause 4 "Pause 30 s"
-  tippe "Test Drei"
-  pruefe antippen-als-naechstes 5 "Danach" "Test Drei" "Rückgängig"
+  pruefe angespielt 5 "Angehalten" "Test Eins" "Song beenden" "Test Zwei"
+  # 3 Pausen-Kästchen: Tipp schaltet weiter (Test Zwei: 20 s → 30 s)
+  tippe "Pause umschalten"
+  pruefe pause-kaestchen 4 "Pause 30 s"
+  # 4 Wischen nach links = ans Ende, dann Rückgängig
+  wische "Test Zwei" links
+  pruefe wisch-links 5 "Test Zwei“ steht jetzt am Ende" "Rückgängig"
   tippe "Rückgängig"
   pruefe rueckgaengig 5 "Zurückgenommen"
-  # 4 Beenden mit zweitem Tipp
+  # 5 Wischen nach rechts = kommt als Nächstes
+  wische "Test Drei" rechts
+  pruefe wisch-rechts 5 "Test Drei“ kommt als Nächstes" "Rückgängig"
+  # 6 Antippen = Einstellungen (startet keine Musik)
+  tippe "Test Zwei"
+  pruefe antippen-karte 5 "Test Zwei" "0 s" "10 s" "30 s" "1 min" "2 min"
+  tippe "Schließen"
+  # 7 Beenden mit zweitem Tipp, dann Pause in der Leiste
   tippe "Song beenden"
-  pruefe beenden-erster-tipp 4 "Nochmal" "Pause 20 s"
+  pruefe beenden-erster-tipp 4 "Nochmal"
   # Nach 4 s klappt der Knopf wieder zurück: abwarten, dann beide Tipps direkt hintereinander.
   v=8; while [ $v -gt 0 ] && texte | grep -q "Nochmal"; do v=$((v - 1)); done
   tippe_zweimal "Song beenden"
-  pruefe pause-seite 5 "Stille Pause" "Test Zwei" "Jetzt starten" "Anderer Song" "Anhalten"
-  # 5 In der Pause anderer Song: Countdown läuft weiter
-  tippe "Anderer Song"
-  pruefe liste-in-pause 5 "kommt nach der Pause" "Test Drei"
-  tippe "Test Drei"
-  pruefe pause-mit-anderem-song 5 "Stille Pause" "Test Drei" "Rückgängig"
+  pruefe pause-leiste 5 "Pause · gleich" "Test Drei" "Jetzt starten" "Anhalten"
+  # 8 In der Pause nach rechts wischen: ersetzt den wartenden Song, Countdown läuft weiter
+  wische "Test Zwei" rechts
+  pruefe pause-anderer-song 5 "kommt nach der Pause" "Jetzt starten"
   # Die Testpause ist kurz (20 s): ist sie schon abgelaufen, läuft der Song von selbst.
   texte | grep -qF "Jetzt starten" && tippe "Jetzt starten"; tippe "Pause"
-  pruefe jetzt-starten 5 "Test Drei" "Beenden"
-  # 6 Set wechseln während ein Song läuft: beginnt erst danach
-  tippe "Zur Setliste"; tippe "Set A"
-  pruefe sets 5 "Set B" "Set A"
-  tippe "2 · Set B"
-  pruefe set-danach 5 "beginnt nach diesem Song" "Danach · Set B"
+  pruefe jetzt-starten 5 "Test Zwei" "Song beenden"
+  # 9 Set wechseln über den Set-Reiter, während ein Song läuft: beginnt erst danach
+  tippe "Set A"
+  pruefe set-klappe 5 "Sets · Testlauf" "Set B" "Set bearbeiten" "Alle Gigs"
+  tippe "Set B"
+  pruefe set-danach 5 "Nach diesem Song beginnt „Set B“"
   tippe "Abspielen"
   pruefe set-b-bereit 15 "Set B" "Bereit · 1 / 2" "Test Drei"
-  # 7 Wunschsong aus dem Archiv
-  tippe "Zur Setliste"; tippe "Wunschsong"
-  pruefe archiv-wunsch 5 "Wunschsong für Set B" "Antippen = als Nächstes"
-  tippe "tippen zum Springen"; tippe "T"
-  tippe "Take on Me"
-  pruefe wunsch-bereit 5 "Take on Me" "Bereit" "Rückgängig"
-  # 8 Lautstärketaste auf der Bühne ohne Text: nichts passiert, Bühne bleibt
+  # 10 Reiter Archiv: nach rechts wischen = liegt bereit
+  tippe "Archiv"
+  pruefe archiv 5 "Wischen plant in „Set B“ ein" "Langsam" "springen"
+  fuss=$(texte | grep -o "^A–Z · Seite [^[]* springen" | head -1)
+  tippe "$fuss"; tippe "T"
+  wische "Take on Me" rechts
+  pruefe archiv-wisch-rechts 5 "Take on Me" "liegt bereit" "Rückgängig"
+  # 11 Lautstärketaste blättert im Archiv; schon eingeplant = Rückfrage
   $G key 25 >/dev/null
-  pruefe lautstaerketaste 4 "Take on Me" "Bereit"
-  # 9 Vorbereiten ist getrennt: Set bearbeiten
-  tippe "Zur Setliste"; tippe "Set B"; tippe "Set-Menü" 1
-  tippe "Set bearbeiten"
-  pruefe set-bearbeiten 5 "Bearbeiten" "Umstellen" "Songs" "20 s" "dann weiter"
-  # 10 Pause mit einem Tipp umschalten (Take on Me steht auf 30 s): 1 min, 2 min, 0 s, 10 s
-  tippe "Pause umschalten"
-  pruefe pause-umschalten 4 "1 min"
-  tippe "Pause umschalten"; tippe "Pause umschalten"; tippe "Pause umschalten"
-  pruefe pause-rundum 4 "10 s" "20 s"
-  # 11 Karte: fünf Pausen-Knöpfe, Titel ganz
-  tippe "Take on Me"
-  pruefe karte-pausen 5 "Take on Me" "0 s" "10 s" "30 s" "1 min" "2 min"
-  tippe "Schließen"
-  # 12 Schon im Gig: grau, Rückfrage vor dem Einplanen
-  tippe "Songs"
-  pruefe archiv-songs-dazu 5 "Songs dazu für"
-  tippe "tippen zum Springen"; tippe "T"
-  pruefe archiv-grau 5 "Take on Me" "eingeplant · Set B"
-  $G key 25 >/dev/null   # eine Seite weiter (Lautstärke leiser = vor)
   warte 5 "Test Zwei" >/dev/null
-  tippe "Test Zwei"
-  pruefe rueckfrage 5 "Nochmal einplanen?" "Test Zwei" "Ja, auch hier" "Abbrechen"
+  wische "Test Zwei" links
+  pruefe rueckfrage 5 "Nochmal einplanen?" "Test Zwei" "Ja, ans Ende" "Abbrechen"
   tippe "Abbrechen"
-  pruefe abbrechen 5 "Songs dazu für"
+  pruefe abbrechen 5 "Archiv" "Langsam"
+  # 12 Text-Ansicht: öffnet über die Leiste, geht am Songende von selbst zurück
+  tippe "Set B"
+  wische "Test Eins" rechts
+  pruefe text-knopf 5 "Test Eins" "Bereit" "Text zeigen"
+  tippe "Text zeigen"
+  pruefe text-ansicht 5 "Test Eins" "Liste"
+  tippe "Abspielen"
+  pruefe zurueck-nach-songende 20 "Archiv" "Set B"
+  # 13 Vorbereiten: Set bearbeiten über die Set-Klappe
+  tippe "Set B"
+  tippe "Set bearbeiten"
+  pruefe set-bearbeiten 5 "Bearbeiten" "Umstellen" "Songs"
+  tippe "Fertig"
+  pruefe zurueck-haupt 5 "Archiv" "Set B"
 
   aufraeumen
   bericht
