@@ -31,8 +31,9 @@ Ablauf-Code.
 
 ## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:55; Nachtrag D unten drüber)
 
-**Neu 15.11. (Arbeitsliste D, PLAN.md): "TrikTrak einfach", Fassung 6 (versionCode 6, Commit
-bf40890), gebaut, Tests grün, NOCH NICHT INSTALLIERT.** Jan fand El Circo beim Spielen
+**Neu 15.11. (Arbeitsliste D, PLAN.md): "TrikTrak einfach", Fassung 6 (versionCode 6), auf dem
+Mudita INSTALLIERT (15.11. ~02:00, Stand nach D10), `testlauf.sh ablauf` 17/17 OK.** Rückweg:
+`.geraet/fassung5-2026-11-14.apk`. Offen D11: Jan probiert selbst mit echtem Set und Ton. Jan fand El Circo beim Spielen
 unübersichtlich und will Weltklasse-Bedienung bei mindestens gleicher Lesbarkeit. Kern: eine
 Regel "Antippen = kommt als Nächstes" (Setliste, Bühne, Wunschsong), Bühne mit drei Knöpfen
 (Liste · Play/Pause · Beenden mit zweitem Tipp), Set-Wechsel nur nach dem laufenden Song,
@@ -40,8 +41,11 @@ Regel "Antippen = kommt als Nächstes" (Setliste, Bühne, Wunschsong), Bühne mi
 `files/protokoll.txt`. Auswahlseite SongWahl ist weg. Entwurf: `entwuerfe/einfach/`.
 **Testen jetzt mit `sh werkzeug/testlauf.sh`** (`bauen` · `installieren` nur mit Jans Ja ·
 `ablauf` = Testmodus mit Spielwiese, tippt alle Live-Abläufe durch, Fotos + `.geraet/testlauf/uebersicht.html`,
-vergleicht Jans `bestand.json` vorher/nachher). Nächster Schritt D10: Jans Ja holen, installieren,
-`ablauf` laufen lassen, Fotos prüfen, nachbessern, bis es "ein absoluter Traum" ist (Jans Auftrag).
+vergleicht Jans `bestand.json` vorher/nachher; ca. 3 Min.). Das Skript bricht ab, wenn TrikTrak
+hörbar spielt (prüft die Tonausgabe, nicht den Dienst: der bleibt nach dem Anhalten bestehen) oder
+eine andere App vorne ist. Nach jeder Änderung an der Bedienung: `bauen`, `installieren` (Ja!),
+`ablauf`, Fotos ansehen, neue Abläufe als Schritte ins Skript. Jans Auftrag bleibt: "prüfe und
+verbessere, bis die App ein absoluter Traum ist".
 
 **Stand in einem Satz:** Arbeitsliste B fertig bis auf B7 (Jan bedient die Werkstatt selbst)
 und einen Test mit einer wirklich neuen Datei; Arbeitsliste C (C1–C6, Ende von PLAN.md) fertig.

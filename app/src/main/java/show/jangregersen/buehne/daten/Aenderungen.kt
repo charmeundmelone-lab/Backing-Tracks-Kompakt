@@ -29,9 +29,17 @@ fun Bestand.setAendern(setId: Long, f: (SetListe) -> SetListe): Bestand =
 fun Bestand.eintragAendern(setId: Long, songId: Long, f: (Eintrag) -> Eintrag): Bestand =
     setAendern(setId) { s -> s.copy(eintraege = s.eintraege.map { if (it.songId == songId) f(it) else it }) }
 
+/**
+ * Songende, das in diesem Set üblich ist (bei Gleichstand Automatik, denn der letzte Song eines
+ * Automatik-Sets hält oft an). Neue Songs bekommen es (15.11.): Ein
+ * Wunschsong in einem Set mit Show-Automatik darf die Automatik nicht anhalten.
+ */
+fun SetListe.ueblichesEnde(): Int =
+    eintraege.count { it.ende == Ende.WEITER }.let { w -> if (w > 0 && w >= eintraege.size - w) Ende.WEITER else Ende.ANHALTEN }
+
 fun Bestand.songsHinzufuegen(setId: Long, songIds: List<Long>): Bestand = setAendern(setId) { s ->
     val schon = s.eintraege.map { it.songId }.toSet()
-    s.copy(eintraege = s.eintraege + songIds.filterNot { it in schon }.map { Eintrag(it) })
+    s.copy(eintraege = s.eintraege + songIds.filterNot { it in schon }.map { Eintrag(it, ende = s.ueblichesEnde()) })
 }
 
 fun Bestand.ausSetNehmen(setId: Long, songId: Long): Bestand =
@@ -129,7 +137,7 @@ fun Bestand.testlauf(heute: Long): Bestand {
  */
 fun Bestand.vorziehen(setId: Long, songId: Long, aktuellId: Long?, laeuft: Boolean): Bestand = setAendern(setId) { s ->
     if (songId == aktuellId) return@setAendern s
-    val e = (s.eintraege.firstOrNull { it.songId == songId } ?: Eintrag(songId)).copy(gespielt = false)
+    val e = (s.eintraege.firstOrNull { it.songId == songId } ?: Eintrag(songId, ende = s.ueblichesEnde())).copy(gespielt = false)
     val rest = s.eintraege.filterNot { it.songId == songId }.toMutableList()
     val anker = rest.indexOfFirst { it.songId == aktuellId }
     val idx = when {
@@ -161,6 +169,6 @@ fun Bestand.einfuegenNach(setId: Long, songId: Long, nachId: Long?): Bestand = s
     val l = s.eintraege.toMutableList()
     val anker = l.indexOfFirst { it.songId == nachId }
     val idx = if (anker >= 0) anker + 1 else l.indexOfFirst { !it.gespielt }.let { if (it < 0) l.size else it }
-    l.add(idx, Eintrag(songId))
+    l.add(idx, Eintrag(songId, ende = s.ueblichesEnde()))
     s.copy(eintraege = l)
 }

@@ -722,4 +722,10 @@ Entwurf: `entwuerfe/einfach/` (8 Seiten, Bilder in `bilder/`), von Jan angenomme
 - [x] D9 Testlauf-Skript `werkzeug/testlauf.sh` + Testmodus (`files/testmodus` → test-bestand.json,
   Spielwiese `Bestand.testlauf`, Jans Daten unberührt, vorher/nachher-Vergleich). Symbol-Knöpfe
   haben jetzt Namen (contentDescription), damit das Skript sie findet.
-- [ ] D10 Installieren (Jans Ja) und `testlauf.sh ablauf` am Gerät, Fotos prüfen, nachbessern.
+- [x] D10 Installiert (Jans Ja), drei Testläufe am Gerät. Nachgebessert: angehaltener Song heißt
+  "Angehalten · noch m:ss"; Rückgängig im Danach-Block bzw. bei "Als Nächstes"; Bühnen-Hinweise
+  über "Danach" (verdeckten Kapo/Countdown); Wunschsong-Liste klar beschriftet; Pause-Seite ohne
+  doppelte Zeile; neue Songs übernehmen das übliche Songende des Sets (`ueblichesEnde`, sonst hätte
+  ein Wunschsong die Automatik gestoppt). Letzter Lauf: 17/17 OK, Jans Daten unverändert.
+- [ ] D11 Jan probiert Fassung 6 selbst (mit echtem Set, mit Ton). Ungetestet am Gerät: Bühne mit
+  echtem Text während der Wiedergabe, Ansagen, Start am Gig-Tag mit einem neuen Gig.

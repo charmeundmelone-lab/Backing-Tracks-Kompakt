@@ -178,7 +178,7 @@ ablauf() {
   # 9 Vorbereiten ist getrennt: Set bearbeiten
   tippe "Zur Setliste"; tippe "Set B"; tippe "Set-Menü" 1
   tippe "Set bearbeiten"
-  pruefe set-bearbeiten 5 "Bearbeiten" "Umstellen" "Songs" "0:20"
+  pruefe set-bearbeiten 5 "Bearbeiten" "Umstellen" "Songs" "0:20" "weiter"
   tippe "Fertig"
 
   aufraeumen

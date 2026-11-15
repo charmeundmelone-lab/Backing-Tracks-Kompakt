@@ -186,10 +186,8 @@ private fun Meldungen(navi: Navi) {
     val h = z.hinweis
     if (h != null) {
         val buehne = navi.oben == Seite.Buehne || navi.oben is Seite.ProbeBuehne
-        Column(
-            Modifier.fillMaxSize().padding(top = if (buehne) 136.dp else 0.dp, bottom = if (buehne) 0.dp else 104.dp),
-            verticalArrangement = if (buehne) Arrangement.Top else Arrangement.Bottom
-        ) {
+        // Bühne: über "Danach" (dort ist meist Platz frei); oben säßen Kapo und Tonart darunter.
+        Column(Modifier.fillMaxSize().padding(bottom = if (buehne) 196.dp else 104.dp), verticalArrangement = Arrangement.Bottom) {
             Box(Modifier.fillMaxWidth().padding(horizontal = 10.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz).padding(14.dp)) {
                 T(h, textStil(17.sp, Weiss, FontWeight.Bold), zeilen = 3)
             }

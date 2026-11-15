@@ -17,6 +17,8 @@ import show.jangregersen.buehne.daten.eintragAendern
 import show.jangregersen.buehne.daten.vorziehen
 import show.jangregersen.buehne.daten.wasKommt
 import show.jangregersen.buehne.daten.testlauf
+import show.jangregersen.buehne.daten.setAendern
+import show.jangregersen.buehne.daten.Ende
 import show.jangregersen.buehne.lyrics.Abschnitte
 
 class LogikTest {
@@ -99,6 +101,16 @@ class LogikTest {
         assertEquals(false, b.set(100)!!.eintraege.first { it.songId == 1L }.gespielt)
         // Der laufende Song selbst ändert nichts.
         assertEquals(ids(b), ids(b.vorziehen(100, 3, 3, laeuft = true)))
+    }
+
+    @Test fun wunschsongUebernimmtAutomatikDesSets() {
+        // Set mit Show-Automatik (letzter Song hält an): ein Wunschsong darf die Automatik nicht stoppen.
+        var b = bestand().setAendern(100) { s -> s.copy(eintraege = s.eintraege.mapIndexed { i, e -> e.copy(ende = if (i < 4) Ende.WEITER else Ende.ANHALTEN) }) }
+        b = b.copy(songs = b.songs + Song(9, "Wunsch", pfad = "p9")).vorziehen(100, 9, 2, laeuft = true)
+        assertEquals(Ende.WEITER, b.set(100)!!.eintraege.first { it.songId == 9L }.ende)
+        // Set ohne Automatik: neuer Song hält an wie alle.
+        val c = bestand().copy(songs = bestand().songs + Song(9, "Wunsch", pfad = "p9")).vorziehen(100, 9, 2, laeuft = true)
+        assertEquals(Ende.ANHALTEN, c.set(100)!!.eintraege.first { it.songId == 9L }.ende)
     }
 
     @Test fun testlaufSpielwiese() {
