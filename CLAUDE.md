@@ -29,7 +29,19 @@ Ablauf-Code.
   Dateien lesen, am Gerät meist `geraet.sh texte` statt Fotos.
 - Das Repo ist **öffentlich**: nie Songtexte, `bestand.json` oder Jans Daten einchecken.
 
-## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:55)
+## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:55; Nachtrag D unten drüber)
+
+**Neu 15.11. (Arbeitsliste D, PLAN.md): "TrikTrak einfach", Fassung 6 (versionCode 6, Commit
+bf40890), gebaut, Tests grün, NOCH NICHT INSTALLIERT.** Jan fand El Circo beim Spielen
+unübersichtlich und will Weltklasse-Bedienung bei mindestens gleicher Lesbarkeit. Kern: eine
+Regel "Antippen = kommt als Nächstes" (Setliste, Bühne, Wunschsong), Bühne mit drei Knöpfen
+(Liste · Play/Pause · Beenden mit zweitem Tipp), Set-Wechsel nur nach dem laufenden Song,
+"Set bearbeiten" getrennt (⋯ am Set), Start am Gig-Tag direkt auf der Bühne, Abend-Protokoll
+`files/protokoll.txt`. Auswahlseite SongWahl ist weg. Entwurf: `entwuerfe/einfach/`.
+**Testen jetzt mit `sh werkzeug/testlauf.sh`** (`bauen` · `installieren` nur mit Jans Ja ·
+`ablauf` = Testmodus mit Spielwiese, tippt alle Live-Abläufe durch, Fotos + `.geraet/testlauf/uebersicht.html`,
+vergleicht Jans `bestand.json` vorher/nachher). Nächster Schritt D10: Jans Ja holen, installieren,
+`ablauf` laufen lassen, Fotos prüfen, nachbessern, bis es "ein absoluter Traum" ist (Jans Auftrag).
 
 **Stand in einem Satz:** Arbeitsliste B fertig bis auf B7 (Jan bedient die Werkstatt selbst)
 und einen Test mit einer wirklich neuen Datei; Arbeitsliste C (C1–C6, Ende von PLAN.md) fertig.
