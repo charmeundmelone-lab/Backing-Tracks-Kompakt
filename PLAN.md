@@ -735,10 +735,13 @@ Entwurf: `entwuerfe/einfach/` (8 Seiten, Bilder in `bilder/`), von Jan angenomme
 Jan: "Im Prinzip läuft es gar nicht schlecht." Menüführung noch hakelig (zu viele Seiten), das
 kommt später. Jetzt umsetzen:
 
-- [x] E1 Pausen schnell umschalten: nur noch 10 s · 30 s · 1 min · 2 min, ohne Eintrag gelten
-  10 s (`PAUSE_WAHL`, `Song.pauseDanach`, `naechstePause`). Einstellungen-Karte und Bearbeiten:
-  vier Knöpfe nebeneinander (`PausenWahl`). "Set bearbeiten": Pausen-Knopf rechts in jeder Zeile,
-  ein Tipp schaltet weiter. Automatik nimmt immer die Pause des fertigen Songs (früher bei 0 die
+- [x] E1 Pausen schnell umschalten: 0 s · 10 s · 30 s · 1 min · 2 min, jeder Song ohne Eintrag
+  10 s (Jans Nachtrag: "0 Sekunden kann auch noch mit rein, standardmäßig 10"). Gespeichert:
+  0 = kein Eintrag (10 s), -1 = `KEINE_PAUSE` (0 s), sonst Sekunden, damit alte Daten ohne
+  Umschreiben gelten (`PAUSE_WAHL`, `Song.pauseDanach`, `pauseSpeichern`, `naechstePause`;
+  Werkstatt-Spielzeit nimmt `pauseDanach`). Einstellungen-Karte und Bearbeiten:
+  fünf Knöpfe nebeneinander (`PausenWahl`). "Set bearbeiten": Pausen-Knopf rechts in jeder Zeile,
+  ein Tipp schaltet weiter (10 s → 30 s → 1 min → 2 min → 0 s → 10 s). Automatik nimmt immer die Pause des fertigen Songs (früher bei 0 die
   des nächsten). Jans Daten 15.11.: 11× 0 (→ 10 s), 24× 30 s, 7× 1 min.
 - [x] E2 Songtitel immer ganz sichtbar, Zeile gleich hoch (`PassenderTitel`: Schrift wird kleiner
   statt "…" oder Umbruch). Einstellungen-Karte 30→18 sp, Bearbeiten, Archiv, Setliste (laufender

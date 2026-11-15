@@ -11,6 +11,8 @@ import show.jangregersen.buehne.daten.SetListe
 import show.jangregersen.buehne.daten.Song
 import show.jangregersen.buehne.daten.alsNaechstes
 import show.jangregersen.buehne.daten.naechstePause
+import show.jangregersen.buehne.daten.KEINE_PAUSE
+import show.jangregersen.buehne.daten.pauseSpeichern
 import show.jangregersen.buehne.daten.pauseDanach
 import show.jangregersen.buehne.daten.schonImGig
 import show.jangregersen.buehne.daten.wiederholungsFrage
@@ -81,11 +83,14 @@ class LogikTest {
 
     private fun ids(b: Bestand) = b.set(100)!!.eintraege.map { it.songId }
 
-    /** Jans Wunsch 15.11.: Pausen 10 s / 30 s / 1 min / 2 min, ohne Eintrag 10 s. */
+    /** Jans Wunsch 15.11.: Pausen 0 s / 10 s / 30 s / 1 min / 2 min, ohne Eintrag 10 s. */
     @Test fun pausenUmschalten() {
         assertEquals(10, Song(1, "A", pfad = "p").pauseDanach)
         assertEquals(60, Song(1, "A", pfad = "p", pauseSek = 60).pauseDanach)
-        assertEquals(listOf(30, 60, 120, 10), listOf(10, 30, 60, 120).map { naechstePause(it) })
+        assertEquals(0, Song(1, "A", pfad = "p", pauseSek = KEINE_PAUSE).pauseDanach)
+        assertEquals(KEINE_PAUSE, pauseSpeichern(0))
+        assertEquals(30, pauseSpeichern(30))
+        assertEquals(listOf(30, 60, 120, 0, 10), listOf(10, 30, 60, 120, 0).map { naechstePause(it) })
         assertEquals(60, naechstePause(45))
     }
 

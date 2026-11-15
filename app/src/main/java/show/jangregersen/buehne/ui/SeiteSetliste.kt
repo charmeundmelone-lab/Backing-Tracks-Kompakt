@@ -35,6 +35,7 @@ import show.jangregersen.buehne.daten.PAUSE_WAHL
 import show.jangregersen.buehne.daten.dauerMs
 import show.jangregersen.buehne.daten.naechstePause
 import show.jangregersen.buehne.daten.pauseDanach
+import show.jangregersen.buehne.daten.pauseSpeichern
 import show.jangregersen.buehne.daten.schieben
 import show.jangregersen.buehne.daten.songAendern
 import show.jangregersen.buehne.daten.verschieben
@@ -201,17 +202,17 @@ private fun GespieltZeile(gespielt: List<Eintrag>, songs: List<Song>, onClick: (
 }
 
 fun pauseText(sek: Int): String = when {
-    sek <= 0 -> "keine"
+    sek <= 0 -> "0 s"
     sek < 60 -> "$sek s"
     sek % 60 == 0 -> "${sek / 60} min"
     else -> "%d:%02d min".format(sek / 60, sek % 60)
 }
 
-/** Die vier Pausen als Knopfreihe (Jans Wahl 15.11.). Steht ein alter Wert drin, ist keiner gewählt. */
+/** Die fünf Pausen als Knopfreihe (Jans Wahl 15.11.). Steht ein alter Wert drin, ist keiner gewählt. */
 @Composable
 fun PausenWahl(song: Song, modifier: Modifier = Modifier, hoehe: androidx.compose.ui.unit.Dp = 50.dp) {
-    Segmente(PAUSE_WAHL.map { pauseText(it) }, PAUSE_WAHL.indexOf(song.pauseDanach), modifier, hoehe = hoehe, groesse = 18.sp) { i ->
-        App.ablage.aendern { it.songAendern(song.id) { s -> s.copy(pauseSek = PAUSE_WAHL[i]) } }
+    Segmente(PAUSE_WAHL.map { pauseText(it) }, PAUSE_WAHL.indexOf(song.pauseDanach), modifier, hoehe = hoehe, groesse = 17.sp) { i ->
+        App.ablage.aendern { it.songAendern(song.id) { s -> s.copy(pauseSek = pauseSpeichern(PAUSE_WAHL[i])) } }
     }
 }
 
@@ -271,12 +272,12 @@ private fun BearbeitenZeile(nr: Int, s: Song, e: Eintrag, onClick: () -> Unit) {
                 T(if (e.ende == Ende.WEITER) "dann weiter" else "hält an", textStil(13.sp, gewicht = FontWeight.Bold), zeilen = 1)
             }
         }
-        // Jans Wunsch 15.11.: Pause mit einem Tipp umschalten, 10 s → 30 s → 1 min → 2 min → 10 s.
+        // Jans Wunsch 15.11.: Pause mit einem Tipp umschalten, 10 s → 30 s → 1 min → 2 min → 0 s → 10 s.
         val form = RoundedCornerShape(12.dp)
         Box(
             Modifier.width(78.dp).height(48.dp).clip(form).border(2.5.dp, Schwarz, form)
                 .semantics { contentDescription = "Pause umschalten" }
-                .tipp { App.ablage.aendern { it.songAendern(s.id) { x -> x.copy(pauseSek = naechstePause(x.pauseDanach)) } } },
+                .tipp { App.ablage.aendern { it.songAendern(s.id) { x -> x.copy(pauseSek = pauseSpeichern(naechstePause(x.pauseDanach))) } } },
             contentAlignment = Alignment.Center
         ) {
             T(pauseText(s.pauseDanach), titelStil(22.sp), zeilen = 1)

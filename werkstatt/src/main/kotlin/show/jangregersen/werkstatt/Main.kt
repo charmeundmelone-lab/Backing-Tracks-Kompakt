@@ -5,6 +5,7 @@ import com.sun.net.httpserver.HttpServer
 import org.json.JSONArray
 import org.json.JSONObject
 import show.jangregersen.buehne.daten.Song
+import show.jangregersen.buehne.daten.pauseDanach
 import show.jangregersen.buehne.lyrics.Abgleich
 import show.jangregersen.buehne.lyrics.Ablauf
 import show.jangregersen.buehne.lyrics.Abschnitte
@@ -369,7 +370,7 @@ private fun gigCheck(): JSONObject = JSONObject().put("gigs", JSONArray(arbeit.b
                 .put("teile", l.size).put("eingemessen", l.count { it.eingemessen }).put("vorlaeufig", s.markenVorlaeufig)
                 .put("geaendert", s.id in arbeit.geaendert)
                 // Ungefähre Länge auf der Bühne: Song, Ansagen und stille Pause danach.
-                .put("buehneMs", s.dauerMs + s.ansageVorherMs + s.ansageNachherMs + s.pauseSek * 1000L)
+                .put("buehneMs", s.dauerMs + s.ansageVorherMs + s.ansageNachherMs + s.pauseDanach * 1000L)
         }))
     }))
 }))

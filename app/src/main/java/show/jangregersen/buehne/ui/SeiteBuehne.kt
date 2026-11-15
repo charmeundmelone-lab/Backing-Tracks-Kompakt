@@ -151,7 +151,8 @@ fun BuehneSeite(navi: Navi) {
             naechster == null -> "Dann ist das Set zu Ende."
             endeHier == Ende.ANHALTEN -> "Dann liegt „${naechster.titel}“ bereit."
             song.ansageNachher.isNotBlank() || naechster.ansageVorher.isNotBlank() -> "Dann Ansage und „${naechster.titel}“."
-            else -> "Dann Pause ${pauseText(song.pauseDanach)} und „${naechster.titel}“."
+            song.pauseDanach > 0 -> "Dann Pause ${pauseText(song.pauseDanach)} und „${naechster.titel}“."
+            else -> "Dann startet gleich „${naechster.titel}“."
         }
         Column(Modifier.fillMaxSize().padding(bottom = 84.dp), verticalArrangement = Arrangement.Bottom) {
             Box(Modifier.fillMaxWidth().padding(horizontal = 10.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz).tipp { bestaetigen = false }.padding(14.dp)) {
@@ -268,7 +269,8 @@ private fun DanachBlock(naechster: Song?, aktuell: Song, ende: Int, setEnde: Boo
                     ende == Ende.ANHALTEN -> Sym.STOP to "hält an"
                     aktuell.ansageNachher.isNotBlank() -> Sym.MIKRO to "Ansage ${zeit(aktuell.ansageNachherMs)}"
                     naechster.ansageVorher.isNotBlank() -> Sym.MIKRO to "Ansage ${zeit(naechster.ansageVorherMs)}"
-                    else -> null to "Pause ${pauseText(aktuell.pauseDanach)}"
+                    aktuell.pauseDanach > 0 -> null to "Pause ${pauseText(aktuell.pauseDanach)}"
+                    else -> null to "ohne Pause"
                 }
                 Row(
                     Modifier.border(2.dp, Schwarz, RoundedCornerShape(10.dp)).padding(horizontal = 9.dp, vertical = 3.dp),
