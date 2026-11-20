@@ -49,7 +49,9 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,7 +87,7 @@ object HauptZustand {
 }
 
 /** Ungefähre Höhe der Player-Leiste: Hinweise erscheinen knapp darüber. */
-val PLAYER_HOEHE = 190.dp
+val PLAYER_HOEHE = 160.dp
 
 /** So weit muss der Finger waagerecht wandern, bis ein Wischen zählt. */
 private val WISCH_SCHWELLE = 64.dp
@@ -146,8 +148,8 @@ fun HauptSeite(navi: Navi) {
 @Composable
 private fun HauptKopf(ober: String, setName: String, reiter: Int, klappe: Boolean, onSet: () -> Unit, onArchiv: () -> Unit) {
     Column(
-        Modifier.fillMaxWidth().background(Schwarz).padding(start = 10.dp, end = 10.dp, top = 7.dp, bottom = 10.dp),
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        Modifier.fillMaxWidth().background(Schwarz).padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 7.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Etikett(ober, Modifier.padding(start = 4.dp), Weiss)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -164,7 +166,7 @@ private fun HauptKopf(ober: String, setName: String, reiter: Int, klappe: Boolea
 private fun Reiter(modifier: Modifier, an: Boolean, onClick: () -> Unit, inhalt: @Composable RowScope.(Color) -> Unit) {
     val form = RoundedCornerShape(12.dp)
     Row(
-        modifier.height(44.dp).clip(form).background(if (an) Weiss else Schwarz).border(2.5.dp, Weiss, form)
+        modifier.height(40.dp).clip(form).background(if (an) Weiss else Schwarz).border(2.5.dp, Weiss, form)
             .tipp(onClick = onClick).padding(horizontal = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
@@ -203,9 +205,9 @@ private fun SetBereich(navi: Navi, setId: Long) {
             }
         }
         SeitenListe(
-            eintraege = kommt + gespielt, zeilenHoehe = 64.dp, modifier = Modifier.weight(1f), schluessel = "haupt$setId·$besuch",
-            fussHoehe = FUSS_HOEHE, oben = 8.dp,
-            fuss = { s, n, _, zur, vor -> SeitenFuss(s, n, zur, vor, if (n > 1) "Seite ${s + 1} von $n · hoch/runter wischen" else null) },
+            eintraege = kommt + gespielt, zeilenHoehe = SET_ZEILE, modifier = Modifier.weight(1f), schluessel = "haupt$setId·$besuch",
+            fussHoehe = 0.dp, oben = 2.dp, seitenPunkte = true,
+            fuss = { _, _, _, _, _ -> },
             leer = { T("Alle Songs sind gespielt.", titelStil(24.sp), Modifier.padding(18.dp)) }
         ) { _, e ->
             val s = b.song(e.songId) ?: return@SeitenListe
@@ -230,73 +232,75 @@ private fun SetBereich(navi: Navi, setId: Long) {
     }
 }
 
-/** Eine Zeile der Setliste, Aussehen wie Fassung 7. [naechster]: schwarzes Schild „Als Nächstes“ und dicke Linie darunter. */
+// ── Zeilen der Setliste (20.11., Jan: lieber 5 Songs pro Seite, dafür besser lesbar) ─────────
+// Der Titel hat die Zeile für sich und steht mittig (Unterlängen stoßen nirgends an).
+// Rechts stehen Länge und Pause übereinander; endet hier die Automatik, steht dort „hält an“.
+
+/** Höhe jeder Zeile im Reiter „Set“ (SeitenListe braucht eine feste Höhe). */
+private val SET_ZEILE = 64.dp
+
+/** Kleines Schild mit Rand (z. B. „hält an“), so flach wie möglich. */
 @Composable
-private fun LiveZeile(nr: Int, s: Song, e: Eintrag, naechster: Boolean, haeltAnZeigen: Boolean, onClick: () -> Unit) {
-    Box(Modifier.fillMaxWidth().height(64.dp)) {
-        Row(
-            Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(63.dp)
-                .tipp(onClick = onClick).padding(start = 8.dp, end = 10.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Box(Modifier.width(26.dp), contentAlignment = Alignment.Center) {
-                if (e.gespielt) Box(Modifier.size(22.dp).clip(RoundedCornerShape(11.dp)).background(Schwarz), contentAlignment = Alignment.Center) { Symbol(Sym.HAKEN, Weiss, 13.dp) }
-                // Der nächste Song: Nummer schwarz hinterlegt, damit man ihn auch ohne Schild sofort findet.
-                else if (naechster) Box(Modifier.size(28.dp).clip(RoundedCornerShape(7.dp)).background(Schwarz), contentAlignment = Alignment.Center) { T("$nr", titelStil(21.sp, Weiss), zeilen = 1) }
-                else T("$nr", titelStil(22.sp))
-            }
-            // Zweite Zeile: das Pausen-Kästchen (Tipp = nächste Pause), dazu Ansage und "hält an",
-            // wenn es vom Üblichen abweicht. Gespielte Songs zeigen nur den Titel.
-            val haeltAn = haeltAnZeigen && e.ende == Ende.ANHALTEN
-            val ansage = s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank()
-            val zeile2 = !e.gespielt || haeltAn || ansage
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                if (zeile2) PassenderTitel(s.titel, { textStil(it) }, 22, 15, durchgestrichen = e.gespielt)
-                else T(s.titel, textStil(22.sp).copy(lineHeight = 24.sp), zeilen = 2, durchgestrichen = e.gespielt)
-                if (zeile2) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (ansage) Symbol(Sym.MIKRO, Schwarz, 15.dp)
-                    if (!e.gespielt) PausenKaestchen(s, Schwarz)
-                    if (haeltAn) Box(Modifier.border(1.5.dp, Schwarz, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) { T("hält an", textStil(14.sp, gewicht = FontWeight.Bold), zeilen = 1) }
-                    // Das Schild nur, wenn es ganz hinpasst (neben "hält an" oder Ansage wäre es abgeschnitten).
-                    if (naechster && !haeltAn && !ansage) Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Schwarz).padding(horizontal = 6.dp, vertical = 1.dp)) {
-                        T("NÄCHSTER", etikettStil(Weiss, 12.sp), zeilen = 1)
-                    }
-                }
-            }
-            T(zeit(s.dauerMs), titelStil(20.sp, gewicht = FontWeight.SemiBold), Modifier.width(44.dp), zeilen = 1)
-        }
-        Linie(Modifier.align(Alignment.BottomCenter).padding(horizontal = 10.dp), dicke = if (naechster) 2.5.dp else 1.dp)
+private fun Schildchen(text: String, farbe: Color) {
+    // Normale Zeilenhöhe (sonst kappt der Rahmen die Buchstaben), dafür keine Luft im Rahmen.
+    Box(Modifier.border(1.5.dp, farbe, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp)) {
+        T(text, textStil(14.sp, farbe, FontWeight.Bold), zeilen = 1)
     }
 }
 
-/** Der Song, der jetzt dran ist (läuft oder liegt bereit): schwarz hinterlegt mit „JETZT“, gleich hoch wie die anderen Zeilen. */
+/** Mitte einer Zeile: Mikro (wenn es eine Ansage gibt) und der Titel, eine Zeile, notfalls kleiner. */
 @Composable
-private fun JetztZeile(nr: Int, s: Song, e: Eintrag, haeltAnZeigen: Boolean, onClick: () -> Unit) {
-    Box(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 6.dp, vertical = 2.dp)) {
+private fun RowScope.TitelMitte(s: Song, farbe: Color, fett: Boolean, durchgestrichen: Boolean) {
+    Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        if (s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank()) Symbol(Sym.MIKRO, farbe, 15.dp)
+        PassenderTitel(s.titel, { if (fett) titelStil(it, farbe) else textStil(it, farbe) }, 30, 18, Modifier.weight(1f), durchgestrichen = durchgestrichen)
+    }
+}
+
+/** Rechts: Länge, darunter die Pause danach (Tipp = nächste Pause) bzw. „hält an“. */
+@Composable
+private fun LaengeUndPause(s: Song, e: Eintrag, haeltAn: Boolean, farbe: Color) {
+    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        T(zeit(s.dauerMs), titelStil(24.sp, farbe, FontWeight.SemiBold).knapp(), zeilen = 1, ueberlauf = TextOverflow.Visible)
+        if (!e.gespielt) { if (haeltAn) Schildchen("hält an", farbe) else PausenKaestchen(s, farbe, kompakt = true) }
+    }
+}
+
+/** Eine Zeile der Setliste: Nummer · Titel · Länge mit Pause darunter. */
+@Composable
+private fun LiveZeile(nr: Int, s: Song, e: Eintrag, naechster: Boolean, haeltAnZeigen: Boolean, onClick: () -> Unit) {
+    Box(Modifier.fillMaxWidth().height(SET_ZEILE)) {
         Row(
-            Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)).background(Schwarz)
-                .tipp(onClick = onClick).padding(start = 12.dp, end = 14.dp),
+            Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(SET_ZEILE - 1.dp)
+                .tipp(onClick = onClick).padding(start = 8.dp, end = 10.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Box(Modifier.size(28.dp).clip(RoundedCornerShape(7.dp)).background(Weiss), contentAlignment = Alignment.Center) {
-                T("$nr", titelStil(21.sp), zeilen = 1)
+            Box(Modifier.width(30.dp), contentAlignment = Alignment.Center) {
+                if (e.gespielt) Box(Modifier.size(26.dp).clip(RoundedCornerShape(13.dp)).background(Schwarz), contentAlignment = Alignment.Center) { Symbol(Sym.HAKEN, Weiss, 13.dp) }
+                else T("$nr", titelStil(26.sp).knapp(), zeilen = 1, ueberlauf = TextOverflow.Visible)
             }
-            val haeltAn = haeltAnZeigen && e.ende == Ende.ANHALTEN
-            val ansage = s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank()
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-                PassenderTitel(s.titel, { titelStil(it, Weiss) }, 23, 15)
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    Box(Modifier.clip(RoundedCornerShape(6.dp)).background(Weiss).padding(horizontal = 6.dp, vertical = 1.dp)) {
-                        T("JETZT", etikettStil(Schwarz, 12.sp), zeilen = 1)
-                    }
-                    if (ansage) Symbol(Sym.MIKRO, Weiss, 15.dp)
-                    PausenKaestchen(s, Weiss)
-                    if (haeltAn) Box(Modifier.border(1.5.dp, Weiss, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) {
-                        T("hält an", textStil(14.sp, Weiss, FontWeight.Bold), zeilen = 1)
-                    }
-                }
+            TitelMitte(s, Schwarz, fett = false, durchgestrichen = e.gespielt)
+            LaengeUndPause(s, e, haeltAnZeigen && e.ende == Ende.ANHALTEN, Schwarz)
+        }
+        Linie(Modifier.align(Alignment.BottomCenter).padding(horizontal = 10.dp))
+    }
+}
+
+/** Der Song, der jetzt dran ist (läuft oder liegt bereit): schwarz hinterlegt, gleich hoch wie die anderen Zeilen. */
+@Composable
+private fun JetztZeile(nr: Int, s: Song, e: Eintrag, haeltAnZeigen: Boolean, onClick: () -> Unit) {
+    Box(Modifier.fillMaxWidth().height(SET_ZEILE).padding(start = 6.dp, end = 12.dp, top = 1.dp, bottom = 1.dp)) {
+        Row(
+            Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)).background(Schwarz)
+                .semantics { contentDescription = "Jetzt dran" }
+                .tipp(onClick = onClick).padding(start = 12.dp, end = 8.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(Weiss), contentAlignment = Alignment.Center) {
+                T("$nr", titelStil(25.sp).knapp(), zeilen = 1, ueberlauf = TextOverflow.Visible)
             }
-            T(zeit(s.dauerMs), titelStil(20.sp, Weiss, FontWeight.SemiBold), Modifier.width(44.dp), zeilen = 1)
+            TitelMitte(s, Weiss, fett = true, durchgestrichen = false)
+            LaengeUndPause(s, e.copy(gespielt = false), haeltAnZeigen && e.ende == Ende.ANHALTEN, Weiss)
         }
     }
 }
@@ -466,10 +470,10 @@ private fun ArchivBereich(navi: Navi, setId: Long?) {
     if (sprung) { Sprung(songs) { i -> if (i >= 0) zeige = Zeige(i); sprung = false }; return }
     Column(Modifier.fillMaxSize()) {
         // 20.11. (Jan: "mehr Songs im Archiv ist gut"): schmalere Tempo-Leiste und kompakte Zeilen.
-        Segmente(listOf("Alle", "Langsam", "Mittel", "Schnell"), tempo, Modifier.padding(start = 10.dp, end = 10.dp, top = 5.dp), hoehe = 32.dp, groesse = 15.sp) { tempo = it }
+        Segmente(listOf("Alle", "Langsam", "Mittel", "Schnell"), tempo, Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp), hoehe = 30.dp, groesse = 15.sp) { tempo = it }
         val merk = "hauptarchiv$tempo"
         SeitenListe(
-            eintraege = songs, zeilenHoehe = 48.dp, modifier = Modifier.weight(1f), schluessel = merk, zeige = zeige, oben = 2.dp,
+            eintraege = songs, zeilenHoehe = 47.dp, modifier = Modifier.weight(1f), schluessel = merk, zeige = zeige, oben = 2.dp,
             fussHoehe = FUSS_HOEHE,
             fuss = { s, n, pro, zur, vor ->
                 val erster = songs.getOrNull(SeitenGedaechtnis.seiten[merk] ?: (s * pro))
@@ -494,7 +498,7 @@ private fun ArchivBereich(navi: Navi, setId: Long?) {
 
 // ── Seitenfuß: schmal, damit möglichst viele Songs Platz haben ───────────────
 
-private val FUSS_HOEHE = 30.dp
+private val FUSS_HOEHE = 26.dp
 
 @Composable
 private fun SeitenFuss(seite: Int, seiten: Int, zurueck: () -> Unit, vor: () -> Unit, text: String?, onMitte: (() -> Unit)? = null) {
@@ -536,42 +540,48 @@ private fun PlayerLeiste(navi: Navi) {
         else -> b.song(set?.naechsterNach(song.id)?.songId)
     }
 
-    Column(Modifier.fillMaxWidth().background(Schwarz).padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 12.dp)) {
-        // Zeile 1: Zustand links, Zeit rechts. Feste Höhen überall: In der Leiste springt nichts.
-        Row(Modifier.fillMaxWidth().height(38.dp), verticalAlignment = Alignment.Bottom) {
+    // 20.11. kompakt: Zustand und Kapo/Tonart (bzw. Fortschritt) stehen links übereinander neben
+    // der großen Zeit, statt je eine eigene Zeile zu belegen. Schriftgrößen wie vorher.
+    Column(Modifier.fillMaxWidth().background(Schwarz).padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 10.dp)) {
+        // Zeile 1: links Zustand, darunter Kapo/Tonart bzw. Fortschritt; rechts die Zeit. Feste Höhen: nichts springt.
+        Row(Modifier.fillMaxWidth().height(52.dp), verticalAlignment = Alignment.CenterVertically) {
             val wort = when {
                 song == null -> "Nichts bereit"
                 pause != null -> "${pause.art} · gleich${platz?.let { " $it" } ?: ""}"
                 z.probe -> "Probe"
                 else -> (if (z.spielt) "Läuft" else if (angefangen) "Angehalten" else "Bereit") + (platz?.let { " · $it" } ?: "")
             }
-            Etikett(wort, Modifier.weight(1f).padding(bottom = 4.dp), Weiss)
-            if (song != null && pause != null) T(zeit(pause.restSek * 1000L), zeitStil(40.sp), zeilen = 1)
-            else if (song != null) {
-                Etikett(if (angespielt) "noch" else "Länge", Modifier.padding(end = 8.dp, bottom = 4.dp), Weiss)
-                Restzeit(song, z.dauerMs, angespielt)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Etikett(wort, farbe = Weiss)
+                Box(Modifier.fillMaxWidth().height(27.dp), contentAlignment = Alignment.CenterStart) {
+                    if (song != null && angespielt && pause == null) Fortschritt(song, z.dauerMs)
+                    else if (song != null) KapoChips(song)
+                }
+            }
+            Abstand(12.dp)
+            Row(verticalAlignment = Alignment.Bottom) {
+                if (song != null && pause != null) T(zeit(pause.restSek * 1000L), zeitStil(40.sp), zeilen = 1)
+                else if (song != null) {
+                    Etikett(if (angespielt) "noch" else "Länge", Modifier.padding(end = 8.dp, bottom = 5.dp), Weiss)
+                    Restzeit(song, z.dauerMs, angespielt)
+                }
             }
         }
-        // Zeile 2: Fortschritt des jetzigen Songs, solange er läuft; sonst seine Kapo und Tonart zum Vorbereiten.
-        Box(Modifier.fillMaxWidth().height(24.dp), contentAlignment = Alignment.CenterStart) {
-            if (song != null && angespielt && pause == null) Fortschritt(song, z.dauerMs)
-            else if (song != null) KapoChips(song)
-        }
-        // Zeile 3: was danach kommt, groß, immer ganz, notfalls kleiner.
-        Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (song == null) T(if (z.setDurch != null) "Set zu Ende" else "Set wählen", titelStil(28.sp, Weiss), zeilen = 1)
+        // Zeile 2: was danach kommt, groß, immer ganz, notfalls kleiner.
+        Row(Modifier.fillMaxWidth().height(36.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (song == null) PassenderTitel(if (z.setDurch != null) "Set zu Ende" else "Set wählen", { titelStil(it, Weiss).knapp() }, 28, 18)
             else {
                 Etikett("Danach", farbe = Weiss)
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
                     when {
-                        danach != null && folgeSet != null -> PassenderTitel("${folgeSet.name}: ${danach.titel}", { titelStil(it, Weiss) }, 28, 18)
-                        danach != null -> PassenderTitel(danach.titel, { titelStil(it, Weiss) }, 31, 18)
-                        else -> T("Set-Ende", titelStil(28.sp, Weiss), zeilen = 1)
+                        danach != null && folgeSet != null -> PassenderTitel("${folgeSet.name}: ${danach.titel}", { titelStil(it, Weiss).knapp() }, 28, 18)
+                        danach != null -> PassenderTitel(danach.titel, { titelStil(it, Weiss).knapp() }, 31, 18)
+                        else -> PassenderTitel("Set-Ende", { titelStil(it, Weiss).knapp() }, 28, 18)
                     }
                 }
             }
         }
-        Abstand(6.dp)
+        Abstand(4.dp)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             // Text nur, wenn es einen gibt; in der Pause zwischen den Songs nicht (dann zählt der Countdown).
             val textDa = song?.lyrics?.isNotBlank() == true && pause == null
@@ -639,7 +649,7 @@ private fun Fortschritt(song: Song, dauerMs: Long) {
 private fun KapoChips(song: Song) {
     Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         listOf(if (song.kapo > 0) "Kapo ${song.kapo}" else "Kapo ohne", song.tonart.ifBlank { "–" }).forEach { t ->
-            Box(Modifier.border(2.dp, Weiss, RoundedCornerShape(7.dp)).padding(horizontal = 8.dp, vertical = 1.dp)) {
+            Box(Modifier.border(2.dp, Weiss, RoundedCornerShape(7.dp)).padding(horizontal = 8.dp)) {
                 T(t, textStil(16.sp, Weiss, FontWeight.Bold), zeilen = 1)
             }
         }
@@ -656,7 +666,7 @@ private fun LeistenKnopf(modifier: Modifier, voll: Boolean = false, aktiv: Boole
     val vorne = (if (hell) Schwarz else Weiss).let { if (aktiv) it else it.copy(alpha = 0.4f) }
     val form = RoundedCornerShape(13.dp)
     Column(
-        modifier.height(58.dp).clip(form).background(if (hell && aktiv) Weiss else Schwarz).border(2.5.dp, rand, form)
+        modifier.height(54.dp).clip(form).background(if (hell && aktiv) Weiss else Schwarz).border(2.5.dp, rand, form)
             .clickable(interactionSource = quelle, indication = null, enabled = aktiv, onClickLabel = beschreibung, onClick = onClick)
             .semantics { contentDescription = beschreibung },
         horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center

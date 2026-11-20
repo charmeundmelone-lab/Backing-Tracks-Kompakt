@@ -1,6 +1,14 @@
 package show.jangregersen.buehne.ui
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -40,6 +48,8 @@ fun <T> SeitenListe(
     zeige: Zeige? = null,
     fussHoehe: Dp = 78.dp,
     oben: Dp = 4.dp,
+    /** Statt einer Fußzeile kleine Seitenpunkte am rechten Rand (Hauptbildschirm, 20.11.). */
+    seitenPunkte: Boolean = false,
     fuss: @Composable (seite: Int, seiten: Int, proSeite: Int, zurueck: () -> Unit, vor: () -> Unit) -> Unit = { s, n, _, z, v -> Blaetterleiste(s, n, z, v) },
     leer: @Composable () -> Unit = {},
     zeile: @Composable (index: Int, eintrag: T) -> Unit
@@ -77,6 +87,14 @@ fun <T> SeitenListe(
             }
             Spacer(Modifier.weight(1f))
             fuss(seite, seiten, pro, zurueck, vor)
+        }
+        if (seitenPunkte && seiten in 2..12) Column(
+            Modifier.align(Alignment.CenterEnd).padding(end = 2.dp), verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            repeat(seiten) { i ->
+                val form = RoundedCornerShape(2.dp)
+                Box(Modifier.size(7.dp).clip(form).then(if (i == seite) Modifier.background(Schwarz) else Modifier.border(1.5.dp, Schwarz, form)))
+            }
         }
     }
 }

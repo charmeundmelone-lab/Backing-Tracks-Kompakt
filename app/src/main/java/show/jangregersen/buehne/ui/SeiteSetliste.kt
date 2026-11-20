@@ -47,15 +47,25 @@ import show.jangregersen.buehne.daten.wasKommt
  * Kästchen (unsichtbarer Rand), damit man es mit dem Finger sicher trifft.
  */
 @Composable
-fun PausenKaestchen(s: Song, farbe: androidx.compose.ui.graphics.Color) {
+fun PausenKaestchen(s: Song, farbe: androidx.compose.ui.graphics.Color, kompakt: Boolean = false) {
     val p = s.pauseDanach
+    // kompakt (Hauptbildschirm, 20.11.): gleiche Schrift, kurz als Pausenzeichen + Dauer ("‖ 30 s"),
+    // ohne Luft darüber/darunter; steht rechtsbündig unter der Songlänge.
+    val stil = textStil(13.sp, farbe, FontWeight.Bold)
     Box(
         Modifier.semantics { contentDescription = "Pause umschalten" }
             .tipp { App.ablage.aendern { it.songAendern(s.id) { x -> x.copy(pauseSek = pauseSpeichern(naechstePause(x.pauseDanach))) } } }
-            .padding(end = 8.dp, top = 3.dp, bottom = 3.dp)
+            .padding(end = if (kompakt) 0.dp else 8.dp, top = if (kompakt) 0.dp else 3.dp, bottom = if (kompakt) 0.dp else 3.dp)
     ) {
-        Box(Modifier.border(1.5.dp, farbe, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) {
-            T(if (p > 0) "Pause ${pauseText(p)}" else "ohne Pause", textStil(13.sp, farbe, FontWeight.Bold), zeilen = 1)
+        if (kompakt) Row(
+            Modifier.border(1.5.dp, farbe, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Symbol(Sym.PAUSE, farbe, 10.dp)
+            T(if (p > 0) pauseText(p) else "0 s", stil, zeilen = 1)
+        }
+        else Box(Modifier.border(1.5.dp, farbe, RoundedCornerShape(6.dp)).padding(horizontal = 5.dp, vertical = 1.dp)) {
+            T(if (p > 0) "Pause ${pauseText(p)}" else "ohne Pause", stil, zeilen = 1)
         }
     }
 }

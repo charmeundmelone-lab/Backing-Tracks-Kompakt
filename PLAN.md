@@ -810,4 +810,25 @@ diese Punkte ändern). Er wählte bei der Leiste Variante A.
 - [x] G7 Fassung 9 (versionCode 9) installiert 20.11. 16:05 (Jans Ja), `testlauf.sh ablauf`
   25/26; der eine Fehler war das Testskript (8-s-Song schon zu Ende), Foto korrekt, Schritt
   angepasst. Rückweg `.geraet/fassung8-2026-11-15.apk`, Kopie `.geraet/fassung9-2026-11-20.apk`.
-- [ ] G8 Jan probiert Fassung 9 selbst.
+- [x] G8 Jan probierte Fassung 9: Schrift teils abgeschnitten, zu wenige Songs → Arbeitsliste H.
+
+## Arbeitsliste H: Set-Ansicht schöner und lesbar (20.11. nachmittags)
+
+Jan: "Schriften werden abgeschnitten dargestellt teilweise. Zu wenige Songs in Set-Ansicht.
+Kompakter und schöner, Schriftgrößen möglichst beibehalten." Danach, als 6 Songs zu sehen waren:
+"Lieber nur 5 Songs auf eine Seite, dafür bessere Lesbarkeit in den Sets."
+
+- [x] H1 Abgeschnittene Unterlängen (g, p, y): `PassenderTitel` zeichnet mit `TextOverflow.Visible`
+  (die Breite ist schon geprüft). Schildchen haben wieder normale Zeilenhöhe, dafür keine Luft im
+  Rahmen (gekürzte Zeilenhöhe kappte dort die Buchstaben). Neu `TextStyle.knapp()` in Bausteine.kt.
+- [x] H2 Set-Zeilen neu: Titel allein in der Zeile, mittig, groß (30 sp, notfalls kleiner bis 18),
+  Nummer 26 sp; rechts Länge (24 sp) und darunter die Pause als „‖ 30 s“ (Tipp = nächste Pause)
+  bzw. „hält an“. Mikro vor dem Titel. 5 Songs pro Seite (64 dp, Jans Wahl). JETZT-Zeile schwarz
+  ohne Schild (Beschreibung „Jetzt dran“ für Tests).
+- [x] H3 Fußzeile im Set weg, dafür Seitenpunkte rechts (`SeitenListe(seitenPunkte)`, wie inkOS).
+- [x] H4 Kopf flacher (Reiter 40 dp), Leiste flacher: Zustand und Kapo/Tonart links übereinander
+  neben der großen Zeit, Knöpfe 54 dp (`PLAYER_HOEHE` 160).
+- [x] H5 Archiv: 6 statt 3 Songs (Zeilen 47 dp, Tempo-Leiste 30 dp), Infozeile mit Abstand.
+- [x] H6 Fassung 10 (versionCode 10) installiert, `testlauf.sh ablauf` 26/26. Kopie
+  `.geraet/fassung10-2026-11-20.apk`, Rückweg `.geraet/fassung9-2026-11-20.apk`.
+- [ ] H7 Jan probiert Fassung 10.

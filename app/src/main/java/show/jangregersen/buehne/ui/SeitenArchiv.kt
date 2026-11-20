@@ -158,13 +158,13 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
 fun ArchivZeile(s: Song, waehlen: Boolean, drin: Boolean, schonIm: String?, kompakt: Boolean = false, onClick: () -> Unit) {
     val farbe = if (schonIm != null) Grau else Schwarz
     Row(
-        Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(if (kompakt) 47.dp else 61.dp).tipp(onClick = onClick).padding(start = 8.dp, end = 4.dp),
+        Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(if (kompakt) 46.dp else 61.dp).tipp(onClick = onClick).padding(start = 8.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Column(Modifier.weight(1f)) {
-            PassenderTitel(s.titel, { textStil(it, farbe) }, if (kompakt) 20 else 21, 15)
+            PassenderTitel(s.titel, { textStil(it, farbe).let { st -> if (kompakt) st.knapp() else st } }, 21, 15)
             (schonIm ?: listOf(songInfo(s), if (s.lyrics.isBlank()) "ohne Text" else "").filter { it.isNotBlank() }.joinToString(" · "))
-                .takeIf { it.isNotBlank() }?.let { T(it, textStil(if (kompakt) 13.sp else 14.sp, farbe, if (schonIm != null) FontWeight.Bold else FontWeight.Medium).let { st -> if (kompakt) st.copy(lineHeight = 15.sp) else st }, zeilen = 1) }
+                .takeIf { it.isNotBlank() }?.let { T(it, textStil(if (kompakt) 13.sp else 14.sp, farbe, if (schonIm != null) FontWeight.Bold else FontWeight.Medium).let { st -> st }, zeilen = 1) }
         }
         T(if (s.dauerMs > 0) zeit(s.dauerMs) else "", titelStil(19.sp, farbe, FontWeight.SemiBold))
         if (waehlen) {

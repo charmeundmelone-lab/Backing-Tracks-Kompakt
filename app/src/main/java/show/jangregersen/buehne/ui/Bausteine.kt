@@ -46,6 +46,7 @@ import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
@@ -108,7 +109,7 @@ fun etikettStil(farbe: Color = Schwarz, groesse: TextUnit? = null) =
     TextStyle(fontFamily = Halbschmal, fontWeight = FontWeight.Bold, fontSize = groesse?.let { Schriftbild.groesse(it) } ?: Schriftbild.etikettGroesse, color = farbe, letterSpacing = Schriftbild.etikettSperrung)
 
 @Composable
-fun T(text: String, stil: TextStyle, modifier: Modifier = Modifier, zeilen: Int = Int.MAX_VALUE, mitte: Boolean = false, durchgestrichen: Boolean = false) {
+fun T(text: String, stil: TextStyle, modifier: Modifier = Modifier, zeilen: Int = Int.MAX_VALUE, mitte: Boolean = false, durchgestrichen: Boolean = false, ueberlauf: TextOverflow? = null) {
     BasicText(
         text = text,
         style = stil.copy(
@@ -117,7 +118,7 @@ fun T(text: String, stil: TextStyle, modifier: Modifier = Modifier, zeilen: Int 
         ),
         modifier = modifier,
         maxLines = zeilen,
-        overflow = if (zeilen == Int.MAX_VALUE) TextOverflow.Clip else TextOverflow.Ellipsis
+        overflow = ueberlauf ?: if (zeilen == Int.MAX_VALUE) TextOverflow.Clip else TextOverflow.Ellipsis
     )
 }
 
@@ -137,8 +138,10 @@ fun PassenderTitel(text: String, stil: (TextUnit) -> TextStyle, gross: Int, klei
                     constraints = androidx.compose.ui.unit.Constraints(maxWidth = breite)).hasVisualOverflow
             } ?: klein
         }
+        // 20.11.: Die Breite ist oben schon geprüft. Unterlängen (g, p, y) dürfen über die knappe
+        // Zeilenhöhe hinausragen statt abgeschnitten zu werden ("Here I go again" war unten gekappt).
         Box(Modifier.height(hoehe), contentAlignment = Alignment.CenterStart) {
-            T(text, stil(groesse.sp), zeilen = 1, durchgestrichen = durchgestrichen)
+            T(text, stil(groesse.sp), zeilen = 1, durchgestrichen = durchgestrichen, ueberlauf = TextOverflow.Visible)
         }
     }
 }
@@ -407,3 +410,12 @@ fun AktionsLeiste(seite: Int, seiten: Int, zurueck: () -> Unit, vor: () -> Unit,
         }
     }
 }
+
+/**
+ * Zeilenhöhe so knapp wie die Schrift selbst (20.11., kompakte Listen); die Schriftgröße bleibt.
+ * Die Buchstaben stehen mittig in der Zeile, damit sie in Schildchen nicht unten anstoßen.
+ */
+fun TextStyle.knapp(f: Float = 1.02f) = copy(
+    lineHeight = fontSize * f,
+    lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.None)
+)

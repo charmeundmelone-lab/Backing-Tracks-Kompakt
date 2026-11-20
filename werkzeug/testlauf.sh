@@ -150,16 +150,16 @@ ablauf() {
   # Testdaten: Set A = Test Eins (mit Text, Automatik), Test Zwei (Automatik), Test Drei (hält an);
   # Set B = Test Drei, Test Eins. Alle Testsongs 8 s, Pause 20 s.
   # 1 Öffnen am Gig-Tag = Hauptbildschirm, erstes Set, erster Song markiert, Leiste zeigt „Danach“
-  pruefe start 10 "Set A" "Archiv" "JETZT" "Test Eins" "Danach" "Test Zwei" "Bereit" "Abspielen"
+  pruefe start 10 "Set A" "Archiv" "Jetzt dran" "Test Eins" "Danach" "Test Zwei" "Bereit" "Abspielen"
   vorne || abbruch "TrikTrak kam nicht nach vorne (Bildschirm gesperrt?)."
   # 2 Play: Test Eins hat Text, also geht der Text von selbst auf; anhalten, dann Stopp = an den Anfang
   tippe "Abspielen"; tippe "Pause"
   pruefe text-automatisch 5 "Test Eins" "Liste" "Angehalten" "Stopp"
   tippe "Stopp"
-  pruefe stopp-anfang 5 "Archiv" "JETZT" "Test Eins" "Bereit" "Überspringen"
+  pruefe stopp-anfang 5 "Archiv" "Jetzt dran" "Test Eins" "Bereit" "Überspringen"
   # 3 Pausen-Kästchen: Tipp schaltet weiter (Test Zwei, das zweite Kästchen: 20 s → 30 s)
   tippe "Pause umschalten" 1
-  pruefe pause-kaestchen 4 "Pause 30 s"
+  pruefe pause-kaestchen 4 "30 s"
   # 4 Wischen nach links = ans Ende, dann Rückgängig
   wische "Test Zwei" links
   pruefe wisch-links 5 "Test Zwei“ steht jetzt am Ende" "Rückgängig"
@@ -175,7 +175,7 @@ ablauf() {
   # 7 Song ohne Text: bleibt auf dem Hauptbildschirm; hält am Ende an, danach ist Test Eins dran
   tippe "Abspielen"
   pruefe ohne-text-bleibt 4 "Archiv" "Läuft" "Test Drei" "Stopp"
-  pruefe songende-haelt-an 15 "JETZT" "Test Eins" "Bereit" "Danach" "Test Zwei"
+  pruefe songende-haelt-an 15 "Jetzt dran" "Test Eins" "Bereit" "Danach" "Test Zwei"
   # 8 Song mit Text und Automatik: Text geht auf, am Songende zu, dann Pause in der Leiste
   tippe "Abspielen"
   pruefe text-auf 5 "Test Eins" "Liste" "Stopp"
@@ -206,7 +206,7 @@ ablauf() {
   # 12 Text geht von selbst auf; „Liste“ führt zurück und der Text springt nicht wieder auf
   tippe "Set B"
   wische "Test Eins" rechts
-  pruefe text-knopf 5 "JETZT" "Test Eins" "Bereit" "Text zeigen"
+  pruefe text-knopf 5 "Jetzt dran" "Test Eins" "Bereit" "Text zeigen"
   tippe "Abspielen"
   pruefe text-auf-set-b 5 "Test Eins" "Liste" "Stopp"
   tippe "Zur Setliste"
