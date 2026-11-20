@@ -145,46 +145,49 @@ ablauf() {
   adbs shell am force-stop $PKG
   adbs shell monkey -p $PKG -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
 
-  # Hauptbildschirm wie die alte App (15.11. abends): Reiter Set/Archiv, Player-Leiste, Wischen.
-  # 1 Öffnen am Gig-Tag = Hauptbildschirm, erstes Set, erster Song bereit
-  pruefe start 10 "Set A" "Archiv" "Test Eins" "Bereit" "Test Zwei" "Nächster" "Abspielen"
+  # Hauptbildschirm (Fassung 9, 20.11.): Liste mit schwarz markiertem Song „JETZT“, Leiste nennt
+  # „Danach“, Text geht beim Start von selbst auf und am Songende zu, Stopp = an den Anfang.
+  # Testdaten: Set A = Test Eins (mit Text, Automatik), Test Zwei (Automatik), Test Drei (hält an);
+  # Set B = Test Drei, Test Eins. Alle Testsongs 8 s, Pause 20 s.
+  # 1 Öffnen am Gig-Tag = Hauptbildschirm, erstes Set, erster Song markiert, Leiste zeigt „Danach“
+  pruefe start 10 "Set A" "Archiv" "JETZT" "Test Eins" "Danach" "Test Zwei" "Bereit" "Abspielen"
   vorne || abbruch "TrikTrak kam nicht nach vorne (Bildschirm gesperrt?)."
-  # 2 Play, dann anhalten (die Testsongs sind nur 8 s lang)
+  # 2 Play: Test Eins hat Text, also geht der Text von selbst auf; anhalten, dann Stopp = an den Anfang
   tippe "Abspielen"; tippe "Pause"
-  pruefe angespielt 5 "Angehalten" "Test Eins" "Song beenden" "Test Zwei"
-  # 3 Pausen-Kästchen: Tipp schaltet weiter (Test Zwei: 20 s → 30 s)
-  tippe "Pause umschalten"
+  pruefe text-automatisch 5 "Test Eins" "Liste" "Angehalten" "Stopp"
+  tippe "Stopp"
+  pruefe stopp-anfang 5 "Archiv" "JETZT" "Test Eins" "Bereit" "Überspringen"
+  # 3 Pausen-Kästchen: Tipp schaltet weiter (Test Zwei, das zweite Kästchen: 20 s → 30 s)
+  tippe "Pause umschalten" 1
   pruefe pause-kaestchen 4 "Pause 30 s"
   # 4 Wischen nach links = ans Ende, dann Rückgängig
   wische "Test Zwei" links
   pruefe wisch-links 5 "Test Zwei“ steht jetzt am Ende" "Rückgängig"
   tippe "Rückgängig"
   pruefe rueckgaengig 5 "Zurückgenommen"
-  # 5 Wischen nach rechts = kommt als Nächstes
+  # 5 Wischen nach rechts, solange nichts läuft = liegt sofort bereit (wird JETZT)
   wische "Test Drei" rechts
-  pruefe wisch-rechts 5 "Test Drei“ kommt als Nächstes" "Rückgängig"
+  pruefe wisch-rechts 5 "Test Drei“ liegt bereit" "Rückgängig"
   # 6 Antippen = Einstellungen (startet keine Musik)
   tippe "Test Zwei"
   pruefe antippen-karte 5 "Test Zwei" "0 s" "10 s" "30 s" "1 min" "2 min"
   tippe "Schließen"
-  # 7 Beenden mit zweitem Tipp, dann Pause in der Leiste
-  tippe "Song beenden"
-  pruefe beenden-erster-tipp 4 "Nochmal"
-  # Nach 4 s klappt der Knopf wieder zurück: abwarten, dann beide Tipps direkt hintereinander.
-  v=8; while [ $v -gt 0 ] && texte | grep -q "Nochmal"; do v=$((v - 1)); done
-  tippe_zweimal "Song beenden"
-  pruefe pause-leiste 5 "Pause · gleich" "Test Drei" "Jetzt starten" "Anhalten"
-  # 8 In der Pause nach rechts wischen: ersetzt den wartenden Song, Countdown läuft weiter
-  wische "Test Zwei" rechts
-  pruefe pause-anderer-song 5 "kommt nach der Pause" "Jetzt starten"
+  # 7 Song ohne Text: bleibt auf dem Hauptbildschirm; hält am Ende an, danach ist Test Eins dran
+  tippe "Abspielen"
+  pruefe ohne-text-bleibt 4 "Archiv" "Läuft" "Test Drei" "Stopp"
+  pruefe songende-haelt-an 15 "JETZT" "Test Eins" "Bereit" "Danach" "Test Zwei"
+  # 8 Song mit Text und Automatik: Text geht auf, am Songende zu, dann Pause in der Leiste
+  tippe "Abspielen"
+  pruefe text-auf 5 "Test Eins" "Liste" "Stopp"
+  pruefe text-zu-pause 20 "Pause · gleich" "Test Zwei" "Jetzt starten" "Anhalten"
   # Die Testpause ist kurz (20 s): ist sie schon abgelaufen, läuft der Song von selbst.
   texte | grep -qF "Jetzt starten" && tippe "Jetzt starten"; tippe "Pause"
-  pruefe jetzt-starten 5 "Test Zwei" "Song beenden"
+  pruefe jetzt-starten 5 "Test Zwei" "Stopp" "Archiv"
   # 9 Set wechseln über den Set-Reiter, während ein Song läuft: beginnt erst danach
   tippe "Set A"
   pruefe set-klappe 5 "Sets · Testlauf" "Set B" "Set bearbeiten" "Alle Gigs"
   tippe "Set B"
-  pruefe set-danach 5 "Nach diesem Song beginnt „Set B“"
+  pruefe set-danach 5 "Nach diesem Song beginnt „Set B“" "Danach"
   tippe "Abspielen"
   pruefe set-b-bereit 15 "Set B" "Bereit · 1 / 2" "Test Drei"
   # 10 Reiter Archiv: nach rechts wischen = liegt bereit
@@ -194,20 +197,22 @@ ablauf() {
   tippe "$fuss"; tippe "T"
   wische "Take on Me" rechts
   pruefe archiv-wisch-rechts 5 "Take on Me" "liegt bereit" "Rückgängig"
-  # 11 Lautstärketaste blättert im Archiv (bis Test Zwei zu sehen ist); schon eingeplant = Rückfrage
-  v=4; while [ $v -gt 0 ] && ! texte | grep -qF "Test Zwei"; do $G key 25 >/dev/null; v=$((v - 1)); done
+  # 11 Nach oben wischen blättert im Archiv (bis Test Zwei zu sehen ist); schon eingeplant = Rückfrage
+  v=4; while [ $v -gt 0 ] && ! texte | grep -qF "Test Zwei"; do vorne && adbs shell input swipe 240 430 240 230 300; v=$((v - 1)); done
   wische "Test Zwei" links
   pruefe rueckfrage 5 "Nochmal einplanen?" "Test Zwei" "Ja, ans Ende" "Abbrechen"
   tippe "Abbrechen"
   pruefe abbrechen 5 "Archiv" "Langsam"
-  # 12 Text-Ansicht: öffnet über die Leiste, geht am Songende von selbst zurück
+  # 12 Text geht von selbst auf; „Liste“ führt zurück und der Text springt nicht wieder auf
   tippe "Set B"
   wische "Test Eins" rechts
-  pruefe text-knopf 5 "Test Eins" "Bereit" "Text zeigen"
-  tippe "Text zeigen"
-  pruefe text-ansicht 5 "Test Eins" "Liste"
+  pruefe text-knopf 5 "JETZT" "Test Eins" "Bereit" "Text zeigen"
   tippe "Abspielen"
-  pruefe zurueck-nach-songende 20 "Archiv" "Set B"
+  pruefe text-auf-set-b 5 "Test Eins" "Liste" "Stopp"
+  tippe "Zur Setliste"
+  # Der Testsong ist nur 8 s lang: beim Nachsehen kann er schon zu Ende sein, darum kein "Stopp".
+  pruefe liste-bleibt 4 "Archiv" "Set B"
+  pruefe zurueck-nach-songende 20 "Archiv" "Set B" "Abspielen"
   # 13 Vorbereiten: Set bearbeiten über die Set-Klappe
   tippe "Set B"
   tippe "Set bearbeiten"

@@ -31,6 +31,12 @@ Ablauf-Code.
 
 ## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:55; Nachträge D, E, F unten drüber)
 
+**Stand 20.11. ~16:15: Fassung 9 INSTALLIERT (Jans Ja), `testlauf.sh ablauf` 25/26 (Fehler war das
+Skript, angepasst). Arbeitsliste G in PLAN.md: Liste markiert den Song „JETZT“, Leiste zeigt groß
+„DANACH“ (Jans Variante A), Text geht beim Start von selbst auf und am Songende zu, Stopp = ein Tipp,
+an den Anfang, Song bleibt dran, Blättern per Wischen hoch/runter (eine Zeile Überlappung), Archiv
+dichter. Jan: „prinzipiell schön“, also nur auf seinen Wunsch umbauen. Offen: G8 Jan probiert selbst.**
+
 **Stand 15.11. ~17:50: Fassung 8 INSTALLIERT (17:43, Jans Ja), `testlauf.sh schnell` 23/23 OK (Lauf 2;
 Lauf 3 nach der Schild-Korrektur abgebrochen, weil Jan das Telefon brauchte, App-Stand 75882a2 ist drauf).
 LEHRE: force-stop ließ „Bitte nicht stören“ an (Anrufe stumm!) – aufraeumen geht jetzt erst über Home.

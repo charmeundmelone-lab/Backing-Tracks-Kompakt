@@ -63,7 +63,9 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         /** Set, das nach dem laufenden Song beginnt (gewählt, während ein Song lief). */
         val setDanach: Long? = null,
         /** Hinweis mit Knopf "Rückgängig" nach dem Antippen eines Songs (verschwindet nach 8 s). */
-        val rueckgaengig: String? = null
+        val rueckgaengig: String? = null,
+        /** Zählt jeden frischen Start eines Set-Songs (ab 0:00). Der Hauptbildschirm öffnet dann den Text (20.11.). */
+        val startNr: Int = 0
     )
 
     /** Stand vor dem letzten Antippen, für "Rückgängig". */
@@ -523,10 +525,11 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
     private fun abspielen() {
         if (!engine.hatSpuren) return
         endeBehandelt = false
-        _zustand.value.let { z -> if (!z.probe && engine.positionMs == 0L) z.songId?.let { protokoll("Start", it, z.setId, null) } }
+        val frisch = _zustand.value.let { z -> !z.probe && engine.positionMs == 0L && z.songId != null }
+        _zustand.value.let { z -> if (frisch) z.songId?.let { protokoll("Start", it, z.setId, null) } }
         engine.play()
         // Probehören zählt nicht als Weiterspielen: der Set-Ende-Hinweis bleibt dann stehen.
-        _zustand.update { it.copy(spielt = true, setDurch = if (it.probe) it.setDurch else null) }
+        _zustand.update { it.copy(spielt = true, setDurch = if (it.probe) it.setDurch else null, startNr = if (frisch) it.startNr + 1 else it.startNr) }
         dienstAn()
     }
 

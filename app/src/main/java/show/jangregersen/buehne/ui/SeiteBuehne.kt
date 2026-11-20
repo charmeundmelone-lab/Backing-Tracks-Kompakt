@@ -106,10 +106,9 @@ fun BuehneSeite(navi: Navi, zurueckAmEnde: Boolean = true) {
     val endeHier = if (folgeSet != null) Ende.ANHALTEN else set?.eintraege?.firstOrNull { it.songId == song.id }?.ende ?: Ende.ANHALTEN
     val pos by App.buehne.position.collectAsState()
     val angespielt = z.spielt || pos > 0
-    // Beenden braucht einen zweiten Tipp (15.11.): Ein Fehltipp neben Play darf den Song nicht abbrechen.
-    var bestaetigen by remember(song.id) { mutableStateOf(false) }
-    LaunchedEffect(bestaetigen) { if (bestaetigen) { kotlinx.coroutines.delay(4000); bestaetigen = false } }
-    if (!angespielt && bestaetigen) bestaetigen = false
+    // Die Bühne ist offen: Diesen Start hat der Hauptbildschirm nicht mehr zu beantworten
+    // (sonst ginge der Text nach "Liste" sofort wieder auf).
+    LaunchedEffect(z.startNr) { HauptZustand.gesehenerStart = z.startNr }
 
     Box(Modifier.fillMaxSize()) {
     Column(Modifier.fillMaxSize()) {
@@ -136,12 +135,13 @@ fun BuehneSeite(navi: Navi, zurueckAmEnde: Boolean = true) {
             SymbolKnopf(if (z.spielt) Sym.PAUSE else Sym.PLAY, if (z.spielt) "Pause" else "Abspielen", Modifier.weight(1.5f), Art.VOLL, hoehe = 62.dp, groesse = 26.dp) { App.buehne.playPause() }
             when {
                 z.probe -> SymbolKnopf(Sym.STOP, "Stopp", Modifier.weight(1f), hoehe = 62.dp, groesse = 20.dp) { App.buehne.stopp() }
-                angespielt -> Knopf(Modifier.weight(1f), if (bestaetigen) Art.VOLL else Art.UMRISS, 62.dp, beschreibung = "Song beenden", onClick = {
-                    if (bestaetigen) { bestaetigen = false; App.buehne.beenden() } else bestaetigen = true
+                // 20.11. (Jan): Stopp = anhalten, an den Anfang, zurück zur Set-Ansicht. Der Song bleibt dran.
+                angespielt -> Knopf(Modifier.weight(1f), Art.UMRISS, 62.dp, beschreibung = "Stopp", onClick = {
+                    App.buehne.stopp(); navi.zurSetliste()
                 }) { f ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Symbol(Sym.STOP, f, 18.dp)
-                        T(if (bestaetigen) "Nochmal" else "Beenden", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
+                        T("Stopp", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
                     }
                 }
                 else -> Knopf(Modifier.weight(1f), hoehe = 62.dp, aktiv = naechster != null || folgeSet != null, beschreibung = "Überspringen", onClick = { App.buehne.weiter() }) { f ->
@@ -150,21 +150,6 @@ fun BuehneSeite(navi: Navi, zurueckAmEnde: Boolean = true) {
                         T("Weiter", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
                     }
                 }
-            }
-        }
-    }
-    if (bestaetigen) {
-        val was = when {
-            folgeSet != null -> "Dann liegt „${folgeSet.name}“ bereit."
-            naechster == null -> "Dann ist das Set zu Ende."
-            endeHier == Ende.ANHALTEN -> "Dann liegt „${naechster.titel}“ bereit."
-            song.ansageNachher.isNotBlank() || naechster.ansageVorher.isNotBlank() -> "Dann Ansage und „${naechster.titel}“."
-            song.pauseDanach > 0 -> "Dann Pause ${pauseText(song.pauseDanach)} und „${naechster.titel}“."
-            else -> "Dann startet gleich „${naechster.titel}“."
-        }
-        Column(Modifier.fillMaxSize().padding(bottom = 84.dp), verticalArrangement = Arrangement.Bottom) {
-            Box(Modifier.fillMaxWidth().padding(horizontal = 10.dp).clip(RoundedCornerShape(14.dp)).background(Schwarz).tipp { bestaetigen = false }.padding(14.dp)) {
-                T("Nochmal auf „Beenden“ tippen, um den Song zu beenden. $was", textStil(17.sp, Weiss, FontWeight.Bold), zeilen = 3)
             }
         }
     }

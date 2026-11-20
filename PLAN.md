@@ -786,4 +786,28 @@ Nächstes, links = ganz nach unten), "aber diesmal perfekt funktionierend". Entw
 - [x] F5 App öffnet am Gig-Tag auf dem Hauptbildschirm; Gig-Sets und Wunschsong führen dorthin.
   `werkzeug/testlauf.sh` neu (Wischen per `geraet.sh wisch`), versionCode 8. Tests grün.
 - [x] F6 Installiert (15.11. 17:43), `testlauf.sh schnell` 23/23. Nachgebessert: Schild „Nächster“ (abgeschnitten neben „hält an“ → schwarze Nummer, Schild nur wenn es passt), Pausen-Countdown 40 sp. Testskript gibt „Bitte nicht stören“ jetzt sauber zurück.
-- [ ] F7 Jan probiert selbst mit echtem Set.
+- [x] F7 Jan hat Fassung 8 am 20.11. mit dem El-Circo-Set ausprobiert: "prinzipiell schön", Wünsche → Arbeitsliste G.
+
+## Arbeitsliste G: Jans Rückmeldung zu Fassung 8 (20.11.)
+
+Jan öffnete das El-Circo-Set. "Prinzipiell finde ich es schön so, wie es ist" (sensibel: nur
+diese Punkte ändern). Er wählte bei der Leiste Variante A.
+
+- [x] G1 Liste: Der Song, der jetzt dran ist (läuft oder liegt bereit), steht oben in der Liste,
+  schwarz hinterlegt mit Schild „JETZT“ (`JetztZeile`). Bisher stand er nur in der Leiste.
+- [x] G2 Leiste (Variante A): groß „DANACH <Titel>“ (bzw. „Set-Ende“ oder „Set B: <Titel>“);
+  Zustand, Zeit, Fortschritt bzw. Kapo/Tonart und Knöpfe gehören zum jetzigen Song.
+- [x] G3 Text von selbst: Startet ein Set-Song mit Text ab 0:00, geht die Text-Ansicht auf
+  (`Zustand.startNr`, `HauptZustand.gesehenerStart`); am Songende zurück (wie bisher). Ohne Text
+  bleibt die Set-Ansicht. „Liste“ auf der Bühne führt zurück, der Text springt nicht wieder auf.
+- [x] G4 Stopp (ein Tipp, Leiste und Bühne): hält an, springt an den Anfang, Song bleibt dran
+  und wird nicht abgehakt; von der Bühne zurück zur Set-Ansicht. Danach erscheint „Weiter“.
+  Wischen nach rechts legt dann sofort den anderen Song bereit. „Beenden“ mit zwei Tipps ist weg.
+- [x] G5 Blättern per Wischen hoch/runter in allen Seitenlisten (`seitenWischen`), springt
+  ohne Gleiten; die letzte Zeile einer Seite steht auf der nächsten oben noch einmal.
+  Lautstärketasten blättern weiter mit, sind aber nicht mehr angeschrieben.
+- [x] G6 Archiv dichter: Zeilen 48 dp (`ArchivZeile(kompakt)`), Tempo-Leiste 32 dp: 4–5 statt 3 Songs.
+- [x] G7 Fassung 9 (versionCode 9) installiert 20.11. 16:05 (Jans Ja), `testlauf.sh ablauf`
+  25/26; der eine Fehler war das Testskript (8-s-Song schon zu Ende), Foto korrekt, Schritt
+  angepasst. Rückweg `.geraet/fassung8-2026-11-15.apk`, Kopie `.geraet/fassung9-2026-11-20.apk`.
+- [ ] G8 Jan probiert Fassung 9 selbst.
