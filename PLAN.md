@@ -890,5 +890,11 @@ kam die Bildschirmsperre, gelegentlich knackte es über die PA. Unsinniges finde
 - [x] J4 Akku: Takt im Leerlauf 1×/s statt 5×/s, angehaltene Mischpulte schlafen 500 ms statt
   30 ms, Bildschirm nur noch im Show-Modus wach (früher immer auf dem Hauptbildschirm).
 - [x] J5 Testlauf: Schritte „set-trotz-pause“, „wieder-set-b“, „kapo-filter“. Gebaut, Tests grün.
+- [x] J7 (Jan: „1 2“) Set antippen, während ein Song läuft: Reiter „Set“ zeigt das gewählte Set als
+  Vorschau (Band „Vorschau · beginnt nach diesem Song“ + Knopf „Zu Set …“, umgekehrt „Ansehen“).
+  Tipp in der Vorschau stellt den Song dort nach vorne, der laufende bleibt unberührt.
+- [x] J8 Letztes Set gemerkt (files/letztes-set.txt): nach Neustart liegt es bereit, die App
+  öffnet auf dem Hauptbildschirm. Restzeit-Anzeige bleibt (Jan mag sie), erst messen, falls
+  der Akku weiter leer läuft.
 - [ ] J6 Mit Jans Ja installieren, testlauf, Stille per `dumpsys media.audio_flinger`
   prüfen (Standby: no während der Pause), dann Jan an der PA probieren lassen.

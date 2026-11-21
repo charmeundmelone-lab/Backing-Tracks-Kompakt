@@ -242,6 +242,8 @@ fun GigSetsSeite(navi: Navi, gigId: Long) {
             SetKarte(i + 1, set, aktiv = set.id == z.setId, laeuft = set.id == z.setId && z.spielt, danach = set.id == z.setDanach, onMenue = { setMenue = set.id }) {
                 // Läuft ein Song, beginnt das gewählte Set erst danach (Buehne.setWaehlen).
                 App.buehne.setWaehlen(set.id)
+                // 21.11.: Dann gleich dieses Set als Vorschau zeigen (nicht das laufende).
+                HauptZustand.folgeZeigen = App.buehne.zustand.value.setDanach == set.id
                 navi.zurSetliste()
             }
         }

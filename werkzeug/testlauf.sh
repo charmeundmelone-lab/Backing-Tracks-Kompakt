@@ -121,7 +121,7 @@ aufraeumen() {
   adbs shell am force-stop $PKG
   runas cp files/protokoll-test.txt files/protokoll-test-letzter.txt 2>/dev/null
   adbs exec-out run-as $PKG cat files/protokoll-test.txt > "$O/protokoll-test.txt" 2>/dev/null
-  runas rm -f files/testmodus files/test-leise files/test-bestand.json files/protokoll-test.txt
+  runas rm -f files/testmodus files/test-leise files/test-bestand.json files/protokoll-test.txt files/letztes-set-test.txt
   if adbs shell dumpsys notification | grep -q "mZenMode=ZEN_MODE_OFF"; then echo "OK    „Bitte nicht stören“ ist aus"
   else echo "ACHTUNG: „Bitte nicht stören“ ist noch an – TrikTrak öffnen und mit Home verlassen"; FEHLER=$((FEHLER + 1)); fi
   sichern "$O/nachher.json"
@@ -146,7 +146,7 @@ ablauf() {
   sichern "$O/vorher.json"
   [ -s "$O/vorher.json" ] || { echo "ABBRUCH: bestand.json nicht lesbar"; exit 3; }
   # Spielwiese anlegen: Testmodus + leise (TrikTrak dreht sonst die Lautstärke voll auf).
-  runas rm -f files/test-bestand.json files/protokoll-test.txt
+  runas rm -f files/test-bestand.json files/protokoll-test.txt files/letztes-set-test.txt
   runas touch files/testmodus files/test-leise
   adbs shell am force-stop $PKG
   adbs shell monkey -p $PKG -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
@@ -193,11 +193,19 @@ ablauf() {
   # Die Testpause ist kurz (20 s): ist sie schon abgelaufen, läuft der Song von selbst.
   texte | grep -qF "Jetzt starten" && tippe "Jetzt starten"; tippe "Pause"
   pruefe jetzt-starten 5 "Test Zwei" "Stopp" "Archiv"
-  # 9 Set wechseln über den Set-Reiter, während ein Song läuft: beginnt erst danach
+  # 9 Set wechseln, während ein Song läuft: beginnt erst danach, bis dahin Vorschau (21.11.).
+  # Ein angehaltener Song hält das Set nicht mehr auf, darum erst weiterspielen, dann wählen,
+  # dann anhalten (die Testsongs sind nur 8 s lang).
   tippe "Set A"
   pruefe set-klappe 5 "Sets · Testlauf" "Set B" "Set bearbeiten" "Alle Gigs"
-  tippe "Set B"
-  pruefe set-danach 5 "Nach diesem Song beginnt „Set B“" "Danach"
+  tippe "Abspielen"; tippe "Set B"; tippe "Pause"
+  pruefe set-vorschau 5 "Vorschau · beginnt nach diesem Song" "Zu „Set A“" "Test Drei"
+  # Tipp in der Vorschau: der Song steht dort vorne, der laufende bleibt
+  tippe "Test Eins"
+  pruefe vorschau-tipp 5 "mit „Test Eins“" "Rückgängig"
+  tippe "Rückgängig"
+  tippe "Zu „Set A“"
+  pruefe set-danach 5 "Nach diesem Song beginnt „Set B“" "Ansehen"
   tippe "Abspielen"
   pruefe set-b-bereit 15 "Set B" "Bereit · 1 / 2" "Test Drei"
   # 9b (21.11., Jans Fehler): Song angespielt und angehalten, dann anderes Set wählen. Früher kam

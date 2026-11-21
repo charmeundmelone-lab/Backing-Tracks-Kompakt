@@ -29,7 +29,10 @@ class MainActivity : ComponentActivity() {
             val z by App.buehne.zustand.collectAsState()
             val showAn by App.buehne.showLaeuft.collectAsState()
             // Am Gig-Tag (oder wenn gerade etwas läuft) gleich auf dem Hauptbildschirm öffnen, erstes Set bereit.
-            LaunchedEffect(Unit) { if (App.buehne.gigHeute()) navi.zurSetliste() }
+            // Seit 21.11. auch sonst, wenn ein Set gemerkt ist (Buehne merkt sich das letzte).
+            LaunchedEffect(Unit) {
+                if (App.buehne.gigHeute() || App.ablage.jetzt.set(App.buehne.zustand.value.setId) != null) navi.zurSetliste()
+            }
             // Post vom Laptop (Werkstatt "Zum Mudita senden"): alle 2 s nachsehen, aber nur, wenn die
             // App zu sehen ist, nichts spielt und Jan gerade nicht an einem Text oder Song arbeitet.
             LaunchedEffect(Unit) {

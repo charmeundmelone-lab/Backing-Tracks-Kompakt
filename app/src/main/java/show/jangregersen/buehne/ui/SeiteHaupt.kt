@@ -85,6 +85,11 @@ object HauptZustand {
     var reiter by androidx.compose.runtime.mutableIntStateOf(REITER_SET)
     /** Letzter Song-Start, auf den schon reagiert wurde (Text öffnet sich nur einmal pro Start). */
     var gesehenerStart = 0
+    /**
+     * 21.11. (Jan): Wählt man ein anderes Set, während ein Song läuft, beginnt es erst danach. Bis
+     * dahin zeigt der Reiter „Set“ dieses Folge-Set als Vorschau (true) statt des laufenden.
+     */
+    var folgeZeigen by androidx.compose.runtime.mutableStateOf(false)
     /** Kapo-Filter im Archiv: -1 = alle, 0 = ohne, sonst der Bund. */
     var kapo by androidx.compose.runtime.mutableIntStateOf(-1)
 }
@@ -106,7 +111,10 @@ fun HauptSeite(navi: Navi) {
     var klappe by remember { mutableStateOf(false) }
     // Gibt es das aktive Set nicht mehr (z. B. gelöscht), aber ein gewähltes kommt danach: das zeigen
     // statt „Noch kein Set gewählt“ (21.11.).
-    val set = b.set(z.setId) ?: b.set(z.setDanach)
+    // Vorschau des Folge-Sets nur, solange es wirklich danach beginnt (sonst von selbst zurück).
+    LaunchedEffect(z.setDanach) { if (z.setDanach == null) HauptZustand.folgeZeigen = false }
+    val vorschau = HauptZustand.folgeZeigen && b.set(z.setDanach) != null
+    val set = if (vorschau) b.set(z.setDanach) else b.set(z.setId) ?: b.set(z.setDanach)
     val gig = b.gigVonSet(z.setId)
 
     // 20.11. (Jan): Startet ein Song mit Text, geht der Text von selbst auf; am Songende kommt
@@ -198,15 +206,25 @@ private fun SetBereich(navi: Navi, setId: Long) {
     // jetzt dran ist, ist schwarz. Die Seite folgt ihm nur, wenn er sonst nicht zu sehen wäre.
     val eintraege = set.eintraege
     val folgeSet = b.set(z.setDanach)
+    val laufendesSet = b.set(z.setId)
+    // Vorschau: dieses Set beginnt erst nach dem laufenden Song (21.11.).
+    val istVorschau = setId != z.setId && laufendesSet != null
     // "hält an" nur zeigen, wenn es im Set vom Üblichen abweicht (sonst stünde es überall).
     val mitAutomatik = eintraege.any { it.ende == Ende.WEITER }
-    val jetztIndex = eintraege.indexOfFirst { it.songId == z.songId }
+    val jetztIndex = if (istVorschau) -1 else eintraege.indexOfFirst { it.songId == z.songId }
     val zeige = remember(setId, z.songId) { if (jetztIndex >= 0) Zeige(jetztIndex, nurWennVerdeckt = true) else null }
     Column(Modifier.fillMaxSize()) {
         z.setDurch?.let { SetEndeHinweis(it) }
-        if (folgeSet != null) {
-            Row(Modifier.padding(start = 10.dp, end = 10.dp, top = 6.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Schwarz).padding(horizontal = 14.dp, vertical = 8.dp)) {
-                T("Nach diesem Song beginnt „${folgeSet.name}“", textStil(16.sp, Weiss, FontWeight.Bold), zeilen = 2)
+        // Band oben: was nach dem laufenden Song kommt, mit Knopf zum Hin- und Herschauen.
+        if (istVorschau || folgeSet != null) {
+            Row(
+                Modifier.padding(start = 10.dp, end = 10.dp, top = 6.dp).fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(Schwarz)
+                    .padding(start = 14.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                T(if (istVorschau) "Vorschau · beginnt nach diesem Song" else "Nach diesem Song beginnt „${folgeSet?.name}“", textStil(16.sp, Weiss, FontWeight.Bold), Modifier.weight(1f), zeilen = 2)
+                if (istVorschau) TextKnopf("Zu „${laufendesSet?.name}“", Modifier, Art.UMRISS, 42.dp, 16.sp, radius = 10.dp) { HauptZustand.folgeZeigen = false }
+                else TextKnopf("Ansehen", Modifier, Art.UMRISS, 42.dp, 16.sp, radius = 10.dp) { HauptZustand.folgeZeigen = true }
             }
         }
         SeitenListe(
@@ -215,7 +233,7 @@ private fun SetBereich(navi: Navi, setId: Long) {
             fuss = { _, _, _, _, _ -> }
         ) { i, e ->
             val s = b.song(e.songId) ?: return@SeitenListe
-            val jetzt = e.songId == z.songId
+            val jetzt = !istVorschau && e.songId == z.songId
             // Antippen (wie die alte App): Song auswählen. Er liegt dann bereit, Play startet ihn.
             // Läuft gerade ein Song, wird nichts abgebrochen: der angetippte kommt als Nächstes.
             // Gespielt: erst Rückfrage. Lang drücken: Einstellungen des Songs.
@@ -429,7 +447,7 @@ private fun SetKlappe(navi: Navi, onZu: () -> Unit) {
                 val f = if (aktiv) Weiss else Schwarz
                 Row(
                     Modifier.padding(horizontal = 8.dp, vertical = 2.dp).fillMaxWidth().height(56.dp).clip(RoundedCornerShape(10.dp))
-                        .background(if (aktiv) Schwarz else Weiss).tipp { App.buehne.setWaehlen(s.id); onZu() }.padding(horizontal = 10.dp),
+                        .background(if (aktiv) Schwarz else Weiss).tipp { App.buehne.setWaehlen(s.id); HauptZustand.folgeZeigen = App.buehne.zustand.value.setDanach == s.id; onZu() }.padding(horizontal = 10.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
                     Column(Modifier.weight(1f)) {

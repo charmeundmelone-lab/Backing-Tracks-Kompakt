@@ -114,8 +114,19 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
     /** Jan hat den Bildschirm berührt (MainActivity). */
     fun beruehrt() { letzteAktion = SystemClock.elapsedRealtime() }
 
+    /**
+     * Zuletzt gewähltes Set (21.11., Jan: nach einem Neustart hieß es „Noch kein Set gewählt“).
+     * Steht in einer kleinen Datei, nicht im Bestand; beim Start liegt dieses Set wieder bereit.
+     */
+    private val merkDatei: File get() = File(app.filesDir, if (ablage.testmodus) "letztes-set-test.txt" else "letztes-set.txt")
+    private var gemerktesSet: Long? = null
+
     init {
         engine.onFehler = { text -> _zustand.update { it.copy(fehler = text) } }
+        runCatching { merkDatei.readText().trim().toLong() }.getOrNull()
+            ?.takeIf { ablage.jetzt.set(it) != null }
+            ?.let { runCatching { setWaehlen(it) }.onFailure { e -> Log.w(TAG, "Letztes Set: ${e.message}") } }
+        gemerktesSet = _zustand.value.setId
         haupt.launch {
             while (true) {
                 takt()
@@ -143,6 +154,10 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
     private fun takt() {
         val z = _zustand.value
         showPruefen(z)
+        if (z.setId != null && z.setId != gemerktesSet && !z.probe) {
+            gemerktesSet = z.setId
+            runCatching { merkDatei.writeText(z.setId.toString()) }
+        }
         if (engine.hatSpuren) {
             _position.value = engine.positionMs
             val d = engine.dauerMs
@@ -408,6 +423,16 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         if (z.probe) { hinweis("Erst das Probehören beenden."); return }
         if (songId == z.songId && setId == z.setId) return
         val song = ablage.jetzt.song(songId) ?: return
+        // 21.11.: Antippen in einem ANDEREN Set, während ein Song läuft (Vorschau des Folge-Sets):
+        // Der laufende Song bleibt unberührt. Der angetippte steht dort vorne, das Set beginnt danach.
+        if (angespielt() && z.setId != null && z.setId != setId && ablage.jetzt.set(z.setId) != null) {
+            val vor = ablage.jetzt.set(setId)?.eintraege ?: return
+            ablage.aendern { it.vorziehen(setId, songId, null, false) }
+            _zustand.update { it.copy(setDanach = setId) }
+            val name = ablage.jetzt.set(setId)?.name ?: "Set"
+            merken(Vorher(setId, vor, z.songId, true, z.songId), "Nach diesem Song: „$name“ mit „${song.titel}“.")
+            return
+        }
         val laeuft = angespielt() && z.setId == setId
         val vorEintraege = ablage.jetzt.set(setId)?.eintraege ?: return
         ablage.aendern { it.vorziehen(setId, songId, z.songId.takeIf { z.setId == setId }, laeuft) }
