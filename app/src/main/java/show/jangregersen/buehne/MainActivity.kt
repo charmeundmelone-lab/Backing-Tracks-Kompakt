@@ -27,6 +27,7 @@ class MainActivity : ComponentActivity() {
         setContent {
             val navi = remember { Navi() }
             val z by App.buehne.zustand.collectAsState()
+            val showAn by App.buehne.showLaeuft.collectAsState()
             // Am Gig-Tag (oder wenn gerade etwas läuft) gleich auf dem Hauptbildschirm öffnen, erstes Set bereit.
             LaunchedEffect(Unit) { if (App.buehne.gigHeute()) navi.zurSetliste() }
             // Post vom Laptop (Werkstatt "Zum Mudita senden"): alle 2 s nachsehen, aber nur, wenn die
@@ -43,7 +44,9 @@ class MainActivity : ComponentActivity() {
                     delay(2000)
                 }
             }
-            val bildschirmAn = z.spielt || z.pause != null || navi.oben == Seite.Buehne || navi.oben == Seite.Setliste
+            // 21.11. (Jan: in langen Pausen kam die Bildschirmsperre): wach, solange die Show läuft,
+            // egal welche Seite offen ist. Ohne Set oder eine Stunde nach dem Letzten darf er schlafen (Akku).
+            val bildschirmAn = showAn || z.spielt || z.pause != null
             LaunchedEffect(bildschirmAn) {
                 if (bildschirmAn) window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
                 else window.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -67,8 +70,15 @@ class MainActivity : ComponentActivity() {
         return true
     }
 
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+        App.buehne.beruehrt()
+    }
+
     override fun onStart() {
         super.onStart()
+        App.buehne.sichtbar = true
+        App.buehne.beruehrt()
         // Kommt sie nicht auf voll (Gehörschutz-Sperre), zeigt die Wurzel einen großen Hinweis mit
         // Knopf "Ton freigeben" (VolleLautstaerke.gedrosselt).
         show.jangregersen.buehne.audio.VolleLautstaerke.sichtbar(true)
@@ -76,6 +86,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onStop() {
         super.onStop()
+        App.buehne.sichtbar = false
         show.jangregersen.buehne.audio.VolleLautstaerke.sichtbar(false)
         App.ablage.sofortSichern()
     }

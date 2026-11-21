@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.Dispatchers
@@ -62,12 +63,13 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var tempo by rememberSaveable { mutableIntStateOf(0) }
+    var kapo by rememberSaveable { mutableIntStateOf(-1) }
     var sprung by remember { mutableStateOf(false) }
     var zeige by remember { mutableStateOf<Zeige?>(null) }
     var holt by remember { mutableStateOf<String?>(null) }
 
     val alle = b.songs.sortedBy { Normalizer.normalize(it.titel.lowercase(), Normalizer.Form.NFD) }
-    val songs = alle.filter { tempo == 0 || it.tempo == tempo }
+    val songs = alle.filter { (tempo == 0 || it.tempo == tempo) && passtKapo(it, kapo) }
     val zielSet = b.set(zielSetId)
     val imSet = zielSet?.eintraege?.map { it.songId }?.toSet() ?: emptySet()
     // Jans Wunsch 15.11.: Was im Gig schon eingeplant ist, steht grau da; nochmal nur mit Rückfrage.
@@ -108,15 +110,16 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
         // Texte holen gibt es seit 13.11. nur noch in der Werkstatt am Laptop.
         if (zielSet == null) Segmente(listOf("Gigs", "Archiv"), 1, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp)) { if (it == 0) navi.ersetzen(Seite.Gigs) }
         Segmente(listOf("Alle", "Langsam", "Mittel", "Schnell"), tempo, Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp), hoehe = 40.dp, groesse = 15.sp) { tempo = it }
+        KapoLeiste(alle, kapo, Modifier.padding(start = 14.dp, end = 14.dp, top = 6.dp), hoehe = 40.dp) { kapo = it }
         SeitenListe(
-            eintraege = songs, zeilenHoehe = 62.dp, modifier = Modifier.weight(1f), schluessel = "archiv$tempo$zielSetId", zeige = zeige, oben = 6.dp,
+            eintraege = songs, zeilenHoehe = 62.dp, modifier = Modifier.weight(1f), schluessel = "archiv$tempo$kapo$zielSetId", zeige = zeige, oben = 6.dp,
             fuss = { s, n, pro, z, v ->
-                val erster = songs.getOrNull(SeitenGedaechtnis.seiten["archiv$tempo$zielSetId"] ?: (s * pro))
+                val erster = songs.getOrNull(SeitenGedaechtnis.seiten["archiv$tempo$kapo$zielSetId"] ?: (s * pro))
                 Blaetterleiste(s, n, z, v, mitteText = "${erster?.let { buchstabe(it.titel) } ?: "A"}–Z · Seite ${s + 1}/$n", mitteKlein = "tippen zum Springen", onMitte = { sprung = true })
             },
             leer = {
                 Column(Modifier.padding(18.dp)) {
-                    T(if (b.songs.isEmpty()) "Noch keine Songs." else "Keine Songs mit diesem Tempo.", titelStil(26.sp))
+                    T(if (b.songs.isEmpty()) "Noch keine Songs." else "Keine Songs mit diesem Filter.", titelStil(26.sp))
                     Abstand(6.dp)
                     if (b.songs.isEmpty()) {
                         T("Tippe oben auf „Songs holen“ und wähle den Ordner mit deinen Backing-Tracks. Einzelne Audiodateien werden je ein Stereo-Song (links Band, rechts Click), Unterordner werden Songs aus Einzelspuren.", textStil(16.sp))
@@ -210,5 +213,26 @@ fun Sprung(songs: List<Song>, wahl: (Int) -> Unit) {
         }
         Abstand(4.dp)
         TextKnopf("Zurück zur Liste", Modifier.fillMaxWidth(), hoehe = 52.dp) { wahl(-1) }
+    }
+}
+
+/** Passt der Song zum Kapo-Filter? [kapo] -1 = alle, 0 = ohne Kapo, sonst der Bund. */
+fun passtKapo(s: Song, kapo: Int) = kapo < 0 || s.kapo.coerceAtLeast(0) == kapo
+
+/**
+ * Kapo-Filter (21.11., Jan: „filtern nach Kapoposition ist wichtig“). Zeigt nur die Bünde, die im
+ * Archiv wirklich vorkommen, damit jedes Feld breit genug zum Treffen bleibt.
+ */
+@Composable
+fun KapoLeiste(alle: List<Song>, kapo: Int, modifier: Modifier = Modifier, hoehe: Dp = 30.dp, onWahl: (Int) -> Unit) {
+    val werte = (alle.map { it.kapo.coerceAtLeast(0) } + listOfNotNull(kapo.takeIf { it >= 0 })).distinct().sorted()
+    if (werte.size < 2) return
+    val optionen = listOf("alle") + werte.map { if (it == 0) "ohne" else "$it" }
+    val gewaehlt = if (kapo < 0) 0 else werte.indexOf(kapo) + 1
+    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        T("Kapo", textStil(15.sp, gewicht = FontWeight.Bold), zeilen = 1)
+        Box(Modifier.weight(1f)) {
+            Segmente(optionen, gewaehlt, hoehe = hoehe, groesse = 15.sp) { i -> onWahl(if (i == 0) -1 else werte[i - 1]) }
+        }
     }
 }

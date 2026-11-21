@@ -158,7 +158,8 @@ class Mischpult(context: Context, private val quellen: List<Quelle>, val pegel: 
                         warten(20); continue
                     }
                     // Angehalten: nur bis zum Puffer vorfüllen
-                    if (!laeuft && geschrieben >= pufferFrames - block) { warten(30); continue }
+                    // Akku (21.11.): angehalten fast schlafen, play() und Sprünge wecken sofort (notifyAll).
+                    if (!laeuft && geschrieben >= pufferFrames - block) { warten(500); continue }
                     // Einen Block mischen
                     aus.fill(0f)
                     var maxGelesen = 0
@@ -194,7 +195,7 @@ class Mischpult(context: Context, private val quellen: List<Quelle>, val pegel: 
                 if (w < 0) { fehler = "Tonausgabe meldet Fehler $w"; Log.e(TAG, "write $w"); warten(50); continue }
                 synchronized(lock) { if (sprungZiel < 0) geschrieben += w / 2 }
                 offenAb += w; offen -= w
-                if (offen > 0) warten(if (laeuft) 5 else 30)
+                if (offen > 0) warten(if (laeuft) 5 else 500)
             }
         } catch (e: Exception) {
             Log.e(TAG, "Mischfaden abgebrochen", e)

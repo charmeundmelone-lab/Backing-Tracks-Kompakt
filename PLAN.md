@@ -871,4 +871,24 @@ Plan (Fassung 11):
   dieselben drei Knöpfe (Stopp ausgegraut statt „Weiter“). `geraet.sh lang` + `testlauf.sh`
   (lange drücken, Tipp wählt aus): 28/28. Fassung 11 installiert 21.11., Kopie
   `.geraet/fassung11-2026-11-21.apk`, Rückweg `.geraet/fassung10-2026-11-20.apk`.
-- [ ] I8 Jan probiert Fassung 11.
+- [x] I8 Jan probiert Fassung 11 (21.11. abends): „viel besser“. Rückmeldung → Arbeitsliste J.
+
+## Arbeitsliste J – Fassung 12 (21.11. abends, Jans Rückmeldung zu Fassung 11)
+
+Jan: „viel besser“. Fehler: Set ließ sich nicht öffnen („Noch kein Set gewählt“), solange ein
+Song angehalten war; nach Stopp ging es. Wünsche: Kapo-Filter. Akku sehr hoch. In langen Pausen
+kam die Bildschirmsperre, gelegentlich knackte es über die PA. Unsinniges finden und berichten.
+
+- [x] J1 Set wählen bei angehaltenem Song: Nur ein laufender Song schiebt das Set nach hinten.
+  Angehalten = Song wird beendet (kein Haken), das neue Set liegt sofort bereit. Hauptbildschirm
+  zeigt notfalls das gewählte Folge-Set statt „Noch kein Set gewählt“.
+- [x] J2 Kapo-Filter in beiden Archiv-Ansichten (alle · ohne · nur vorkommende Bünde).
+- [x] J3 Show-Modus: Set aktiv und in der letzten Stunde gespielt/getippt (versteckt: 15 min)
+  → Bildschirm bleibt an (jede Seite), Lautstärke + „Bitte nicht stören“ bleiben, Dienst hält
+  den Prozess, stille Tonspur (`audio/Stille.kt`) hält die USB-Ausgabe wach (Android legt sie
+  sonst 3 s nach dem letzten Ton schlafen, gemessen am Kompakt).
+- [x] J4 Akku: Takt im Leerlauf 1×/s statt 5×/s, angehaltene Mischpulte schlafen 500 ms statt
+  30 ms, Bildschirm nur noch im Show-Modus wach (früher immer auf dem Hauptbildschirm).
+- [x] J5 Testlauf: Schritte „set-trotz-pause“, „wieder-set-b“, „kapo-filter“. Gebaut, Tests grün.
+- [ ] J6 Mit Jans Ja installieren, testlauf, Stille per `dumpsys media.audio_flinger`
+  prüfen (Standby: no während der Pause), dann Jan an der PA probieren lassen.

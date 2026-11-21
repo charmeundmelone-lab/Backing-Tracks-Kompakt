@@ -14,7 +14,7 @@ import show.jangregersen.buehne.MainActivity
 import show.jangregersen.buehne.R
 
 /**
- * Hält den Prozess am Leben, solange gespielt wird (Mudita bremst Hintergrund-Apps).
+ * Hält den Prozess am Leben, solange die Show läuft, auch in der Set-Pause (Mudita bremst Hintergrund-Apps).
  * Enthält keine Logik, nur die Pflicht-Mitteilung.
  */
 class WiedergabeDienst : Service() {
@@ -32,7 +32,7 @@ class WiedergabeDienst : Service() {
         )
         val n: Notification = Notification.Builder(this, KANAL)
             .setSmallIcon(R.drawable.ic_mitteilung)
-            .setContentTitle("TrikTrak spielt")
+            .setContentTitle("TrikTrak · Show läuft")
             .setContentIntent(oeffnen)
             .setOngoing(true)
             .build()

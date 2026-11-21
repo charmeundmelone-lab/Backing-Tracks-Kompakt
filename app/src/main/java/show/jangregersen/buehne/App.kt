@@ -14,8 +14,10 @@ class App : Application() {
         ablage = Ablage(this)
         buehne = Buehne(this, ablage)
         // Volle Medienlautstärke, solange die App offen ist oder etwas läuft (Jans Wunsch, 13.11.).
-        show.jangregersen.buehne.audio.VolleLautstaerke.einrichten(this) { buehne.zustand.value.let { it.spielt || it.pause != null } }
+        // Seit 21.11. auch, solange die Show läuft (Set-Pause mit gesperrtem Bildschirm).
+        show.jangregersen.buehne.audio.VolleLautstaerke.einrichten(this) { buehne.showLaeuft.value || buehne.zustand.value.let { it.spielt || it.pause != null } }
         kotlinx.coroutines.MainScope().launch { buehne.zustand.collect { show.jangregersen.buehne.audio.VolleLautstaerke.pruefen() } }
+        kotlinx.coroutines.MainScope().launch { buehne.showLaeuft.collect { show.jangregersen.buehne.audio.VolleLautstaerke.pruefen() } }
     }
 
     companion object {

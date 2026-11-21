@@ -74,7 +74,7 @@ import kotlin.math.abs
 // Ein Bildschirm für den ganzen Abend: oben die Reiter „Set“ und „Archiv“, in der Mitte die
 // Liste, unten immer die Player-Leiste. Optik wie Fassung 7 (Jan: „von den Textgrößen super“).
 // Wischen nach rechts = kommt als Nächstes, nach links = ans Ende vom Set (wie in der alten App).
-// Antippen eines Songs öffnet seine Einstellungen und startet nie Musik; Play gibt es nur unten.
+// Antippen wählt einen Song aus (21.11.), lang drücken öffnet seine Einstellungen; Play gibt es nur unten.
 // Der Entwurf dazu liegt in entwuerfe/wie-alt/.
 
 private const val REITER_SET = 0
@@ -85,6 +85,8 @@ object HauptZustand {
     var reiter by androidx.compose.runtime.mutableIntStateOf(REITER_SET)
     /** Letzter Song-Start, auf den schon reagiert wurde (Text öffnet sich nur einmal pro Start). */
     var gesehenerStart = 0
+    /** Kapo-Filter im Archiv: -1 = alle, 0 = ohne, sonst der Bund. */
+    var kapo by androidx.compose.runtime.mutableIntStateOf(-1)
 }
 
 /** Ungefähre Höhe der Player-Leiste: Hinweise erscheinen knapp darüber. */
@@ -102,7 +104,9 @@ fun HauptSeite(navi: Navi) {
     // Der Reiter bleibt gewählt, auch wenn man kurz eine andere Seite öffnet (Einstellungen, Rückfrage).
     var reiter by HauptZustand::reiter
     var klappe by remember { mutableStateOf(false) }
-    val set = b.set(z.setId)
+    // Gibt es das aktive Set nicht mehr (z. B. gelöscht), aber ein gewähltes kommt danach: das zeigen
+    // statt „Noch kein Set gewählt“ (21.11.).
+    val set = b.set(z.setId) ?: b.set(z.setDanach)
     val gig = b.gigVonSet(z.setId)
 
     // 20.11. (Jan): Startet ein Song mit Text, geht der Text von selbst auf; am Songende kommt
@@ -466,15 +470,18 @@ private fun BoxScope.RueckBand(text: String) {
 private fun ArchivBereich(navi: Navi, setId: Long?) {
     val b by App.ablage.stand.collectAsState()
     var tempo by rememberSaveable { mutableIntStateOf(0) }
+    // Kapo-Filter (21.11.): bleibt gewählt, auch wenn man kurz zum Set wechselt.
+    var kapo by HauptZustand::kapo
     var sprung by remember { mutableStateOf(false) }
     var zeige by remember { mutableStateOf<Zeige?>(null) }
-    val songs = b.songs.sortedBy { Normalizer.normalize(it.titel.lowercase(), Normalizer.Form.NFD) }.filter { tempo == 0 || it.tempo == tempo }
+    val songs = b.songs.sortedBy { Normalizer.normalize(it.titel.lowercase(), Normalizer.Form.NFD) }.filter { (tempo == 0 || it.tempo == tempo) && passtKapo(it, kapo) }
     val imGig = if (setId != null) b.schonImGig(setId) else emptyMap()
     if (sprung) { Sprung(songs) { i -> if (i >= 0) zeige = Zeige(i); sprung = false }; return }
     Column(Modifier.fillMaxSize()) {
         // 20.11. (Jan: "mehr Songs im Archiv ist gut"): schmalere Tempo-Leiste und kompakte Zeilen.
         Segmente(listOf("Alle", "Langsam", "Mittel", "Schnell"), tempo, Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp), hoehe = 30.dp, groesse = 15.sp) { tempo = it }
-        val merk = "hauptarchiv$tempo"
+        KapoLeiste(b.songs, kapo, Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp)) { kapo = it }
+        val merk = "hauptarchiv$tempo$kapo"
         SeitenListe(
             eintraege = songs, zeilenHoehe = 47.dp, modifier = Modifier.weight(1f), schluessel = merk, zeige = zeige, oben = 2.dp,
             fussHoehe = FUSS_HOEHE,
@@ -482,7 +489,7 @@ private fun ArchivBereich(navi: Navi, setId: Long?) {
                 val erster = songs.getOrNull(SeitenGedaechtnis.seiten[merk] ?: (s * pro))
                 SeitenFuss(s, n, zur, vor, "${erster?.let { buchstabe(it.titel) } ?: "A"}–Z · Seite ${s + 1}/$n · springen", onMitte = { sprung = true })
             },
-            leer = { T(if (b.songs.isEmpty()) "Noch keine Songs." else "Keine Songs mit diesem Tempo.", titelStil(24.sp), Modifier.padding(18.dp)) }
+            leer = { T(if (b.songs.isEmpty()) "Noch keine Songs." else "Keine Songs mit diesem Filter.", titelStil(24.sp), Modifier.padding(18.dp)) }
         ) { _, s ->
             key(s.id) {
                 val fund = imGig[s.id]

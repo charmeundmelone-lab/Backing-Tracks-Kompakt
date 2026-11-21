@@ -2,6 +2,7 @@ package show.jangregersen.buehne.spiel
 
 import android.app.Application
 import android.content.Intent
+import android.os.SystemClock
 import android.util.Log
 import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import show.jangregersen.buehne.audio.Engine
 import show.jangregersen.buehne.audio.Spuren
+import show.jangregersen.buehne.audio.Stille
 import show.jangregersen.buehne.audio.Warnton
 import show.jangregersen.buehne.daten.Ablage
 import show.jangregersen.buehne.daten.Ende
@@ -31,6 +33,15 @@ import show.jangregersen.buehne.daten.ansEnde
 import java.io.File
 
 private const val TAG = "Buehne"
+
+/**
+ * So lange nach dem letzten Ton oder Antippen gilt die Show noch als laufend (21.11.): Bildschirm
+ * bleibt an, Lautstärke und „Bitte nicht stören“ bleiben, die Tonausgabe bleibt wach. Deckt lange
+ * Ansagen und eine normale Set-Pause ab. Danach darf der Mudita wieder schlafen (Akku).
+ */
+private const val SHOW_NACHLAUF_MS = 60 * 60_000L
+/** Ist TrikTrak nicht zu sehen (Home gedrückt, Bildschirm von Hand aus), endet die Show schneller. */
+private const val SHOW_NACHLAUF_VERSTECKT_MS = 15 * 60_000L
 
 /**
  * Herz der App: welcher Song liegt bereit oder läuft, welches Set ist aktiv, und die
@@ -91,20 +102,47 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
 
     val engineZumAnhoeren: Engine get() = engine
 
+    /** Show läuft: ein Set ist aktiv und es wurde in der letzten Stunde gespielt oder getippt (21.11.). */
+    private val _show = MutableStateFlow(false)
+    val showLaeuft: StateFlow<Boolean> = _show.asStateFlow()
+    @Volatile private var letzteAktion = SystemClock.elapsedRealtime()
+    private var dienstLaeuft = false
+
+    /** TrikTrak ist gerade zu sehen (MainActivity onStart/onStop). */
+    @Volatile var sichtbar = false
+
+    /** Jan hat den Bildschirm berührt (MainActivity). */
+    fun beruehrt() { letzteAktion = SystemClock.elapsedRealtime() }
+
     init {
         engine.onFehler = { text -> _zustand.update { it.copy(fehler = text) } }
         haupt.launch {
             while (true) {
                 takt()
-                delay(200)
+                // Akku (21.11.): nur während Song oder Pause fünfmal pro Sekunde nachsehen, sonst einmal.
+                val z = _zustand.value
+                delay(if (z.spielt || z.pause != null) 200 else 1000)
             }
         }
+    }
+
+    private fun showPruefen(z: Zustand) {
+        val jetzt = SystemClock.elapsedRealtime()
+        val laeuft = z.spielt || z.pause != null
+        if (laeuft) letzteAktion = jetzt
+        val setDa = z.setId != null && ablage.jetzt.set(z.setId) != null
+        val an = laeuft || (setDa && jetzt - letzteAktion < if (sichtbar) SHOW_NACHLAUF_MS else SHOW_NACHLAUF_VERSTECKT_MS)
+        if (an != _show.value) _show.value = an
+        if (an) Stille.an() else Stille.aus()
+        // Der Dienst hält den Prozess auch in der Set-Pause am Leben, nicht nur während ein Song läuft.
+        if (an && !dienstLaeuft) dienstAn() else if (!an && dienstLaeuft) dienstAus()
     }
 
     // ── Takt: Position, Songende ─────────────────────────────────────────────
 
     private fun takt() {
         val z = _zustand.value
+        showPruefen(z)
         if (engine.hatSpuren) {
             _position.value = engine.positionMs
             val d = engine.dauerMs
@@ -333,9 +371,15 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         val z0 = _zustand.value
         if (angespielt() && !z0.probe) {
             if (z0.setId == setId) { _zustand.update { it.copy(setDanach = null) }; return }
-            _zustand.update { it.copy(setDanach = setId) }
-            hinweis("„${ablage.jetzt.set(setId)?.name ?: "Set"}“ beginnt nach diesem Song.")
-            return
+            // 21.11. (Jan: Set ließ sich nicht öffnen, solange ein Song auf Pause stand): Nur ein
+            // Song, der wirklich läuft, schiebt das neue Set nach hinten. Ein angehaltener Song wird
+            // beendet (bekommt keinen Haken), das gewählte Set liegt sofort bereit.
+            if (z0.spielt) {
+                _zustand.update { it.copy(setDanach = setId) }
+                hinweis("„${ablage.jetzt.set(setId)?.name ?: "Set"}“ beginnt nach diesem Song.")
+                return
+            }
+            engine.stop(); _position.value = 0
         }
         if (z0.pause != null) {
             pauseJob?.cancel(); engine.notizStoppen()
@@ -535,8 +579,15 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
 
     private fun dienstAn() {
         runCatching { ContextCompat.startForegroundService(app, Intent(app, WiedergabeDienst::class.java)) }
+            .onSuccess { dienstLaeuft = true }
             .onFailure { Log.w(TAG, "Dienst nicht startbar: ${it.message}") }
     }
 
-    private fun dienstAus() { runCatching { app.stopService(Intent(app, WiedergabeDienst::class.java)) } }
+    /** Dienst aus, aber nur, wenn keine Show mehr läuft (sonst hält er die Set-Pause am Leben). */
+    private fun dienstAus() {
+        val z = _zustand.value
+        if (_show.value || z.spielt || z.pause != null) return
+        runCatching { app.stopService(Intent(app, WiedergabeDienst::class.java)) }
+        dienstLaeuft = false
+    }
 }

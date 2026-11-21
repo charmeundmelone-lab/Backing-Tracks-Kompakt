@@ -200,6 +200,13 @@ ablauf() {
   pruefe set-danach 5 "Nach diesem Song beginnt „Set B“" "Danach"
   tippe "Abspielen"
   pruefe set-b-bereit 15 "Set B" "Bereit · 1 / 2" "Test Drei"
+  # 9b (21.11., Jans Fehler): Song angespielt und angehalten, dann anderes Set wählen. Früher kam
+  # „Noch kein Set gewählt“ bzw. das Set kam nie; jetzt ist das gewählte Set sofort da.
+  tippe "Abspielen"; tippe "Pause"
+  tippe "Set B"; tippe "Set A"
+  pruefe set-trotz-pause 5 "Set A" "Testlauf ·" "Archiv"
+  tippe "Set A"; tippe "Set B"
+  pruefe wieder-set-b 5 "Set B" "Bereit · 1 / 2" "Test Drei"
   # 10 Reiter Archiv: nach rechts wischen = liegt bereit
   tippe "Archiv"
   pruefe archiv 5 "Wischen plant in „Set B“ ein" "Langsam" "springen"
@@ -213,6 +220,10 @@ ablauf() {
   pruefe rueckfrage 5 "Nochmal einplanen?" "Test Zwei" "Ja, ans Ende" "Abbrechen"
   tippe "Abbrechen"
   pruefe abbrechen 5 "Archiv" "Langsam"
+  # 11b Kapo-Filter (21.11.): nur Songs mit Kapo 2, dann wieder alle
+  tippe "2"
+  pruefe kapo-filter 5 "Kapo" "alle" "Kapo 2"
+  tippe "alle"
   # 12 Text geht von selbst auf; „Liste“ führt zurück und der Text springt nicht wieder auf
   tippe "Set B"
   wische "Test Eins" rechts
