@@ -896,5 +896,6 @@ kam die Bildschirmsperre, gelegentlich knackte es über die PA. Unsinniges finde
 - [x] J8 Letztes Set gemerkt (files/letztes-set.txt): nach Neustart liegt es bereit, die App
   öffnet auf dem Hauptbildschirm. Restzeit-Anzeige bleibt (Jan mag sie), erst messen, falls
   der Akku weiter leer läuft.
+- [x] J6a Installiert 21.11. ~18:20 (Jans Ja), Daten gleich. testlauf 13 OK / 20 FEHLT: alles Folgefehler aus Schritt 9 (8-s-Testsong war vor dem Tipp auf „Pause“ schon zu Ende, Set B begann dann richtig). set-trotz-pause und kapo-filter OK. Vorschau am Gerät NICHT geprüft. Lehre: force-stop im aufraeumen lässt „Bitte nicht stören“ an, weil der Show-Modus es nach Home noch 15 min hält → aufraeumen anpassen. Jan behält Fassung 12 für den Gig am 21.11. abends.
 - [ ] J6 Mit Jans Ja installieren, testlauf, Stille per `dumpsys media.audio_flinger`
   prüfen (Standby: no während der Pause), dann Jan an der PA probieren lassen.

@@ -26,7 +26,8 @@ object Stille {
             val rate = 48000
             val frames = rate / 2 // 0,5 s Stille, endlos wiederholt
             val t = AudioTrack.Builder()
-                .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
+                // Eigene Kennung (UNKNOWN statt MUSIC): So erkennt werkzeug/testlauf.sh echte Songs weiter.
+                .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_UNKNOWN).build())
                 .setAudioFormat(AudioFormat.Builder().setSampleRate(rate).setChannelMask(AudioFormat.CHANNEL_OUT_STEREO).setEncoding(AudioFormat.ENCODING_PCM_16BIT).build())
                 .setTransferMode(AudioTrack.MODE_STATIC)
                 .setBufferSizeInBytes(frames * 4)

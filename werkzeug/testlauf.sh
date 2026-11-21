@@ -31,7 +31,8 @@ sichern() { adbs exec-out run-as $PKG cat files/bestand.json > "$1"; }
 # darum zählt nur eine Tonausgabe von TrikTraks Nutzerkennung im Zustand "started".)
 spielt() {
   uid=$(adbs shell dumpsys package $PKG | grep -m1 -oE "userId=[0-9]+" | cut -d= -f2)
-  adbs shell dumpsys audio | grep "AudioPlaybackConfiguration" | grep "u/pid:$uid/" | grep -q "state:started"
+  # Die stille Show-Spur (audio/Stille.kt, CONTENT_TYPE_UNKNOWN) zählt nicht, nur Musik.
+  adbs shell dumpsys audio | grep "AudioPlaybackConfiguration" | grep "u/pid:$uid/" | grep "state:started" | grep -q "CONTENT_TYPE_MUSIC"
 }
 vorne() { adbs shell dumpsys window | grep mCurrentFocus | grep -q $PKG; }
 
