@@ -94,6 +94,12 @@ wische() {
   $G wisch "$1" "$2" >/dev/null || { echo "FEHLT Zeile „$1“"; FEHLER=$((FEHLER + 1)); BERICHT="$BERICHT|FEHLT Zeile $1"; return 1; }
 }
 
+# lange "Text": lange auf die Zeile mit diesem Text drücken (Einstellungen).
+lange() {
+  vorne || abbruch "TrikTrak ist nicht vorne."
+  $G lang "$1" >/dev/null || { echo "FEHLT Zeile „$1“"; FEHLER=$((FEHLER + 1)); BERICHT="$BERICHT|FEHLT Zeile $1"; return 1; }
+}
+
 # pruefe NAME VERSUCHE TEXT…: warten, Foto, Ergebnis merken.
 pruefe() {
   name=$1; shift; v=$1; shift
@@ -156,7 +162,7 @@ ablauf() {
   tippe "Abspielen"; tippe "Pause"
   pruefe text-automatisch 5 "Test Eins" "Liste" "Angehalten" "Stopp"
   tippe "Stopp"
-  pruefe stopp-anfang 5 "Archiv" "Jetzt dran" "Test Eins" "Bereit" "Überspringen"
+  pruefe stopp-anfang 5 "Archiv" "Jetzt dran" "Test Eins" "Bereit" "Abspielen"
   # 3 Pausen-Kästchen: Tipp schaltet weiter (Test Zwei, das zweite Kästchen: 20 s → 30 s)
   tippe "Pause umschalten" 1
   pruefe pause-kaestchen 4 "30 s"
@@ -168,10 +174,14 @@ ablauf() {
   # 5 Wischen nach rechts, solange nichts läuft = liegt sofort bereit (wird JETZT)
   wische "Test Drei" rechts
   pruefe wisch-rechts 5 "Test Drei“ liegt bereit" "Rückgängig"
-  # 6 Antippen = Einstellungen (startet keine Musik)
-  tippe "Test Zwei"
+  # 6 Lang drücken = Einstellungen (startet keine Musik); Tipp = auswählen (21.11., wie die alte App)
+  lange "Test Zwei"
   pruefe antippen-karte 5 "Test Zwei" "0 s" "10 s" "30 s" "1 min" "2 min"
   tippe "Schließen"
+  tippe "Test Zwei"
+  pruefe tipp-waehlt-aus 5 "Test Zwei“ liegt bereit" "Rückgängig"
+  tippe "Rückgängig"
+  pruefe tipp-rueckgaengig 5 "Zurückgenommen"
   # 7 Song ohne Text: bleibt auf dem Hauptbildschirm; hält am Ende an, danach ist Test Eins dran
   tippe "Abspielen"
   pruefe ohne-text-bleibt 4 "Archiv" "Läuft" "Test Drei" "Stopp"

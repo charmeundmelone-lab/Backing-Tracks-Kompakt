@@ -123,25 +123,33 @@ fun T(text: String, stil: TextStyle, modifier: Modifier = Modifier, zeilen: Int 
 }
 
 /**
- * Jans Wunsch 15.11.: Ein Songtitel steht immer ganz da, in einer Zeile. Ist er zu lang, wird die
- * Schrift kleiner (von [gross] bis [klein] sp), die Zeile bleibt gleich hoch, damit nichts springt.
+ * Ein Songtitel in einer Zeile, immer in derselben Schriftgröße [gross] (21.11., Jan: dass die
+ * Schrift je nach Titellänge kleiner wird, ist "total doof"; die alte App hatte feste Größen).
+ * Ist er zu lang, wird er mit "…" gekürzt. [klein] gibt es nur noch aus Verträglichkeit.
  */
 @Composable
-fun PassenderTitel(text: String, stil: (TextUnit) -> TextStyle, gross: Int, klein: Int, modifier: Modifier = Modifier, durchgestrichen: Boolean = false) {
+fun PassenderTitel(text: String, stil: (TextUnit) -> TextStyle, gross: Int, @Suppress("UNUSED_PARAMETER") klein: Int = gross, modifier: Modifier = Modifier, durchgestrichen: Boolean = false) {
     val messer = rememberTextMeasurer()
     BoxWithConstraints(modifier, contentAlignment = Alignment.CenterStart) {
         val breite = constraints.maxWidth
-        val hoehe = with(androidx.compose.ui.platform.LocalDensity.current) { stil(gross.sp).lineHeight.toDp() }
-        val groesse = remember(text, breite, gross, klein) {
-            (gross downTo klein).firstOrNull { g ->
-                !messer.measure(text, stil(g.sp), maxLines = 1, softWrap = false,
-                    constraints = androidx.compose.ui.unit.Constraints(maxWidth = breite)).hasVisualOverflow
-            } ?: klein
+        val s = stil(gross.sp)
+        val hoehe = with(androidx.compose.ui.platform.LocalDensity.current) { s.lineHeight.toDp() }
+        val passt = { t: String ->
+            !messer.measure(t, s, maxLines = 1, softWrap = false,
+                constraints = androidx.compose.ui.unit.Constraints(maxWidth = breite)).hasVisualOverflow
         }
-        // 20.11.: Die Breite ist oben schon geprüft. Unterlängen (g, p, y) dürfen über die knappe
-        // Zeilenhöhe hinausragen statt abgeschnitten zu werden ("Here I go again" war unten gekappt).
+        val anzeige = remember(text, breite, gross) {
+            if (passt(text)) text
+            else {
+                var n = text.length - 1
+                while (n > 1 && !passt(text.take(n).trimEnd() + "…")) n--
+                text.take(n).trimEnd() + "…"
+            }
+        }
+        // Die Breite ist oben schon geprüft. Unterlängen (g, p, y) dürfen über die knappe
+        // Zeilenhöhe hinausragen statt abgeschnitten zu werden (20.11., "Here I go again").
         Box(Modifier.height(hoehe), contentAlignment = Alignment.CenterStart) {
-            T(text, stil(groesse.sp), zeilen = 1, durchgestrichen = durchgestrichen, ueberlauf = TextOverflow.Visible)
+            T(anzeige, s, zeilen = 1, durchgestrichen = durchgestrichen, ueberlauf = TextOverflow.Visible)
         }
     }
 }

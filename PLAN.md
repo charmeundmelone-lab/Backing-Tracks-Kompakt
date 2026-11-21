@@ -831,4 +831,44 @@ Kompakter und schöner, Schriftgrößen möglichst beibehalten." Danach, als 6 S
 - [x] H5 Archiv: 6 statt 3 Songs (Zeilen 47 dp, Tempo-Leiste 30 dp), Infozeile mit Abstand.
 - [x] H6 Fassung 10 (versionCode 10) installiert, `testlauf.sh ablauf` 26/26. Kopie
   `.geraet/fassung10-2026-11-20.apk`, Rückweg `.geraet/fassung9-2026-11-20.apk`.
-- [ ] H7 Jan probiert Fassung 10.
+- [x] H7 Jan zu Fassung 10 (21.11.): alte App "haushoch überlegen" → Arbeitsliste I.
+
+## Arbeitsliste I: Bedienung wie die alte Backing-Tracks-App (21.11.)
+
+Jan: "Die alte App ist immer noch haushoch überlegen ... ich komme da total durcheinander."
+Beispiele: Schrift wird je nach Titellänge kleiner ("total doof"); Tipp auf einen Song öffnet den
+Editor, er will ihn auswählen und spielen. Auftrag: alte App ansehen (GitHub
+charmeundmelone-lab/Backing-Tracks, lokal C:\Users\HUAWEI\Backing-Tracks), Plan machen, selbst
+nachbessern, Prototyp zum Testen geben. Lesbarkeit vor Menge.
+
+Was die alte App ausmacht (aus MainScreen.kt, GigManagementScreen.kt, PlayerViewModel.kt):
+- Ein Bildschirm: Reiter oben, Liste, Player unten. Schrift fest (Titel 20 sp, Ellipse).
+- Setliste behält die Reihenfolge; gespielte Songs bleiben an ihrem Platz, nur blass; der
+  aktuelle Song ist markiert. Zeile: Nummer · Titel, darunter Tonart · Kapo · Dauer.
+- Tipp auf einen Song = auswählen (`loadSetAsQueue` → `selectSong`): er liegt bereit, Play startet.
+  Gespielter Song: Rückfrage "Heute bereits gespielt. Trotzdem verwenden?". Wischen rechts =
+  als Nächstes, links = ans Ende. Editor nur übers Archiv.
+- Player: Restzeit, aktueller Titel groß, darunter "⏭ nächster Song · Capo"; Knöpfe immer gleich
+  (Play/Pause breit, Stopp, Loop). Stopp = anhalten, an den Anfang. Mit Text: Text geht beim
+  Start auf, am Songende zu.
+
+Plan (Fassung 11):
+- [x] I1 Nirgends mehr kleinere Schrift: `PassenderTitel` kürzt zu lange Titel mit "…", Größe fest.
+- [x] I2 Setliste wie alt: Reihenfolge bleibt, gespielte Songs blass mit Haken an ihrem Platz,
+  aktueller Song schwarz. Zeile: Nummer · Titel (fest, groß), darunter Kapo · Tonart · Länge und
+  das Pausen-Schildchen. 5 Songs pro Seite; die Seite folgt dem aktuellen Song nur, wenn er
+  sonst nicht zu sehen wäre.
+- [x] I3 Tipp auf einen Song = auswählen (liegt bereit, Play startet). Läuft gerade ein Song,
+  kommt der angetippte als Nächstes (Hinweis mit Rückgängig, nichts bricht ab). Gespielt:
+  Rückfrage. Lang drücken = Einstellungen. Wischen bleibt.
+- [x] I4 Archiv nach derselben Regel: Tipp = auswählen (ins Set), lang drücken = Bearbeiten.
+- [x] I5 Leiste wie alt: aktueller Titel groß + Restzeit, darunter "Danach: … · Kapo",
+  Fortschritt als Linie, immer dieselben drei Knöpfe Text · Play/Pause · Stopp (in der Pause:
+  Play = jetzt starten, Stopp = Automatik anhalten). "Weiter" entfällt (anderen Song antippen).
+- [x] I6 Testlauf anpassen, Fotos am echten Set prüfen, selbst nachbessern, installieren.
+- [x] I7 Selbst nachgebessert: Leiste flacher (5 Songs passen auch beim echten Set), Text „Alle
+  Songs gespielt“ statt „Set wählen“, ausgegrauter Play-Knopf zeigt sein Zeichen, Text-Ansicht hat
+  dieselben drei Knöpfe (Stopp ausgegraut statt „Weiter“). `geraet.sh lang` + `testlauf.sh`
+  (lange drücken, Tipp wählt aus): 28/28. Fassung 11 installiert 21.11., Kopie
+  `.geraet/fassung11-2026-11-21.apk`, Rückweg `.geraet/fassung10-2026-11-20.apk`.
+- [ ] I8 Jan probiert Fassung 11.

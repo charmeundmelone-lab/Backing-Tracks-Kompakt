@@ -5,6 +5,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -155,10 +156,13 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
 }
 
 @Composable
-fun ArchivZeile(s: Song, waehlen: Boolean, drin: Boolean, schonIm: String?, kompakt: Boolean = false, onClick: () -> Unit) {
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+fun ArchivZeile(s: Song, waehlen: Boolean, drin: Boolean, schonIm: String?, kompakt: Boolean = false, onLang: (() -> Unit)? = null, onClick: () -> Unit) {
     val farbe = if (schonIm != null) Grau else Schwarz
     Row(
-        Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(if (kompakt) 46.dp else 61.dp).tipp(onClick = onClick).padding(start = 8.dp, end = 4.dp),
+        Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(if (kompakt) 46.dp else 61.dp)
+            .then(if (onLang != null) Modifier.combinedClickable(interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null, onClick = onClick, onLongClick = onLang) else Modifier.tipp(onClick = onClick))
+            .padding(start = 8.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
     ) {
         Column(Modifier.weight(1f)) {

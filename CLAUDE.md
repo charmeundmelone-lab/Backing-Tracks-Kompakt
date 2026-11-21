@@ -31,6 +31,8 @@ Ablauf-Code.
 
 ## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:55; Nachträge D, E, F unten drüber)
 
+**Stand 21.11. ~15:00: Fassung 11 INSTALLIERT (Arbeitsliste I, Bedienung nach der alten Backing-Tracks-App): Setliste in fester Reihenfolge, gespielte blass, aktueller schwarz; Tipp = auswählen (läuft etwas: als Nächstes), lang drücken = Einstellungen, Archiv genauso; feste Schriftgrößen (PassenderTitel kürzt mit „…“); Leiste = jetziger Song groß + Zeit, darunter „Danach: … · Kapo“, immer Text · Play · Stopp. testlauf 28/28. Offen I8: Jan probiert. Achtung: Jans Set 1 war am 21.11. komplett gespielt und umsortiert (seine Daten).**
+
 **Stand 20.11. ~16:40: Fassung 10 INSTALLIERT, testlauf 26/26, Arbeitsliste H (Set-Zeilen groß, 5 pro Seite, Titel allein in der Zeile, Länge + „‖ 30 s“ rechts, Seitenpunkte statt Fußzeile, Archiv 6 Songs, nichts mehr abgeschnitten). Offen H7: Jan probiert.**
 
 **Stand 20.11. ~16:15: Fassung 9 INSTALLIERT (Jans Ja), `testlauf.sh ablauf` 25/26 (Fehler war das

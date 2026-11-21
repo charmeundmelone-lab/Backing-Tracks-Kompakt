@@ -4,6 +4,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -180,8 +181,6 @@ private fun SetBereich(navi: Navi, setId: Long) {
     val b by App.ablage.stand.collectAsState()
     val z by App.buehne.zustand.collectAsState()
     val set = b.set(setId) ?: return
-    // Jeder Besuch beginnt auf Seite 1, also bei dem, was als Nächstes kommt.
-    val besuch = remember(setId) { System.nanoTime() }
     if (set.eintraege.isEmpty()) {
         Column(Modifier.padding(18.dp)) {
             T("Dieses Set ist noch leer.", titelStil(26.sp))
@@ -190,13 +189,15 @@ private fun SetBereich(navi: Navi, setId: Long) {
         }
         return
     }
-    // 20.11. (Jan): Der Song, der jetzt dran ist (läuft oder liegt bereit), steht oben in der
-    // Liste und ist schwarz markiert. Unten in der Leiste steht, was danach kommt.
-    val kommt = set.wasKommt(z.songId)
-    val gespielt = set.eintraege.filter { it.gespielt && it.songId != z.songId }
+    // 21.11. (Jan: "die alte App ist haushoch überlegen"): Die Setliste bleibt in ihrer Reihenfolge
+    // wie in der alten App. Gespielte Songs bleiben an ihrem Platz und werden blass, der Song, der
+    // jetzt dran ist, ist schwarz. Die Seite folgt ihm nur, wenn er sonst nicht zu sehen wäre.
+    val eintraege = set.eintraege
     val folgeSet = b.set(z.setDanach)
     // "hält an" nur zeigen, wenn es im Set vom Üblichen abweicht (sonst stünde es überall).
-    val mitAutomatik = set.eintraege.any { it.ende == Ende.WEITER }
+    val mitAutomatik = eintraege.any { it.ende == Ende.WEITER }
+    val jetztIndex = eintraege.indexOfFirst { it.songId == z.songId }
+    val zeige = remember(setId, z.songId) { if (jetztIndex >= 0) Zeige(jetztIndex, nurWennVerdeckt = true) else null }
     Column(Modifier.fillMaxSize()) {
         z.setDurch?.let { SetEndeHinweis(it) }
         if (folgeSet != null) {
@@ -205,26 +206,32 @@ private fun SetBereich(navi: Navi, setId: Long) {
             }
         }
         SeitenListe(
-            eintraege = kommt + gespielt, zeilenHoehe = SET_ZEILE, modifier = Modifier.weight(1f), schluessel = "haupt$setId·$besuch",
-            fussHoehe = 0.dp, oben = 2.dp, seitenPunkte = true,
-            fuss = { _, _, _, _, _ -> },
-            leer = { T("Alle Songs sind gespielt.", titelStil(24.sp), Modifier.padding(18.dp)) }
-        ) { _, e ->
+            eintraege = eintraege, zeilenHoehe = SET_ZEILE, modifier = Modifier.weight(1f), schluessel = "haupt$setId",
+            zeige = zeige, fussHoehe = 0.dp, oben = 2.dp, seitenPunkte = true,
+            fuss = { _, _, _, _, _ -> }
+        ) { i, e ->
             val s = b.song(e.songId) ?: return@SeitenListe
-            val nr = set.eintraege.indexOfFirst { it.songId == e.songId } + 1
+            val jetzt = e.songId == z.songId
+            // Antippen (wie die alte App): Song auswählen. Er liegt dann bereit, Play startet ihn.
+            // Läuft gerade ein Song, wird nichts abgebrochen: der angetippte kommt als Nächstes.
+            // Gespielt: erst Rückfrage. Lang drücken: Einstellungen des Songs.
+            val tippen = {
+                when {
+                    jetzt -> App.buehne.hinweis("„${s.titel}“ ist schon dran. Lang drücken: Einstellungen.")
+                    e.gespielt -> einplanen(navi, setId, s, rechts = true)
+                    else -> App.buehne.vorziehen(setId, s.id)
+                }
+            }
+            val lang = { navi.zu(Seite.SongKarte(setId, s.id)) }
             key(e.songId) {
-                if (e.songId == z.songId) {
-                    // Der Song, der jetzt dran ist: kein Wischen (er ist schon dran), Tipp = Einstellungen.
-                    JetztZeile(nr, s, e, haeltAnZeigen = mitAutomatik) { navi.zu(Seite.SongKarte(setId, s.id)) }
-                } else if (e.gespielt) {
-                    // Gespielt: nach rechts wischen spielt ihn nochmal (mit Rückfrage), links gibt es nicht.
-                    WischZeile(e.songId, rechts = "NOCHMAL", links = null, onRechts = { einplanen(navi, setId, s, rechts = true) }, onLinks = {}) {
-                        LiveZeile(nr, s, e, naechster = false, haeltAnZeigen = mitAutomatik) { navi.zu(Seite.SongKarte(setId, s.id)) }
+                when {
+                    jetzt -> SetZeile(i + 1, s, e, SetArt.JETZT, mitAutomatik, tippen, lang)
+                    e.gespielt -> WischZeile(e.songId, rechts = "NOCHMAL", links = null, onRechts = { einplanen(navi, setId, s, rechts = true) }, onLinks = {}) {
+                        SetZeile(i + 1, s, e, SetArt.GESPIELT, mitAutomatik, tippen, lang)
                     }
-                } else {
-                    WischZeile(e.songId, rechts = "ALS NÄCHSTES", links = "ANS ENDE",
+                    else -> WischZeile(e.songId, rechts = "ALS NÄCHSTES", links = "ANS ENDE",
                         onRechts = { App.buehne.vorziehen(setId, s.id) }, onLinks = { App.buehne.ansEnde(setId, s.id) }) {
-                        LiveZeile(nr, s, e, naechster = false, haeltAnZeigen = mitAutomatik) { navi.zu(Seite.SongKarte(setId, s.id)) }
+                        SetZeile(i + 1, s, e, SetArt.OFFEN, mitAutomatik, tippen, lang)
                     }
                 }
             }
@@ -232,12 +239,15 @@ private fun SetBereich(navi: Navi, setId: Long) {
     }
 }
 
-// ── Zeilen der Setliste (20.11., Jan: lieber 5 Songs pro Seite, dafür besser lesbar) ─────────
-// Der Titel hat die Zeile für sich und steht mittig (Unterlängen stoßen nirgends an).
-// Rechts stehen Länge und Pause übereinander; endet hier die Automatik, steht dort „hält an“.
+// ── Zeilen der Setliste (21.11., nach der alten App) ─────────────────────────
+// Feste Schriftgrößen (nichts wird kleiner, zu Lange bekommen "…"). Oben der Titel groß, darunter
+// Kapo · Tonart · Länge wie in der alten App, rechts daneben die Pause (Tipp = nächste Pause).
+// 5 Songs pro Seite (Jan: lieber weniger Songs, dafür lesbar).
 
 /** Höhe jeder Zeile im Reiter „Set“ (SeitenListe braucht eine feste Höhe). */
-private val SET_ZEILE = 64.dp
+private val SET_ZEILE = 63.dp
+
+private enum class SetArt { OFFEN, JETZT, GESPIELT }
 
 /** Kleines Schild mit Rand (z. B. „hält an“), so flach wie möglich. */
 @Composable
@@ -248,60 +258,53 @@ private fun Schildchen(text: String, farbe: Color) {
     }
 }
 
-/** Mitte einer Zeile: Mikro (wenn es eine Ansage gibt) und der Titel, eine Zeile, notfalls kleiner. */
-@Composable
-private fun RowScope.TitelMitte(s: Song, farbe: Color, fett: Boolean, durchgestrichen: Boolean) {
-    Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        if (s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank()) Symbol(Sym.MIKRO, farbe, 15.dp)
-        PassenderTitel(s.titel, { if (fett) titelStil(it, farbe) else textStil(it, farbe) }, 30, 18, Modifier.weight(1f), durchgestrichen = durchgestrichen)
-    }
-}
+/** „Kapo 2 · G · 3:36“ wie die Meta-Zeile der alten App; ohne Kapo steht es ausdrücklich da. */
+private fun metaZeile(s: Song) = listOf(
+    if (s.kapo > 0) "Kapo ${s.kapo}" else "ohne Kapo",
+    s.tonart.trim(),
+    if (s.dauerMs > 0) zeit(s.dauerMs) else ""
+).filter { it.isNotBlank() }.joinToString(" · ")
 
-/** Rechts: Länge, darunter die Pause danach (Tipp = nächste Pause) bzw. „hält an“. */
+/** Eine Zeile der Setliste. JETZT = schwarz hinterlegt, GESPIELT = blass mit Haken. */
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
-private fun LaengeUndPause(s: Song, e: Eintrag, haeltAn: Boolean, farbe: Color) {
-    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        T(zeit(s.dauerMs), titelStil(24.sp, farbe, FontWeight.SemiBold).knapp(), zeilen = 1, ueberlauf = TextOverflow.Visible)
-        if (!e.gespielt) { if (haeltAn) Schildchen("hält an", farbe) else PausenKaestchen(s, farbe, kompakt = true) }
-    }
-}
-
-/** Eine Zeile der Setliste: Nummer · Titel · Länge mit Pause darunter. */
-@Composable
-private fun LiveZeile(nr: Int, s: Song, e: Eintrag, naechster: Boolean, haeltAnZeigen: Boolean, onClick: () -> Unit) {
+private fun SetZeile(nr: Int, s: Song, e: Eintrag, art: SetArt, mitAutomatik: Boolean, onTipp: () -> Unit, onLang: () -> Unit) {
+    val jetzt = art == SetArt.JETZT
+    val gespielt = art == SetArt.GESPIELT
+    val vorne = when { jetzt -> Weiss; gespielt -> Grau; else -> Schwarz }
+    val haeltAn = mitAutomatik && e.ende == Ende.ANHALTEN
+    val ansage = s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank()
+    val quelle = remember { MutableInteractionSource() }
     Box(Modifier.fillMaxWidth().height(SET_ZEILE)) {
         Row(
-            Modifier.padding(horizontal = 10.dp).fillMaxWidth().height(SET_ZEILE - 1.dp)
-                .tipp(onClick = onClick).padding(start = 8.dp, end = 10.dp),
+            Modifier.fillMaxSize()
+                .then(if (jetzt) Modifier.padding(start = 6.dp, end = 12.dp, top = 1.dp, bottom = 1.dp).clip(RoundedCornerShape(12.dp)).background(Schwarz).semantics { contentDescription = "Jetzt dran" } else Modifier.padding(horizontal = 10.dp))
+                .combinedClickable(interactionSource = quelle, indication = null, onClick = onTipp, onLongClick = onLang)
+                .padding(start = if (jetzt) 12.dp else 8.dp, end = if (jetzt) 8.dp else 10.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
-            Box(Modifier.width(30.dp), contentAlignment = Alignment.Center) {
-                if (e.gespielt) Box(Modifier.size(26.dp).clip(RoundedCornerShape(13.dp)).background(Schwarz), contentAlignment = Alignment.Center) { Symbol(Sym.HAKEN, Weiss, 13.dp) }
-                else T("$nr", titelStil(26.sp).knapp(), zeilen = 1, ueberlauf = TextOverflow.Visible)
+            // Links: Nummer (jetzt: weißes Kästchen), gespielt: Haken.
+            Box(Modifier.width(32.dp), contentAlignment = Alignment.Center) {
+                when {
+                    jetzt -> Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(Weiss), contentAlignment = Alignment.Center) {
+                        T("$nr", titelStil(24.sp).knapp(), zeilen = 1, ueberlauf = TextOverflow.Visible)
+                    }
+                    gespielt -> Box(Modifier.size(26.dp).clip(RoundedCornerShape(13.dp)).border(2.dp, Grau, RoundedCornerShape(13.dp)), contentAlignment = Alignment.Center) { Symbol(Sym.HAKEN, Grau, 13.dp) }
+                    else -> T("$nr", titelStil(24.sp).knapp(), zeilen = 1, ueberlauf = TextOverflow.Visible)
+                }
             }
-            TitelMitte(s, Schwarz, fett = false, durchgestrichen = e.gespielt)
-            LaengeUndPause(s, e, haeltAnZeigen && e.ende == Ende.ANHALTEN, Schwarz)
-        }
-        Linie(Modifier.align(Alignment.BottomCenter).padding(horizontal = 10.dp))
-    }
-}
-
-/** Der Song, der jetzt dran ist (läuft oder liegt bereit): schwarz hinterlegt, gleich hoch wie die anderen Zeilen. */
-@Composable
-private fun JetztZeile(nr: Int, s: Song, e: Eintrag, haeltAnZeigen: Boolean, onClick: () -> Unit) {
-    Box(Modifier.fillMaxWidth().height(SET_ZEILE).padding(start = 6.dp, end = 12.dp, top = 1.dp, bottom = 1.dp)) {
-        Row(
-            Modifier.fillMaxSize().clip(RoundedCornerShape(12.dp)).background(Schwarz)
-                .semantics { contentDescription = "Jetzt dran" }
-                .tipp(onClick = onClick).padding(start = 12.dp, end = 8.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
-        ) {
-            Box(Modifier.size(32.dp).clip(RoundedCornerShape(8.dp)).background(Weiss), contentAlignment = Alignment.Center) {
-                T("$nr", titelStil(25.sp).knapp(), zeilen = 1, ueberlauf = TextOverflow.Visible)
+            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
+                PassenderTitel(s.titel, { titelStil(it, vorne).knapp() }, 26)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    T(metaZeile(s), textStil(16.sp, vorne, FontWeight.SemiBold), Modifier.weight(1f, fill = false), zeilen = 1)
+                    if (!gespielt) {
+                        if (ansage) Symbol(Sym.MIKRO, vorne, 15.dp)
+                        if (haeltAn) Schildchen("hält an", vorne) else PausenKaestchen(s, vorne, kompakt = true)
+                    }
+                }
             }
-            TitelMitte(s, Weiss, fett = true, durchgestrichen = false)
-            LaengeUndPause(s, e.copy(gespielt = false), haeltAnZeigen && e.ende == Ende.ANHALTEN, Weiss)
         }
+        if (!jetzt) Linie(Modifier.align(Alignment.BottomCenter).padding(horizontal = 10.dp))
     }
 }
 
@@ -489,7 +492,10 @@ private fun ArchivBereich(navi: Navi, setId: Long?) {
                     onRechts = { if (setId != null) einplanen(navi, setId, s, rechts = true) },
                     onLinks = { if (setId != null) einplanen(navi, setId, s, rechts = false) }
                 ) {
-                    ArchivZeile(s, waehlen = false, drin = false, schonIm = wo, kompakt = true) { navi.zu(Seite.Editor(s.id)) }
+                    // 21.11. (wie die Setliste): Tipp = für das Set auswählen, lang drücken = Bearbeiten.
+                    ArchivZeile(s, waehlen = false, drin = false, schonIm = wo, kompakt = true, onLang = { navi.zu(Seite.Editor(s.id)) }) {
+                        if (setId != null) einplanen(navi, setId, s, rechts = true) else navi.zu(Seite.Editor(s.id))
+                    }
                 }
             }
         }
@@ -531,8 +537,6 @@ private fun PlayerLeiste(navi: Navi) {
     val angespielt = z.spielt || angefangen
     val pause = z.pause
     val platz = set?.eintraege?.indexOfFirst { it.songId == song?.id }?.takeIf { it >= 0 }?.let { "${it + 1} / ${set.eintraege.size}" }
-    // 20.11. (Jan, Variante A): Der Song, der jetzt dran ist, ist oben in der Liste markiert;
-    // die Leiste nennt groß, was DANACH kommt. Zeit, Fortschritt und Knöpfe gehören zum jetzigen Song.
     val folgeSet = b.set(z.setDanach)
     val danach = when {
         song == null -> null
@@ -540,88 +544,67 @@ private fun PlayerLeiste(navi: Navi) {
         else -> b.song(set?.naechsterNach(song.id)?.songId)
     }
 
-    // 20.11. kompakt: Zustand und Kapo/Tonart (bzw. Fortschritt) stehen links übereinander neben
-    // der großen Zeit, statt je eine eigene Zeile zu belegen. Schriftgrößen wie vorher.
-    Column(Modifier.fillMaxWidth().background(Schwarz).padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 10.dp)) {
-        // Zeile 1: links Zustand, darunter Kapo/Tonart bzw. Fortschritt; rechts die Zeit. Feste Höhen: nichts springt.
-        Row(Modifier.fillMaxWidth().height(52.dp), verticalAlignment = Alignment.CenterVertically) {
+    // 21.11. wie die alte App: oben der jetzige Song groß mit seiner Zeit, darunter "Danach: …".
+    // Feste Schriftgrößen, feste Höhen, immer dieselben drei Knöpfe an derselben Stelle.
+    Column(Modifier.fillMaxWidth().background(Schwarz).padding(start = 12.dp, end = 12.dp, top = 5.dp, bottom = 8.dp)) {
+        // Fortschritt als dünne Linie (nur solange der Song läuft; sonst bleibt der Platz leer).
+        Box(Modifier.fillMaxWidth().height(5.dp)) {
+            if (song != null && angespielt && pause == null) Fortschritt(song, z.dauerMs)
+        }
+        Abstand(3.dp)
+        // Zeile 1: Zustand links, Kapo und Tonart des jetzigen Songs rechts.
+        Row(Modifier.fillMaxWidth().height(19.dp), verticalAlignment = Alignment.CenterVertically) {
             val wort = when {
                 song == null -> "Nichts bereit"
                 pause != null -> "${pause.art} · gleich${platz?.let { " $it" } ?: ""}"
                 z.probe -> "Probe"
                 else -> (if (z.spielt) "Läuft" else if (angefangen) "Angehalten" else "Bereit") + (platz?.let { " · $it" } ?: "")
             }
-            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Etikett(wort, farbe = Weiss)
-                Box(Modifier.fillMaxWidth().height(27.dp), contentAlignment = Alignment.CenterStart) {
-                    if (song != null && angespielt && pause == null) Fortschritt(song, z.dauerMs)
-                    else if (song != null) KapoChips(song)
-                }
-            }
-            Abstand(12.dp)
-            Row(verticalAlignment = Alignment.Bottom) {
-                if (song != null && pause != null) T(zeit(pause.restSek * 1000L), zeitStil(40.sp), zeilen = 1)
-                else if (song != null) {
-                    Etikett(if (angespielt) "noch" else "Länge", Modifier.padding(end = 8.dp, bottom = 5.dp), Weiss)
-                    Restzeit(song, z.dauerMs, angespielt)
-                }
-            }
+            Etikett(wort, Modifier.weight(1f), Weiss)
+            if (song != null) Etikett(listOf(if (song.kapo > 0) "Kapo ${song.kapo}" else "ohne Kapo", song.tonart.trim()).filter { it.isNotBlank() }.joinToString(" · "), farbe = Weiss)
         }
-        // Zeile 2: was danach kommt, groß, immer ganz, notfalls kleiner.
-        Row(Modifier.fillMaxWidth().height(36.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            if (song == null) PassenderTitel(if (z.setDurch != null) "Set zu Ende" else "Set wählen", { titelStil(it, Weiss).knapp() }, 28, 18)
-            else {
+        // Zeile 2: der jetzige Song groß, rechts seine Restzeit (bzw. Länge, in der Pause der Countdown).
+        Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Box(Modifier.weight(1f)) {
+                val ohneSong = when { z.setDurch != null -> "Set zu Ende"; set != null && set.eintraege.isNotEmpty() && set.eintraege.none { !it.gespielt } -> "Alle Songs gespielt"; set != null -> "Set ist leer"; else -> "Set wählen" }
+                PassenderTitel(song?.titel ?: ohneSong, { titelStil(it, Weiss).knapp() }, 26)
+            }
+            if (song != null && pause != null) T(zeit(pause.restSek * 1000L), zeitStil(34.sp), zeilen = 1)
+            else if (song != null) Restzeit(song, z.dauerMs, angespielt, 34.sp)
+        }
+        // Zeile 3: was danach kommt (mit Kapo, wie in der alten App).
+        Row(Modifier.fillMaxWidth().height(26.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            if (song != null) {
                 Etikett("Danach", farbe = Weiss)
-                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                    when {
-                        danach != null && folgeSet != null -> PassenderTitel("${folgeSet.name}: ${danach.titel}", { titelStil(it, Weiss).knapp() }, 28, 18)
-                        danach != null -> PassenderTitel(danach.titel, { titelStil(it, Weiss).knapp() }, 31, 18)
-                        else -> PassenderTitel("Set-Ende", { titelStil(it, Weiss).knapp() }, 28, 18)
-                    }
-                }
+                val text = when {
+                    danach == null -> "Set-Ende"
+                    folgeSet != null -> "${folgeSet.name}: ${danach.titel}"
+                    else -> danach.titel
+                } + (danach?.let { if (it.kapo > 0) " · Kapo ${it.kapo}" else " · ohne Kapo" } ?: "")
+                Box(Modifier.weight(1f)) { PassenderTitel(text, { textStil(it, Weiss, FontWeight.Bold) }, 18) }
             }
         }
         Abstand(4.dp)
+        // Immer dieselben drei Knöpfe: Text · Play/Pause · Stopp. In der Pause zwischen zwei Songs
+        // startet Play sofort und Stopp hält die Automatik an.
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            // Text nur, wenn es einen gibt; in der Pause zwischen den Songs nicht (dann zählt der Countdown).
             val textDa = song?.lyrics?.isNotBlank() == true && pause == null
             LeistenKnopf(Modifier.weight(1f), beschreibung = "Text zeigen", aktiv = textDa, onClick = { navi.zurBuehne() }) { f ->
                 Symbol(Sym.ZEILEN, f, 20.dp)
                 T(if (song != null && song.lyrics.isBlank()) "Kein Text" else "Text", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
             }
-            if (pause != null) {
-                LeistenKnopf(Modifier.weight(1.5f), voll = true, beschreibung = "Jetzt starten", onClick = { App.buehne.pauseUeberspringen() }) { f ->
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Symbol(Sym.PLAY, f, 18.dp)
-                        T("Jetzt starten", textStil(18.sp, f, FontWeight.Bold), zeilen = 1)
-                    }
-                }
-                LeistenKnopf(Modifier.weight(1f), beschreibung = "Anhalten", onClick = { App.buehne.stopp() }) { f ->
-                    Symbol(Sym.PAUSE, f, 18.dp)
-                    T("Anhalten", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
-                }
-            } else {
-                val spielbar = song != null || set?.eintraege?.any { !it.gespielt } == true
-                LeistenKnopf(Modifier.weight(1.5f), voll = true, aktiv = spielbar, beschreibung = if (z.spielt) "Pause" else "Abspielen", onClick = { App.buehne.playPause() }) { f ->
-                    Symbol(if (z.spielt) Sym.PAUSE else Sym.PLAY, f, 26.dp)
-                }
-                when {
-                    z.probe -> LeistenKnopf(Modifier.weight(1f), beschreibung = "Stopp", onClick = { App.buehne.stopp() }) { f ->
-                        Symbol(Sym.STOP, f, 18.dp); T("Stopp", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
-                    }
-                    // 20.11. (Jan): Stopp hält an und springt an den Anfang; der Song bleibt dran
-                    // und wird nicht abgehakt. Darum reicht ein Tipp. Danach erscheint "Weiter".
-                    angespielt -> LeistenKnopf(Modifier.weight(1f), beschreibung = "Stopp", onClick = { App.buehne.stopp() }) { f ->
-                        Symbol(Sym.STOP, f, 18.dp)
-                        T("Stopp", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
-                    }
-                    else -> {
-                        val weiterGeht = song != null && (set?.naechsterNach(song.id) != null || z.setDanach != null)
-                        LeistenKnopf(Modifier.weight(1f), aktiv = weiterGeht, beschreibung = "Überspringen", onClick = { App.buehne.weiter() }) { f ->
-                            Symbol(Sym.WEITER, f, 20.dp); T("Weiter", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
-                        }
-                    }
-                }
+            val spielbar = pause != null || song != null || set?.eintraege?.any { !it.gespielt } == true
+            LeistenKnopf(Modifier.weight(1.5f), voll = true, aktiv = spielbar,
+                beschreibung = when { pause != null -> "Jetzt starten"; z.spielt -> "Pause"; else -> "Abspielen" },
+                onClick = { if (pause != null) App.buehne.pauseUeberspringen() else App.buehne.playPause() }) { f ->
+                Symbol(if (z.spielt && pause == null) Sym.PAUSE else Sym.PLAY, f, 26.dp)
+                if (pause != null) T("Jetzt starten", textStil(14.sp, f, FontWeight.Bold), zeilen = 1)
+            }
+            // Stopp: anhalten und an den Anfang, der Song bleibt dran (20.11.); in der Pause: Automatik anhalten.
+            LeistenKnopf(Modifier.weight(1f), aktiv = angespielt || pause != null || z.probe,
+                beschreibung = if (pause != null) "Anhalten" else "Stopp", onClick = { App.buehne.stopp() }) { f ->
+                Symbol(Sym.STOP, f, 18.dp)
+                T(if (pause != null) "Anhalten" else "Stopp", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
             }
         }
     }
@@ -630,10 +613,10 @@ private fun PlayerLeiste(navi: Navi) {
 private fun zeitStil(g: TextUnit) = titelStil(g, Weiss).copy(lineHeight = g, fontFeatureSettings = "tnum")
 
 @Composable
-private fun Restzeit(song: Song, dauerMs: Long, angespielt: Boolean) {
+private fun Restzeit(song: Song, dauerMs: Long, angespielt: Boolean, groesse: TextUnit = 40.sp) {
     val pos by App.buehne.position.collectAsState()
     val dauer = if (dauerMs > 0) dauerMs else song.dauerMs
-    T(zeit(if (angespielt) (dauer - pos).coerceAtLeast(0) else dauer), zeitStil(40.sp), zeilen = 1)
+    T(zeit(if (angespielt) (dauer - pos).coerceAtLeast(0) else dauer), zeitStil(groesse), zeilen = 1)
 }
 
 @Composable
@@ -642,7 +625,7 @@ private fun Fortschritt(song: Song, dauerMs: Long) {
     val dauer = if (dauerMs > 0) dauerMs else song.dauerMs
     // Nur neu zeichnen, wenn ein Kästchen dazukommt.
     val voll by remember(dauer) { derivedStateOf { if (dauer > 0) ((pos.value * 20) / dauer).toInt().coerceIn(0, 20) else 0 } }
-    Kaestchen(20, voll, Weiss, Modifier.fillMaxWidth(), hoehe = 7.dp)
+    Kaestchen(20, voll, Weiss, Modifier.fillMaxWidth(), hoehe = 5.dp)
 }
 
 @Composable
@@ -663,7 +646,8 @@ private fun LeistenKnopf(modifier: Modifier, voll: Boolean = false, aktiv: Boole
     val gedrueckt by quelle.collectIsPressedAsState()
     val hell = voll != gedrueckt
     val rand = if (aktiv) Weiss else Weiss.copy(alpha = 0.4f)
-    val vorne = (if (hell) Schwarz else Weiss).let { if (aktiv) it else it.copy(alpha = 0.4f) }
+    // Ausgegraut immer hellgrau auf Schwarz (vorher war das Zeichen im gefüllten Knopf unsichtbar).
+    val vorne = if (aktiv) (if (hell) Schwarz else Weiss) else Weiss.copy(alpha = 0.4f)
     val form = RoundedCornerShape(13.dp)
     Column(
         modifier.height(54.dp).clip(form).background(if (hell && aktiv) Weiss else Schwarz).border(2.5.dp, rand, form)

@@ -144,10 +144,11 @@ fun BuehneSeite(navi: Navi, zurueckAmEnde: Boolean = true) {
                         T("Stopp", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
                     }
                 }
-                else -> Knopf(Modifier.weight(1f), hoehe = 62.dp, aktiv = naechster != null || folgeSet != null, beschreibung = "Überspringen", onClick = { App.buehne.weiter() }) { f ->
+                // 21.11.: immer dieselben Knöpfe wie in der Leiste; vor dem Start ist Stopp nur ausgegraut.
+                else -> Knopf(Modifier.weight(1f), hoehe = 62.dp, aktiv = false, beschreibung = "Stopp", onClick = { }) { f ->
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Symbol(Sym.WEITER, f, 20.dp)
-                        T("Weiter", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
+                        Symbol(Sym.STOP, f, 18.dp)
+                        T("Stopp", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
                     }
                 }
             }
