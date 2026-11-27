@@ -491,11 +491,53 @@ function gigKasten(g) {
         el("h3", {}, g.name, el("span", { class: "klein" }, "  ·  " + tagLang(g.datum) + (g.geaendert ? "  ·  hier geändert, noch nicht gesendet" : ""))),
         el("div", { class: "reihe", style: "align-items:center;margin-top:6px" },
           el("button", { class: "knopf klein", onclick: () => { const n = prompt("Neuer Name:", g.name); if (n && n.trim()) gigTun({ tun: "aendern", gig: g.id, name: n.trim() }); } }, "Umbenennen"),
+          el("button", { class: "knopf klein", title: "Neuer Gig mit allen Sets, Songs und Jokern, alles wieder ungespielt", onclick: () => gigKopieren(g) }, "Gig kopieren"),
           el("label", { class: "klein" }, "Datum: ", datum),
           el("label", { class: "klein" }, auto, " Nach einem Set automatisch ins nächste"))),
       el("button", { class: "knopf klein strich", onclick: () => { if (confirm(`Gig „${g.name}“ mit allen Sets löschen?\nDie Songs bleiben im Archiv. Auf dem Mudita verschwindet er erst nach „Zum Mudita senden“.`)) gigTun({ tun: "loeschen", gig: g.id }); } }, "Gig löschen")),
     ...g.sets.map((s, i) => setKasten(g, s, i)),
-    el("button", { class: "knopf", style: "margin-top:12px", onclick: () => gigTun({ tun: "setNeu", gig: g.id }) }, "+ Set hinzufügen"));
+    el("button", { class: "knopf", style: "margin-top:12px", onclick: () => gigTun({ tun: "setNeu", gig: g.id }) }, "+ Set hinzufügen"),
+    jokerKasten(g));
+}
+
+// Datum aus „TT.MM.JJJJ“ (leer = ohne Datum). null = falsch eingegeben.
+function datumAusText(text) {
+  if (!text || !text.trim()) return 0;
+  const m = text.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{2,4})$/);
+  if (!m) return null;
+  const jahr = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]);
+  return Math.round(Date.UTC(jahr, Number(m[2]) - 1, Number(m[1])) / 86400000);
+}
+
+// 27.11.: Gig kopieren – neuer Name und Datum, alles andere kommt mit (ungespielt).
+async function gigKopieren(g) {
+  const name = prompt("Name für die Kopie:", g.name);
+  if (!name || !name.trim()) return;
+  const tag = datumAusText(prompt("Datum (TT.MM.JJJJ), leer lassen = ohne Datum:", ""));
+  if (tag === null) { melden("Das Datum bitte so: 21.11.2026"); return; }
+  const vorher = new Set(Z.plan.gigs.map((x) => x.id));
+  await gigTun({ tun: "kopieren", gig: g.id, name: name.trim(), datum: tag });
+  const neu = Z.plan.gigs.find((x) => !vorher.has(x.id));
+  if (neu) { Z.gig = neu.id; zeigeGigs(); }
+}
+
+// 27.11.: Joker – Songs, die an diesem Abend vielleicht gewünscht werden. Live am Mudita im
+// Reiter „Joker“: ein Tipp, und der Song kommt als Nächstes.
+function jokerKasten(g) {
+  const drin = new Set(g.joker.map((x) => x.id));
+  const wahl = el("select", {}, el("option", { value: "" }, "Joker hinzufügen …"),
+    ...Z.plan.alleSongs.filter((x) => !drin.has(x.id)).map((x) => el("option", { value: String(x.id) }, x.titel)));
+  wahl.addEventListener("change", () => { if (wahl.value) gigTun({ tun: "jokerHinzu", gig: g.id, song: Number(wahl.value) }); });
+  const zeilen = g.joker.map((x, k) => el("li", {},
+    el("span", { class: "nr" }, String(k + 1)),
+    el("span", { class: "weit" }, x.titel, x.imSet ? el("span", { class: "klein" }, "  · steht schon in einem Set") : null),
+    el("span", { class: "klein" }, zeit(x.dauerMs)),
+    el("button", { class: "knopf klein strich", title: "Kein Joker mehr (bleibt im Archiv)", onclick: () => gigTun({ tun: "jokerWeg", gig: g.id, song: x.id }) }, "Weg")));
+  return el("div", { class: "set", style: "margin-top:18px" },
+    el("div", { class: "setkopf reihe", style: "align-items:center" },
+      el("b", {}, "Joker"), el("span", { class: "klein" }, `${g.joker.length === 1 ? "1 Song" : g.joker.length + " Songs"} · live im Reiter „Joker“, ein Tipp = als Nächstes`)),
+    g.joker.length ? el("ol", { class: "setliste" }, ...zeilen) : el("p", { class: "klein" }, "Noch keine Joker. Das sind Songs, die heute vielleicht gewünscht werden."),
+    el("div", { class: "reihe", style: "margin-top:6px" }, wahl));
 }
 
 function setKasten(g, s, i) {

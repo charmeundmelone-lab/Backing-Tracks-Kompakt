@@ -94,7 +94,12 @@ data class Gig(
     /** Tage seit 1970-01-01, 0 = ohne Datum. */
     val datum: Long = 0,
     val sets: List<SetListe> = emptyList(),
-    val autoWeiter: Boolean = true
+    val autoWeiter: Boolean = true,
+    /**
+     * Joker (27.11.): Songs, die an diesem Abend vielleicht gewünscht werden. Stehen in keinem Set,
+     * live im Reiter „Joker“ mit einem Tipp als Nächstes einplanbar.
+     */
+    val joker: List<Long> = emptyList()
 )
 
 data class Bestand(

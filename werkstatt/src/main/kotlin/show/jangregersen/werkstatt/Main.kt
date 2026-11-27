@@ -6,6 +6,7 @@ import org.json.JSONArray
 import org.json.JSONObject
 import show.jangregersen.buehne.daten.Song
 import show.jangregersen.buehne.daten.pauseDanach
+import show.jangregersen.buehne.daten.kopie
 import show.jangregersen.buehne.lyrics.Abgleich
 import show.jangregersen.buehne.lyrics.Ablauf
 import show.jangregersen.buehne.lyrics.Abschnitte
@@ -306,6 +307,10 @@ private fun gigplan(): JSONObject = liste().apply {
                         .put("weiter", e.ende == show.jangregersen.buehne.daten.Ende.WEITER).put("gespielt", e.gespielt)
                 }))
             }))
+            // 27.11.: Joker des Gigs (nur Songs, die es gibt).
+            .put("joker", JSONArray(g.joker.mapNotNull { id -> arbeit.bestand.song(id) }.map { s ->
+                JSONObject().put("id", s.id).put("titel", s.titel).put("dauerMs", s.dauerMs).put("imSet", g.sets.any { st -> st.eintraege.any { it.songId == s.id } })
+            }))
     }))
     put("alleSongs", JSONArray(arbeit.bestand.songs.sortedBy { it.titel.lowercase() }.map { JSONObject().put("id", it.id).put("titel", it.titel).put("dauerMs", it.dauerMs) }))
 }
@@ -326,6 +331,16 @@ private fun gigTun(k: JSONObject) {
             g.copy(name = if (k.has("name")) name() else g.name, datum = if (k.has("datum")) k.getLong("datum") else g.datum, autoWeiter = if (k.has("autoWeiter")) k.getBoolean("autoWeiter") else g.autoWeiter)
         }
         "loeschen" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { _, _ -> null }
+        // 27.11.: Gig kopieren (neuer Gig, vorläufige negative Nummern, alles ungespielt) und Joker.
+        "kopieren" -> {
+            val vorlage = arbeit.bestand.gig(gigId ?: throw Fehler("Welcher Gig?")) ?: throw Fehler("Diesen Gig gibt es nicht mehr.")
+            arbeit.gigAendern(null) { g, neueId -> vorlage.kopie(g.id, name(), k.optLong("datum", 0), neueId) }
+        }
+        "jokerHinzu" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { g, _ ->
+            if (arbeit.bestand.song(songId) == null) throw Fehler("Diesen Song gibt es nicht.")
+            if (songId in g.joker) throw Fehler("Der Song ist schon Joker.") else g.copy(joker = g.joker + songId)
+        }
+        "jokerWeg" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { g, _ -> g.copy(joker = g.joker - songId) }
         "setNeu" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { g, neueId -> g.copy(sets = g.sets + show.jangregersen.buehne.daten.SetListe(neueId(), "Set ${g.sets.size + 1}")) }
         "setName" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { g, _ -> mitSet(g) { it.copy(name = name()) } }
         "setLoeschen" -> arbeit.gigAendern(gigId ?: throw Fehler("Welcher Gig?")) { g, _ ->

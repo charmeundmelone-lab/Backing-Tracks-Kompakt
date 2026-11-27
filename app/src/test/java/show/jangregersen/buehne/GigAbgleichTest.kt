@@ -57,6 +57,18 @@ class GigAbgleichTest {
         assertTrue(r.bestand.naechsteId > maxOf(g.id, g.sets[0].id))
     }
 
+    /** 27.11. Joker: zählen als Änderung, alte Abdrücke ohne Joker bleiben gültig, Unbekannte fallen weg. */
+    @Test fun jokerImAbgleich() {
+        assertEquals(G.abdruck(gig), G.abdruck(gig.copy(joker = emptyList())))
+        assertTrue(G.abdruck(gig) != G.abdruck(gig.copy(joker = listOf(3))))
+        // Am Mudita Joker gesetzt: der Laptop (auf altem Stand) darf nicht überschreiben.
+        val amMudita = mudita.copy(gigs = listOf(gig.copy(joker = listOf(3))))
+        assertEquals(1, G.uebernehmen(amMudita, listOf(Aenderung(10, gig.copy(name = "Laptop"), G.abdruck(gig)))).abgelehnt.size)
+        // Laptop bringt Joker mit, Song 99 gibt es am Mudita nicht.
+        val r = G.uebernehmen(mudita, listOf(Aenderung(10, gig.copy(joker = listOf(4, 99, 4)), G.abdruck(gig))))
+        assertEquals(listOf(4L), r.bestand.gig(10)!!.joker)
+    }
+
     @Test fun loeschenNurWennUnveraendert() {
         val r = G.uebernehmen(mudita, listOf(Aenderung(10, null, G.abdruck(gig))))
         assertNull(r.bestand.gig(10))

@@ -22,6 +22,10 @@ import show.jangregersen.buehne.daten.schieben
 import show.jangregersen.buehne.daten.verschieben
 import show.jangregersen.buehne.daten.eintragAendern
 import show.jangregersen.buehne.daten.einplanen
+import show.jangregersen.buehne.daten.jokerUmschalten
+import show.jangregersen.buehne.daten.jokerSongs
+import show.jangregersen.buehne.daten.kopie
+import show.jangregersen.buehne.daten.nochNichtDran
 import show.jangregersen.buehne.daten.ansEnde
 import show.jangregersen.buehne.daten.wasKommt
 import show.jangregersen.buehne.daten.testlauf
@@ -150,6 +154,43 @@ class LogikTest {
         assertEquals(false, b.set(100)!!.eintraege.last().gespielt)
         b = b.copy(songs = b.songs + Song(9, "Wunsch", pfad = "p9")).ansEnde(100, 9)
         assertEquals(9L, ids(b).last())
+    }
+
+    /** 27.11.: Joker dazu und wieder weg, in der Reihenfolge des Festlegens. */
+    @Test fun jokerUmschalten() {
+        var b = bestand()
+        b = b.jokerUmschalten(50, 4).jokerUmschalten(50, 2)
+        assertEquals(listOf(4L, 2L), b.gig(50)!!.joker)
+        assertEquals(listOf("S4", "S2"), b.jokerSongs(50).map { it.titel })
+        b = b.jokerUmschalten(50, 4)
+        assertEquals(listOf(2L), b.gig(50)!!.joker)
+        // Ein gelöschter Song taucht nicht als Joker auf.
+        assertEquals(emptyList<String>(), b.copy(songs = b.songs.filterNot { it.id == 2L }).jokerSongs(50).map { it.titel })
+        assertEquals(emptyList<Song>(), b.jokerSongs(null))
+    }
+
+    /** 27.11.: Gig kopieren – Sets, Songs, Enden, Joker; neue Nummern; alles ungespielt. */
+    @Test fun gigKopieren() {
+        val vorlage = bestand().eintragAendern(100, 1) { it.copy(gespielt = true, ende = Ende.WEITER) }.jokerUmschalten(50, 3).gig(50)!!
+        var n = 300L
+        val k = vorlage.kopie(299, "Kopie", 12345) { n++ }
+        assertEquals(299L, k.id); assertEquals("Kopie", k.name); assertEquals(12345L, k.datum)
+        assertEquals(listOf(300L), k.sets.map { it.id })
+        assertEquals((1L..5L).toList(), k.sets[0].eintraege.map { it.songId })
+        assertEquals(false, k.sets[0].eintraege.any { it.gespielt })
+        assertEquals(Ende.WEITER, k.sets[0].eintraege[0].ende)
+        assertEquals(listOf(3L), k.joker)
+        // Die Vorlage bleibt, wie sie war.
+        assertEquals(true, vorlage.sets[0].eintraege[0].gespielt)
+    }
+
+    /** 27.11.: Filter „noch nicht dran“ – weg ist, was im Gig gespielt oder eingeplant ist. */
+    @Test fun nochNichtDran() {
+        val b = bestand().copy(songs = bestand().songs + Song(8, "Frei", pfad = "p8") + Song(9, "Auch frei", pfad = "p9"))
+            .eintragAendern(100, 1) { it.copy(gespielt = true) }
+        assertEquals(listOf(8L, 9L), b.nochNichtDran(100, b.songs).map { it.id })
+        // Ohne Gig: nichts ausgeblendet.
+        assertEquals(b.songs.size, b.nochNichtDran(null, b.songs).size)
     }
 
     @Test fun wunschsongUebernimmtAutomatikDesSets() {

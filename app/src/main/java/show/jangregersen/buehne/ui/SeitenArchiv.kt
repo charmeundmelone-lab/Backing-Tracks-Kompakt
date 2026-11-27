@@ -34,6 +34,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -44,6 +46,8 @@ import show.jangregersen.buehne.daten.schonImGig
 import show.jangregersen.buehne.daten.songsHinzufuegen
 import show.jangregersen.buehne.daten.wiederholungsFrage
 import show.jangregersen.buehne.daten.Tempo
+import show.jangregersen.buehne.daten.jokerUmschalten
+import show.jangregersen.buehne.daten.nochNichtDran
 import java.text.Normalizer
 
 fun buchstabe(titel: String): Char {
@@ -58,22 +62,30 @@ fun songInfo(s: Song): String = listOfNotNull(
 ).joinToString(" · ").ifEmpty { s.interpret }
 
 @Composable
-fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
+fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false, jokerGigId: Long? = null) {
     val b by App.ablage.stand.collectAsState()
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
     var tempo by rememberSaveable { mutableIntStateOf(0) }
     var kapo by rememberSaveable { mutableIntStateOf(-1) }
+    var nochNicht by rememberSaveable { mutableStateOf(false) }
     var sprung by remember { mutableStateOf(false) }
     var zeige by remember { mutableStateOf<Zeige?>(null) }
     var holt by remember { mutableStateOf<String?>(null) }
 
     val alle = b.songs.sortedBy { Normalizer.normalize(it.titel.lowercase(), Normalizer.Form.NFD) }
-    val songs = alle.filter { (tempo == 0 || it.tempo == tempo) && passtKapo(it, kapo) }
     val zielSet = b.set(zielSetId)
+    // 27.11.: Joker eines Gigs festlegen (Tipp = Joker ja/nein).
+    val jokerGig = b.gig(jokerGigId)
+    // Für den Filter „noch nicht dran“ und die grauen Hinweise: das Set bzw. der Gig, um den es geht.
+    val gigSet = zielSet?.id ?: jokerGig?.sets?.firstOrNull()?.id
+    val gefiltert = alle.filter { (tempo == 0 || it.tempo == tempo) && passtKapo(it, kapo) }
+    val filterAn = nochNicht && gigSet != null
+    val songs = if (filterAn) b.nochNichtDran(gigSet, gefiltert) else gefiltert
+    val merk = "archiv$tempo$kapo$zielSetId$jokerGigId$filterAn"
     val imSet = zielSet?.eintraege?.map { it.songId }?.toSet() ?: emptySet()
     // Jans Wunsch 15.11.: Was im Gig schon eingeplant ist, steht grau da; nochmal nur mit Rückfrage.
-    val imGig = if (zielSet != null) b.schonImGig(zielSet.id) else emptyMap()
+    val imGig = if (gigSet != null) b.schonImGig(gigSet) else emptyMap()
 
     val waehler = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri: Uri? ->
         if (uri != null) {
@@ -97,10 +109,20 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
         return
     }
 
-    val ober = if (zielSet != null && wunsch) "Wunschsong für ${zielSet.name}" else if (zielSet != null) "Songs dazu für" else "Archiv · ${b.songs.size} Songs"
-    val titel = if (zielSet != null && wunsch) "Antippen = als Nächstes" else if (zielSet != null) "${zielSet.name} · ${zielSet.eintraege.size} ${if (zielSet.eintraege.size == 1) "Song" else "Songs"}" else "Archiv"
+    val ober = when {
+        jokerGig != null -> "Joker für ${jokerGig.name}"
+        zielSet != null && wunsch -> "Wunschsong für ${zielSet.name}"
+        zielSet != null -> "Songs dazu für"
+        else -> "Archiv · ${b.songs.size} Songs"
+    }
+    val titel = when {
+        jokerGig != null -> "${jokerGig.joker.size} Joker"
+        zielSet != null && wunsch -> "Antippen = als Nächstes"
+        zielSet != null -> "${zielSet.name} · ${zielSet.eintraege.size} ${if (zielSet.eintraege.size == 1) "Song" else "Songs"}"
+        else -> "Archiv"
+    }
     Rahmen(navi, ober, titel, rechts = {
-        if (zielSet != null && !wunsch) WeisserKnopfImBand("Fertig") { navi.zurueck() }
+        if ((zielSet != null && !wunsch) || jokerGig != null) WeisserKnopfImBand("Fertig") { navi.zurueck() }
         else if (zielSet == null) WeisserKnopfImBand("Songs holen", Sym.ORDNER) { waehler.launch(null) }
     }) {
         if (sprung) {
@@ -108,18 +130,23 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
             return@Rahmen
         }
         // Texte holen gibt es seit 13.11. nur noch in der Werkstatt am Laptop.
-        if (zielSet == null) Segmente(listOf("Gigs", "Archiv"), 1, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp)) { if (it == 0) navi.ersetzen(Seite.Gigs) }
-        Segmente(listOf("Alle", "Langsam", "Mittel", "Schnell"), tempo, Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp), hoehe = 40.dp, groesse = 15.sp) { tempo = it }
+        if (zielSet == null && jokerGig == null) Segmente(listOf("Gigs", "Archiv"), 1, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp)) { if (it == 0) navi.ersetzen(Seite.Gigs) }
+        if (jokerGig != null) T("Tipp = Joker dazu oder wieder weg. Live stehen die Joker im Reiter „Joker“.", textStil(15.sp), Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp), zeilen = 2)
+        // 27.11.: rechts neben der Tempo-Leiste der Filter „noch nicht dran“ (nur mit Gig).
+        Row(Modifier.padding(start = 14.dp, end = 14.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Box(Modifier.weight(1f)) { Segmente(listOf("Alle", "Langsam", "Mittel", "Schnell"), tempo, hoehe = 40.dp, groesse = 15.sp) { tempo = it } }
+            if (gigSet != null) NochNichtSchalter(nochNicht, 40.dp) { nochNicht = !nochNicht }
+        }
         KapoLeiste(alle, kapo, Modifier.padding(start = 14.dp, end = 14.dp, top = 6.dp), hoehe = 40.dp) { kapo = it }
         SeitenListe(
-            eintraege = songs, zeilenHoehe = 62.dp, modifier = Modifier.weight(1f), schluessel = "archiv$tempo$kapo$zielSetId", zeige = zeige, oben = 6.dp,
+            eintraege = songs, zeilenHoehe = 62.dp, modifier = Modifier.weight(1f), schluessel = merk, zeige = zeige, oben = 6.dp,
             fuss = { s, n, pro, z, v ->
-                val erster = songs.getOrNull(SeitenGedaechtnis.seiten["archiv$tempo$kapo$zielSetId"] ?: (s * pro))
+                val erster = songs.getOrNull(SeitenGedaechtnis.seiten[merk] ?: (s * pro))
                 Blaetterleiste(s, n, z, v, mitteText = "${erster?.let { buchstabe(it.titel) } ?: "A"}–Z · Seite ${s + 1}/$n", mitteKlein = "tippen zum Springen", onMitte = { sprung = true })
             },
             leer = {
                 Column(Modifier.padding(18.dp)) {
-                    T(if (b.songs.isEmpty()) "Noch keine Songs." else "Keine Songs mit diesem Filter.", titelStil(26.sp))
+                    T(if (b.songs.isEmpty()) "Noch keine Songs." else if (filterAn && gefiltert.isNotEmpty()) "Alles schon im Gig." else "Keine Songs mit diesem Filter.", titelStil(26.sp))
                     Abstand(6.dp)
                     if (b.songs.isEmpty()) {
                         T("Tippe oben auf „Songs holen“ und wähle den Ordner mit deinen Backing-Tracks. Einzelne Audiodateien werden je ein Stereo-Song (links Band, rechts Click), Unterordner werden Songs aus Einzelspuren.", textStil(16.sp))
@@ -134,9 +161,14 @@ fun ArchivSeite(navi: Navi, zielSetId: Long?, wunsch: Boolean = false) {
             // Einstellungen mit Rückfrage (früher nahm ein zweiter Tipp live Songs aus Versehen raus).
             val fund = imGig[s.id]
             val wo = fund?.let { f -> f.firstOrNull { it.gespielt }?.let { "gespielt · ${it.setName}" } ?: "eingeplant · ${f.joinToString(", ") { it.setName }}" }
-            ArchivZeile(s, zielSet != null && !wunsch, s.id in imSet, wo) {
+            ArchivZeile(s, (zielSet != null && !wunsch) || jokerGig != null, if (jokerGig != null) s.id in jokerGig.joker else s.id in imSet, wo) {
                 val frage = zielSet?.let { b.wiederholungsFrage(it.id, s.id) }
                 when {
+                    jokerGig != null -> {
+                        val war = s.id in jokerGig.joker
+                        App.ablage.aendern { it.jokerUmschalten(jokerGig.id, s.id) }
+                        App.buehne.hinweis(if (war) "„${s.titel}“ ist kein Joker mehr." else "„${s.titel}“ ist jetzt Joker.")
+                    }
                     zielSet == null -> navi.zu(Seite.Editor(s.id))
                     wunsch && frage != null -> navi.zu(Seite.Frage("Nochmal spielen?", "„${s.titel}“ $frage. Willst du ihn trotzdem nochmal spielen?", "Ja, nochmal spielen") {
                         App.buehne.vorziehen(zielSet.id, s.id); navi.zurSetliste()
@@ -223,6 +255,21 @@ fun passtKapo(s: Song, kapo: Int) = kapo < 0 || s.kapo.coerceAtLeast(0) == kapo
  * Kapo-Filter (21.11., Jan: „filtern nach Kapoposition ist wichtig“). Zeigt nur die Bünde, die im
  * Archiv wirklich vorkommen, damit jedes Feld breit genug zum Treffen bleibt.
  */
+/**
+ * Schalter „noch nicht dran“ (27.11.): an = schwarz, im Archiv stehen dann nur Songs, die im Gig
+ * weder gespielt noch eingeplant sind.
+ */
+@Composable
+fun NochNichtSchalter(an: Boolean, hoehe: Dp = 30.dp, onClick: () -> Unit) {
+    val form = RoundedCornerShape(9.dp)
+    Box(
+        Modifier.height(hoehe).clip(form).background(if (an) Schwarz else Weiss).border(2.dp, Schwarz, form)
+            .tipp(onClick = onClick).semantics { contentDescription = if (an) "noch nicht dran: an" else "noch nicht dran: aus" }
+            .padding(horizontal = 8.dp),
+        contentAlignment = Alignment.Center
+    ) { T("noch nicht dran", textStil(14.sp, if (an) Weiss else Schwarz, FontWeight.Bold), zeilen = 1) }
+}
+
 @Composable
 fun KapoLeiste(alle: List<Song>, kapo: Int, modifier: Modifier = Modifier, hoehe: Dp = 30.dp, onWahl: (Int) -> Unit) {
     val werte = (alle.map { it.kapo.coerceAtLeast(0) } + listOfNotNull(kapo.takeIf { it >= 0 })).distinct().sorted()

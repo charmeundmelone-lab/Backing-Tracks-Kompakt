@@ -85,6 +85,7 @@ object BestandJson {
 
     private fun gigJson(g: Gig) = JSONObject().apply {
         put("id", g.id); put("name", g.name); put("datum", g.datum); put("autoWeiter", g.autoWeiter)
+        put("joker", JSONArray(g.joker))
         put("sets", JSONArray().apply {
             g.sets.forEach { s ->
                 put(JSONObject().apply {
@@ -113,6 +114,7 @@ object BestandJson {
                 )
             }
         } ?: emptyList()
-        return Gig(o.getLong("id"), o.optString("name"), o.optLong("datum"), sets, o.optBoolean("autoWeiter", true))
+        val joker = o.optJSONArray("joker")?.let { a -> (0 until a.length()).map { a.getLong(it) } } ?: emptyList()
+        return Gig(o.getLong("id"), o.optString("name"), o.optLong("datum"), sets, o.optBoolean("autoWeiter", true), joker)
     }
 }

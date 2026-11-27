@@ -30,8 +30,8 @@ import show.jangregersen.buehne.App
 
 sealed class Seite {
     data object Gigs : Seite()
-    /** [zielSetId]: Songs für dieses Set wählen. [wunsch]: live, Antippen = kommt als Nächstes. */
-    data class Archiv(val zielSetId: Long? = null, val wunsch: Boolean = false) : Seite()
+    /** [zielSetId]: Songs für dieses Set wählen. [wunsch]: live, Antippen = kommt als Nächstes. [jokerGigId]: Joker dieses Gigs festlegen (27.11.). */
+    data class Archiv(val zielSetId: Long? = null, val wunsch: Boolean = false, val jokerGigId: Long? = null) : Seite()
     /** Set vorbereiten: Reihenfolge, Songs dazu, Einstellungen je Song (getrennt von der Bühne, 15.11.). */
     data class SetBearbeiten(val setId: Long) : Seite()
     data class GigSets(val gigId: Long) : Seite()
@@ -118,7 +118,7 @@ fun Wurzel(navi: Navi, beenden: () -> Unit) {
     Box(Modifier.fillMaxSize().background(Weiss)) {
         when (val s = navi.oben) {
             Seite.Gigs -> GigsSeite(navi)
-            is Seite.Archiv -> ArchivSeite(navi, s.zielSetId, s.wunsch)
+            is Seite.Archiv -> ArchivSeite(navi, s.zielSetId, s.wunsch, s.jokerGigId)
             is Seite.GigSets -> GigSetsSeite(navi, s.gigId)
             Seite.Setliste -> HauptSeite(navi)
             Seite.Buehne -> BuehneSeite(navi)

@@ -145,6 +145,33 @@ fun Bestand.einplanen(setId: Long, songId: Long): Bestand = setAendern(setId) { 
     else s.copy(eintraege = s.eintraege.map { if (it.songId == songId) it.copy(gespielt = false) else it })
 }
 
+/** Joker (27.11.): Song in die Joker-Liste des Gigs aufnehmen (ans Ende) oder wieder herausnehmen. */
+fun Bestand.jokerUmschalten(gigId: Long, songId: Long): Bestand = gigAendern(gigId) { g ->
+    g.copy(joker = if (songId in g.joker) g.joker - songId else g.joker + songId)
+}
+
+/** Joker eines Gigs in ihrer Reihenfolge, nur Songs, die es noch gibt. */
+fun Bestand.jokerSongs(gigId: Long?): List<Song> = gig(gigId)?.joker?.mapNotNull { song(it) }.orEmpty()
+
+/**
+ * Gig kopieren (27.11., Jans Wunsch aus dem StageTraxx-Vergleich): alle Sets mit ihren Songs,
+ * Songende-Einstellungen und Jokern, alles wieder ungespielt, unter neuem Namen und Datum.
+ * [neueId] liefert die Nummern für die Sets (am Mudita echte, in der Werkstatt vorläufige negative).
+ */
+fun Gig.kopie(neueGigId: Long, name: String, datum: Long, neueId: () -> Long): Gig = copy(
+    id = neueGigId, name = name, datum = datum,
+    sets = sets.map { s -> s.copy(id = neueId(), eintraege = s.eintraege.map { it.copy(gespielt = false) }) }
+)
+
+/**
+ * Filter „noch nicht dran“ (27.11.): Songs, die im Gig von [setId] weder gespielt noch in einem Set
+ * eingeplant sind. Ohne Gig: alle.
+ */
+fun Bestand.nochNichtDran(setId: Long?, songs: List<Song>): List<Song> {
+    val imGig = schonImGig(setId)
+    return songs.filter { it.id !in imGig }
+}
+
 /** Wo ein Song im Gig schon steht (Jans Wunsch 15.11.: keine Wiederholung ohne Rückfrage). */
 data class SchonImGig(val setId: Long, val setName: String, val gespielt: Boolean)
 

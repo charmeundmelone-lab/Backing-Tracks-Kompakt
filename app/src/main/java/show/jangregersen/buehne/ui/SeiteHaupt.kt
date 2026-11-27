@@ -67,6 +67,8 @@ import show.jangregersen.buehne.daten.naechster
 import show.jangregersen.buehne.daten.schonImGig
 import show.jangregersen.buehne.daten.wasKommt
 import show.jangregersen.buehne.daten.wiederholungsFrage
+import show.jangregersen.buehne.daten.jokerSongs
+import show.jangregersen.buehne.daten.nochNichtDran
 import java.text.Normalizer
 import kotlin.math.abs
 
@@ -80,6 +82,8 @@ import kotlin.math.abs
 
 private const val REITER_SET = 0
 private const val REITER_ARCHIV = 1
+/** 27.11.: Joker des Gigs (Wünsche, die vielleicht kommen), ein Tipp = als Nächstes. */
+private const val REITER_JOKER = 2
 
 /** Gewählter Reiter, solange die App läuft (die Seite selbst verschwindet, wenn eine andere oben liegt). */
 object HauptZustand {
@@ -93,6 +97,8 @@ object HauptZustand {
     var folgeZeigen by androidx.compose.runtime.mutableStateOf(false)
     /** Kapo-Filter im Archiv: -1 = alle, 0 = ohne, sonst der Bund. */
     var kapo by androidx.compose.runtime.mutableIntStateOf(-1)
+    /** Filter „noch nicht dran“ im Archiv (27.11.): nur Songs, die im Gig weder gespielt noch eingeplant sind. */
+    var nochNicht by androidx.compose.runtime.mutableStateOf(false)
 }
 
 /** Ungefähre Höhe der Player-Leiste: Hinweise erscheinen knapp darüber. */
@@ -129,12 +135,15 @@ fun HauptSeite(navi: Navi) {
     }
 
     // Zurück schließt zuerst die Set-Klappe bzw. führt vom Archiv zurück zum Set.
-    BackHandler(enabled = klappe || reiter == REITER_ARCHIV) { if (klappe) klappe = false else reiter = REITER_SET }
+    BackHandler(enabled = klappe || reiter != REITER_SET) { if (klappe) klappe = false else reiter = REITER_SET }
 
     Column(Modifier.fillMaxSize()) {
+        val jokerGig = b.gigVonSet(set?.id)
         val ober = when {
             reiter == REITER_ARCHIV && set != null -> "Wischen plant in „${set.name}“ ein"
             reiter == REITER_ARCHIV -> "Archiv · ${b.songs.size} Songs"
+            reiter == REITER_JOKER && jokerGig != null -> "Joker · ${jokerGig.name} · Tipp = als Nächstes"
+            reiter == REITER_JOKER -> "Joker"
             set != null && gig != null -> "${gig.name} · ${set.eintraege.count { it.gespielt }} von ${set.eintraege.size} gespielt · noch ${minuten(set.dauerMs(b, nurOffene = true))}"
             set != null -> "${set.eintraege.size} Songs"
             else -> "Kein Set gewählt"
@@ -142,11 +151,13 @@ fun HauptSeite(navi: Navi) {
         HauptKopf(
             ober, set?.name ?: "Set", reiter, klappe,
             onSet = { if (reiter != REITER_SET) { reiter = REITER_SET; klappe = false } else klappe = !klappe },
+            onJoker = { reiter = REITER_JOKER; klappe = false },
             onArchiv = { reiter = REITER_ARCHIV; klappe = false }
         )
         Box(Modifier.weight(1f).fillMaxWidth()) {
             when {
                 reiter == REITER_ARCHIV -> ArchivBereich(navi, set?.id)
+                reiter == REITER_JOKER -> JokerBereich(navi, set?.id)
                 set == null -> KeinSet(navi)
                 else -> SetBereich(navi, set.id)
             }
@@ -160,17 +171,19 @@ fun HauptSeite(navi: Navi) {
 // ── Kopf mit zwei Reitern ────────────────────────────────────────────────────
 
 @Composable
-private fun HauptKopf(ober: String, setName: String, reiter: Int, klappe: Boolean, onSet: () -> Unit, onArchiv: () -> Unit) {
+private fun HauptKopf(ober: String, setName: String, reiter: Int, klappe: Boolean, onSet: () -> Unit, onJoker: () -> Unit, onArchiv: () -> Unit) {
     Column(
         Modifier.fillMaxWidth().background(Schwarz).padding(start = 10.dp, end = 10.dp, top = 5.dp, bottom = 7.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Etikett(ober, Modifier.padding(start = 4.dp), Weiss)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Reiter(Modifier.weight(1.5f), reiter == REITER_SET, onSet) { f ->
+        // 27.11.: drei Reiter, immer an derselben Stelle: Set · Joker · Archiv.
+        Row(horizontalArrangement = Arrangement.spacedBy(7.dp)) {
+            Reiter(Modifier.weight(1.35f), reiter == REITER_SET, onSet) { f ->
                 T(setName, titelStil(25.sp, f), Modifier.weight(1f, fill = false), zeilen = 1)
                 Symbol(if (klappe) Sym.HOCH else Sym.RUNTER, f, 16.dp)
             }
+            Reiter(Modifier.weight(1f), reiter == REITER_JOKER, onJoker) { f -> T("Joker", titelStil(25.sp, f), zeilen = 1) }
             Reiter(Modifier.weight(1f), reiter == REITER_ARCHIV, onArchiv) { f -> T("Archiv", titelStil(25.sp, f), zeilen = 1) }
         }
     }
@@ -181,7 +194,7 @@ private fun Reiter(modifier: Modifier, an: Boolean, onClick: () -> Unit, inhalt:
     val form = RoundedCornerShape(12.dp)
     Row(
         modifier.height(40.dp).clip(form).background(if (an) Weiss else Schwarz).border(2.5.dp, Weiss, form)
-            .tipp(onClick = onClick).padding(horizontal = 10.dp),
+            .tipp(onClick = onClick).padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally)
     ) { inhalt(if (an) Schwarz else Weiss) }
@@ -503,6 +516,60 @@ private fun BoxScope.RueckBand(text: String) {
     }
 }
 
+// ── Reiter „Joker“ (27.11.) ──────────────────────────────────────────────────
+// Joker = Songs, die an diesem Abend vielleicht gewünscht werden (vorher festgelegt, gehören zum
+// Gig). Statt 42 Songs im Archiv nur diese eine Seite. Tipp oder nach rechts wischen = kommt als
+// Nächstes (DANACH-Schild bzw. sofort bereit, der Song kommt ans Ende des Sets), nach links = ans
+// Ende. Schon gespielte oder eingeplante stehen grau da, nochmal nur nach Rückfrage.
+
+@Composable
+private fun JokerBereich(navi: Navi, setId: Long?) {
+    val b by App.ablage.stand.collectAsState()
+    val gig = b.gigVonSet(setId)
+    if (gig == null || setId == null) {
+        Column(Modifier.padding(18.dp)) {
+            T("Kein Gig gewählt.", titelStil(26.sp))
+            Abstand(8.dp)
+            T("Joker gehören zu einem Gig. Wähle ein Set, dann stehen hier die Joker seines Gigs.", textStil(17.sp))
+        }
+        return
+    }
+    val joker = b.jokerSongs(gig.id)
+    val imGig = b.schonImGig(setId)
+    Column(Modifier.fillMaxSize()) {
+        SeitenListe(
+            eintraege = joker, zeilenHoehe = 62.dp, modifier = Modifier.weight(1f), schluessel = "joker${gig.id}", oben = 4.dp,
+            fussHoehe = FUSS_HOEHE,
+            fuss = { s, n, _, zur, vor -> SeitenFuss(s, n, zur, vor, if (n > 1) "Seite ${s + 1}/$n" else null) },
+            leer = {
+                Column(Modifier.padding(18.dp)) {
+                    T("Noch keine Joker.", titelStil(26.sp))
+                    Abstand(6.dp)
+                    T("Joker sind Songs, die heute vielleicht gewünscht werden. Live holst du sie hier mit einem Tipp ins Set.", textStil(17.sp))
+                }
+            }
+        ) { _, s ->
+            key(s.id) {
+                val fund = imGig[s.id]
+                val wo = fund?.let { f -> f.firstOrNull { it.gespielt }?.let { "gespielt · ${it.setName}" } ?: "eingeplant · ${f.joinToString(", ") { it.setName }}" }
+                WischZeile(
+                    s.id, rechts = "ALS NÄCHSTES", links = "ANS ENDE",
+                    onRechts = { einplanen(navi, setId, s, rechts = true) }, onLinks = { einplanen(navi, setId, s, rechts = false) }
+                ) {
+                    ArchivZeile(s, waehlen = false, drin = false, schonIm = wo, onLang = { navi.zu(Seite.Editor(s.id)) }) {
+                        einplanen(navi, setId, s, rechts = true)
+                    }
+                }
+            }
+        }
+        TextKnopf(
+            if (joker.isEmpty()) "Joker festlegen" else "Joker bearbeiten",
+            Modifier.padding(start = 10.dp, end = 10.dp, top = 2.dp, bottom = 6.dp).fillMaxWidth(),
+            if (joker.isEmpty()) Art.VOLL else Art.DUENN, 44.dp, 16.sp
+        ) { navi.zu(Seite.Archiv(jokerGigId = gig.id)) }
+    }
+}
+
 // ── Reiter „Archiv“ ──────────────────────────────────────────────────────────
 
 @Composable
@@ -511,16 +578,26 @@ private fun ArchivBereich(navi: Navi, setId: Long?) {
     var tempo by rememberSaveable { mutableIntStateOf(0) }
     // Kapo-Filter (21.11.): bleibt gewählt, auch wenn man kurz zum Set wechselt.
     var kapo by HauptZustand::kapo
+    var nochNicht by HauptZustand::nochNicht
     var sprung by remember { mutableStateOf(false) }
     var zeige by remember { mutableStateOf<Zeige?>(null) }
-    val songs = b.songs.sortedBy { Normalizer.normalize(it.titel.lowercase(), Normalizer.Form.NFD) }.filter { (tempo == 0 || it.tempo == tempo) && passtKapo(it, kapo) }
+    val alle = b.songs.sortedBy { Normalizer.normalize(it.titel.lowercase(), Normalizer.Form.NFD) }.filter { (tempo == 0 || it.tempo == tempo) && passtKapo(it, kapo) }
+    // 27.11.: „noch nicht dran“ blendet aus, was im Gig schon gespielt oder eingeplant ist.
+    val filterAn = nochNicht && setId != null
+    val songs = if (filterAn) b.nochNichtDran(setId, alle) else alle
     val imGig = if (setId != null) b.schonImGig(setId) else emptyMap()
     if (sprung) { Sprung(songs) { i -> if (i >= 0) zeige = Zeige(i); sprung = false }; return }
     Column(Modifier.fillMaxSize()) {
         // 20.11. (Jan: "mehr Songs im Archiv ist gut"): schmalere Tempo-Leiste und kompakte Zeilen.
-        Segmente(listOf("Alle", "Langsam", "Mittel", "Schnell"), tempo, Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp), hoehe = 30.dp, groesse = 15.sp) { tempo = it }
+        // 27.11.: rechts daneben der Schalter „noch nicht dran“ (nur mit Gig), kostet keine Zeile.
+        Row(Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Box(Modifier.weight(1f)) {
+                Segmente(listOf("Alle", "Langsam", "Mittel", "Schnell"), tempo, hoehe = 30.dp, groesse = 15.sp) { tempo = it }
+            }
+            if (setId != null) NochNichtSchalter(nochNicht) { nochNicht = !nochNicht }
+        }
         KapoLeiste(b.songs, kapo, Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp)) { kapo = it }
-        val merk = "hauptarchiv$tempo$kapo"
+        val merk = "hauptarchiv$tempo$kapo$filterAn"
         SeitenListe(
             eintraege = songs, zeilenHoehe = 47.dp, modifier = Modifier.weight(1f), schluessel = merk, zeige = zeige, oben = 2.dp,
             fussHoehe = FUSS_HOEHE,
@@ -528,7 +605,7 @@ private fun ArchivBereich(navi: Navi, setId: Long?) {
                 val erster = songs.getOrNull(SeitenGedaechtnis.seiten[merk] ?: (s * pro))
                 SeitenFuss(s, n, zur, vor, "${erster?.let { buchstabe(it.titel) } ?: "A"}–Z · Seite ${s + 1}/$n · springen", onMitte = { sprung = true })
             },
-            leer = { T(if (b.songs.isEmpty()) "Noch keine Songs." else "Keine Songs mit diesem Filter.", titelStil(24.sp), Modifier.padding(18.dp)) }
+            leer = { T(if (b.songs.isEmpty()) "Noch keine Songs." else if (filterAn && alle.isNotEmpty()) "Alles schon im Gig. Oben „noch nicht dran“ ausschalten." else "Keine Songs mit diesem Filter.", titelStil(24.sp), Modifier.padding(18.dp)) }
         ) { _, s ->
             key(s.id) {
                 val fund = imGig[s.id]

@@ -8,6 +8,7 @@ import org.junit.Test
 import show.jangregersen.buehne.daten.Bestand
 import show.jangregersen.buehne.daten.BestandJson
 import show.jangregersen.buehne.daten.Song
+import show.jangregersen.buehne.daten.kopie
 import show.jangregersen.buehne.lyrics.Abgleich
 import show.jangregersen.buehne.lyrics.Ablauf
 import show.jangregersen.buehne.lyrics.Abschnitte
@@ -59,6 +60,31 @@ class WerkstattTest {
         val aufDemMudita = Abgleich.textUndTeile(start.copy(notiz = "Einsatz nach 2 Takten"), laptop)
         assertEquals("Einsatz nach 2 Takten", aufDemMudita.notiz)
         assertEquals("[Strophe 1]\nneu", aufDemMudita.lyrics)
+    }
+
+    /** 27.11.: Gig am Laptop kopieren (mit Jokern), senden, am Mudita mit echten Nummern übernehmen. */
+    @Test fun gigKopieAmLaptopKommtMitJokernAufDenMudita() {
+        val songs = (1L..4L).map { Song(it, "S$it", pfad = "p$it") }
+        val gig = show.jangregersen.buehne.daten.Gig(10, "El Circo", 20000,
+            listOf(show.jangregersen.buehne.daten.SetListe(11, "Set 1", listOf(show.jangregersen.buehne.daten.Eintrag(1, gespielt = true), show.jangregersen.buehne.daten.Eintrag(2)))),
+            joker = listOf(3, 4))
+        val mudita = Bestand(songs, listOf(gig), naechsteId = 30)
+        // JSON hin und zurück: Joker bleiben.
+        assertEquals(listOf(3L, 4L), BestandJson.ausJson(JSONObject(BestandJson.alsJson(mudita).toString())).gig(10)!!.joker)
+        val a = Arbeit(kotlin.io.path.createTempDirectory("arbeit").toFile())
+        a.vomGeraet(BestandJson.alsJson(mudita).toString())
+        val neuId = a.gigAendern(null) { g, neueId -> a.bestand.gig(10)!!.kopie(g.id, "El Circo 2", 20100, neueId) }
+        assertTrue(neuId < 0)
+        val gesendet = BestandJson.eingangGigsAus(JSONObject(a.zumSenden()))
+        val r = show.jangregersen.buehne.daten.GigAbgleich.uebernehmen(mudita, gesendet)
+        val kopie = r.bestand.gigs.single { it.name == "El Circo 2" }
+        assertTrue(kopie.id >= 30 && kopie.sets.all { it.id >= 30 })
+        assertEquals(listOf(1L, 2L), kopie.sets[0].eintraege.map { it.songId })
+        assertTrue(kopie.sets[0].eintraege.none { it.gespielt })
+        assertEquals(listOf(3L, 4L), kopie.joker)
+        assertEquals(20100L, kopie.datum)
+        // Das Original am Mudita bleibt unberührt.
+        assertEquals(true, r.bestand.gig(10)!!.sets[0].eintraege[0].gespielt)
     }
 
     @Test fun amLaptopGeaenderterKapoGehtZumMudita() {

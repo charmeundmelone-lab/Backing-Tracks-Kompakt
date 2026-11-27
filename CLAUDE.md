@@ -29,9 +29,30 @@ Ablauf-Code.
   Dateien lesen, am Gerät meist `geraet.sh texte` statt Fotos.
 - Das Repo ist **öffentlich**: nie Songtexte, `bestand.json` oder Jans Daten einchecken.
 
+## Selbstkontrolle vor „fertig“ (Jans Auftrag 27.11.: „optimiere, wie du deine Arbeit selbst monitorst“)
+
+1. Tests: `./gradlew --no-daemon -q :app:testDebugUnitTest :werkstatt:test :app:assembleDebug`, danach
+   die Zahlen aus `app/build/test-results` und `werkstatt/build/test-results` zählen (nicht nur „kein
+   Fehler gesehen“). Neue Logik bekommt Unit-Tests (Datenfunktionen in `Aenderungen.kt`, JSON in der Werkstatt).
+2. Installieren nur mit Jans Ja: `sh werkzeug/testlauf.sh wartend` (wartet 3 min ohne Musik, sichert,
+   vergleicht, öffnet danach TrikTrak einmal und gibt „Bitte nicht stören“ zurück).
+3. `sh werkzeug/testlauf.sh ablauf`: Jeder neue Ablauf bekommt einen Schritt. Zeitkritische Tipp-Folgen
+   (8-s-Testsongs!) mit `geraet.sh wo` vorher Koordinaten holen und in EINEM `adb shell "input tap …; …"`
+   schicken. Ein „FEHLT“ ist erst erledigt, wenn das Foto zeigt, ob App oder Skript schuld ist.
+4. Fotos jedes geänderten Bildschirms ansehen: nichts abgeschnitten, nichts verdeckt (Hinweise liegen
+   unten über der Liste), Schrift groß genug.
+5. Danach: `mZenMode` aus, Jans `bestand.json` vorher/nachher gleich bzw. jede Abweichung per diff erklärt.
+6. Werkstatt: Test-Instanz nur auf einer KOPIE in einem neuen Scratch-Ordner (nie Jans Datenordner,
+   nie „Zum Mudita senden“), Antworten mit `node` als JSON lesen (grep scheitert an der Feldreihenfolge),
+   Seite im eingebauten Browser ansehen, Instanz beenden, Port 47811 prüfen.
+7. Committen, pushen, PLAN.md abhaken, Übergabe + Gedächtnis. Erst dann „fertig“ sagen, mit dem, was
+   NICHT geprüft ist.
+- Lehre 27.11.: Code nie per Shell-Skript mit `…; cp neu alt` umschreiben (scheiterte das Skript, war die
+  Datei leer). Für Code das Edit-Werkzeug nehmen.
+
 ## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:55; Nachträge D, E, F unten drüber)
 
-**Stand 27.11. ~15:15: Fassung 16 INSTALLIERT (K7: Stopp nach der Hälfte = beendet mit 3 s Ausblenden und Haken, Leiste zeigt den Ton-Ausgang, Notiz pro Song nur am Mudita). LEHRE: Installieren während der Show-Ruhe (nach Spielen) lässt „Bitte nicht stören“ an, weil der Prozess hart endet → nach jeder Installation TrikTrak einmal öffnen und mit Home verlassen, mZenMode prüfen (testlauf.sh nicht geändert, Jans Wunsch). Erster Start von Fassung 16 schreibt in bestand.json ein leeres „notiz“ pro Song (sonst gleich). Offen: Joker-Liste, Gig kopieren, Filter „noch nicht dran“ (Jans Wahl). Davor Fassung 15 (K6): Antippen sortiert nicht mehr um, der Song bekommt das Schild DANACH (`Zustand.danach`, nicht gespeichert) bzw. ist sofort dran, danach geht es mit dem ersten offenen Song von oben weiter (`naechster`, `anfang`, `einplanen` in Aenderungen.kt). Davor Fassung 14: Stopp will während des Songs einen zweiten Tipp („Nochmal tippen“, 4 s) und blendet 1,5 s aus (K1–K4); „Bitte nicht stören“ nur noch, solange die App offen ist oder eine echte Show läuft (K5, vorher 15 min nach jedem Öffnen). Mit `files/test-leise` keine Ruhe mehr, testlauf lässt sie aus. Offen: Jan hört das Ausblenden; Vorschlag DANACH-Schild statt Umsortieren; testlauf-Schritte ab 9 scheitern am Skript (8-s-Songs). Rückweg `.geraet/fassung12-2026-11-21.apk`.**
+**Stand 27.11. ~15:45: Fassung 17 GEBAUT, NICHT INSTALLIERT (K8: Joker-Reiter, Gig kopieren, Filter „noch nicht dran“, Werkstatt mit Joker und Kopie bereits eingespielt). Nächster Schritt: Mudita anschließen, mit Jans Ja `testlauf.sh wartend`, dann `ablauf` (neue Schritte zum ersten Mal), Fotos prüfen. Davor: Fassung 16 INSTALLIERT (K7: Stopp nach der Hälfte = beendet mit 3 s Ausblenden und Haken, Leiste zeigt den Ton-Ausgang, Notiz pro Song nur am Mudita). LEHRE: Installieren während der Show-Ruhe (nach Spielen) lässt „Bitte nicht stören“ an, weil der Prozess hart endet → nach jeder Installation TrikTrak einmal öffnen und mit Home verlassen, mZenMode prüfen (testlauf.sh nicht geändert, Jans Wunsch). Erster Start von Fassung 16 schreibt in bestand.json ein leeres „notiz“ pro Song (sonst gleich). Offen: Joker-Liste, Gig kopieren, Filter „noch nicht dran“ (Jans Wahl). Davor Fassung 15 (K6): Antippen sortiert nicht mehr um, der Song bekommt das Schild DANACH (`Zustand.danach`, nicht gespeichert) bzw. ist sofort dran, danach geht es mit dem ersten offenen Song von oben weiter (`naechster`, `anfang`, `einplanen` in Aenderungen.kt). Davor Fassung 14: Stopp will während des Songs einen zweiten Tipp („Nochmal tippen“, 4 s) und blendet 1,5 s aus (K1–K4); „Bitte nicht stören“ nur noch, solange die App offen ist oder eine echte Show läuft (K5, vorher 15 min nach jedem Öffnen). Mit `files/test-leise` keine Ruhe mehr, testlauf lässt sie aus. Offen: Jan hört das Ausblenden; Vorschlag DANACH-Schild statt Umsortieren; testlauf-Schritte ab 9 scheitern am Skript (8-s-Songs). Rückweg `.geraet/fassung12-2026-11-21.apk`.**
 
 **Stand 21.11. ~18:15 (installiert 18:20): Fassung 12 (Arbeitsliste J): Set wählen trotz angehaltenem Song, Kapo-Filter im Archiv, Show-Modus (Bildschirm wach, stille Tonspur gegen Knacksen, Lautstärke/Ruhe bleiben in der Set-Pause), Akku-Sparen im Leerlauf, Vorschau des Folge-Sets, letztes Set gemerkt. APK `.geraet/fassung12-2026-11-21.apk`. Offen J6: installieren (Jans Ja), testlauf, Stille messen.**
 

@@ -2,8 +2,9 @@
 # Testlauf für TrikTrak (15.11., Jans Wunsch: "Testen muss schneller gehen").
 #
 #   sh werkzeug/testlauf.sh bauen          Tests (App + Werkstatt) und App bauen
-#   sh werkzeug/testlauf.sh installieren   Mudita-Daten sichern, App installieren, Daten vergleichen
-#                                          (GERÄTE-REGEL: nur mit Jans Ja im Chat)
+#   sh werkzeug/testlauf.sh installieren   Mudita-Daten sichern, App installieren, Daten vergleichen,
+#                                          danach „Bitte nicht stören“ zurückgeben (GERÄTE-REGEL: nur mit Jans Ja im Chat)
+#   sh werkzeug/testlauf.sh wartend        wie installieren, aber erst nach 3 min ohne Musik (Jan spielt evtl.)
 #   sh werkzeug/testlauf.sh ablauf         Bedienung am Mudita im TESTMODUS durchspielen: eigene
 #                                          Spielwiese (Gig "Testlauf"), Jans Daten bleiben unberührt.
 #                                          Fotos + Bericht nach .geraet/testlauf/ (uebersicht.html)
@@ -55,6 +56,26 @@ installieren() {
   sichern "$O-nach-install.json"
   if cmp -s "$R/.geraet/bestand-$stempel-vor-install.json" "$O-nach-install.json"; then echo "OK    Jans Daten nach dem Installieren unverändert"; else echo "ACHTUNG: Daten weichen ab"; fi
   rm -f "$O-nach-install.json"
+  # Lehre 27.11.: Die Installation beendet TrikTrak hart. Lief vorher eine Show, bleibt „Bitte nicht
+  # stören“ an (Anrufe stumm). Einmal öffnen und mit Home verlassen gibt die alte Einstellung zurück.
+  adbs shell monkey -p $PKG -c android.intent.category.LAUNCHER 1 >/dev/null 2>&1
+  ping -n 7 127.0.0.1 >/dev/null 2>&1 || sleep 6
+  adbs shell input keyevent 3
+  ping -n 4 127.0.0.1 >/dev/null 2>&1 || sleep 3
+  if adbs shell dumpsys notification | grep -q "mZenMode=ZEN_MODE_OFF"; then echo "OK    „Bitte nicht stören“ ist aus"
+  else echo "ACHTUNG: „Bitte nicht stören“ ist noch an – nachsehen"; fi
+}
+
+# installieren erst, wenn 3 Minuten am Stück keine Musik lief (länger als die längste Pause zwischen
+# zwei Songs, 2 min): so wird nie ein laufendes Set mit Automatik abgebrochen. Wartet höchstens 60 min.
+wartend() {
+  still=0; ende=$(( $(date +%s) + 3600 ))
+  while [ "$(date +%s)" -lt $ende ]; do
+    if spielt; then still=0; else still=$((still + 15)); fi
+    if [ $still -ge 180 ]; then echo "3 min still um $(date +%H:%M)"; installieren; return; fi
+    sleep 15
+  done
+  echo "In einer Stunde nie 3 Minuten still: NICHT installiert."
 }
 
 # ── Ablauf ───────────────────────────────────────────────────────────────────
@@ -157,22 +178,27 @@ ablauf() {
   # Testdaten: Set A = Test Eins (mit Text, Automatik), Test Zwei (Automatik), Test Drei (hält an);
   # Set B = Test Drei, Test Eins. Alle Testsongs 8 s, Pause 20 s.
   # 1 Öffnen am Gig-Tag = Hauptbildschirm, erstes Set, erster Song markiert, Leiste zeigt „Danach“
-  pruefe start 10 "Set A" "Archiv" "Jetzt dran" "Test Eins" "Danach" "Test Zwei" "Bereit" "Abspielen"
+  pruefe start 10 "Set A" "Joker" "Archiv" "Jetzt dran" "Test Eins" "Danach" "Test Zwei" "Bereit" "Abspielen"
   vorne || abbruch "TrikTrak kam nicht nach vorne (Bildschirm gesperrt?)."
+  # 1b (27.11.) Wohin der Ton geht: beim Testen hängt der Laptop am USB, also der Lautsprecher.
+  pruefe ton-anzeige 3 "TON: LAUTSPRECHER"
   # 2 Play: Test Eins hat Text, also geht der Text von selbst auf; anhalten, dann Stopp = an den Anfang
   tippe "Abspielen"; tippe "Pause"
   pruefe text-automatisch 5 "Test Eins" "Liste" "Angehalten" "Stopp"
   tippe "Stopp"
   pruefe stopp-anfang 5 "Archiv" "Jetzt dran" "Test Eins" "Bereit" "Abspielen"
-  # 2b (27.11.) Stopp, während der Song läuft: erster Tipp macht den Knopf scharf („Nochmal tippen“),
-  # erst der zweite hält an (Song blendet aus, steht am Anfang). Zweiter Tipp blind auf dieselbe
-  # Stelle, weil das Fenster nur 4 s offen ist und der Testsong nur 8 s dauert.
+  # 2b (27.11.) Stopp, während der Song läuft: erster Tipp macht den Knopf scharf („Nochmal tippen“).
+  # Danach anhalten (Pause nimmt „scharf“ zurück) und ein Tipp Stopp: angehalten vor der Hälfte =
+  # zurück an den Anfang. Koordinaten vorher holen (geraet.sh wo), damit alles vor der Hälfte des
+  # 8-s-Testsongs passiert (sonst gälte er als beendet, siehe 2d).
   tippe "Abspielen"
   vorne || abbruch "TrikTrak ist nicht vorne."
-  xy=$($G tap "Stopp" | sed -n 's/^tap .* @ //p')
+  ko_stopp=$($G wo "Stopp"); ko_pause=$($G wo "Pause")
+  [ -n "$ko_stopp" ] && adbs shell input tap $ko_stopp
   pruefe stopp-scharf 1 "Nochmal tippen zum Stoppen"
-  [ -n "$xy" ] && $G xy $xy >/dev/null
-  pruefe stopp-ausgeblendet 6 "Archiv" "Jetzt dran" "Test Eins" "Bereit" "Abspielen"
+  [ -n "$ko_pause" ] && adbs shell input tap $ko_pause
+  [ -n "$ko_stopp" ] && adbs shell input tap $ko_stopp
+  pruefe stopp-angehalten 6 "Archiv" "Jetzt dran" "Test Eins" "Bereit" "Abspielen"
   # 2c (27.11.) DANACH-Schild: Song angespielt (pausiert), anderen Song antippen = Schild, nichts rückt.
   tippe "Abspielen"; tippe "Pause"
   tippe "Zur Setliste"
@@ -182,6 +208,18 @@ ablauf() {
   pruefe danach-zurueck 5 "Zurückgenommen"
   tippe "Stopp"
   pruefe danach-stopp 5 "Jetzt dran" "Test Eins" "Bereit" "Abspielen"
+  # 2d (27.11.) Früher aufhören: nach der Hälfte zweimal Stopp = Song beendet (3 s Ausblenden,
+  # Haken, nächster liegt bereit). Beide Tipps in einem adb-Aufruf. Danach Test Eins wieder offen
+  # und bereit machen („Nochmal spielen?“ → Ja), damit die folgenden Schritte gleich bleiben.
+  tippe "Abspielen"
+  vorne || abbruch "TrikTrak ist nicht vorne."
+  ko_stopp=$($G wo "Stopp")
+  ping -n 6 127.0.0.1 >/dev/null 2>&1 || sleep 5
+  [ -n "$ko_stopp" ] && adbs shell "input tap $ko_stopp; input tap $ko_stopp"
+  pruefe frueh-beendet 8 "Test Eins“ beendet." "Test Zwei“ liegt bereit."
+  tippe "Test Eins"
+  warte 3 "Nochmal spielen?" && tippe "Ja, als Nächstes"
+  pruefe frueh-zurueck 5 "Jetzt dran" "Test Eins" "Bereit"
   # 3 Pausen-Kästchen: Tipp schaltet weiter (Test Zwei, das zweite Kästchen: 20 s → 30 s)
   tippe "Pause umschalten" 1
   pruefe pause-kaestchen 4 "30 s"
@@ -195,7 +233,13 @@ ablauf() {
   pruefe wisch-rechts 5 "Test Drei“ liegt bereit" "Rückgängig"
   # 6 Lang drücken = Einstellungen (startet keine Musik); Tipp = auswählen (21.11., wie die alte App)
   lange "Test Zwei"
-  pruefe antippen-karte 5 "Test Zwei" "0 s" "10 s" "30 s" "1 min" "2 min"
+  pruefe antippen-karte 5 "Test Zwei" "0 s" "10 s" "30 s" "1 min" "2 min" "Notiz schreiben"
+  # 6b (27.11.) Notiz für die Bühne: eintippen, steht dann auf dem Knopf (nur Spielwiese).
+  tippe "Notiz schreiben"
+  warte 4 "Notiz für" >/dev/null
+  adbs shell input text "Drop%sD"
+  tippe "OK"
+  pruefe notiz 5 "Drop D"
   tippe "Schließen"
   tippe "Test Zwei"
   pruefe tipp-waehlt-aus 5 "Test Zwei“ liegt bereit" "Rückgängig"
@@ -217,7 +261,10 @@ ablauf() {
   # dann anhalten (die Testsongs sind nur 8 s lang).
   tippe "Set A"
   pruefe set-klappe 5 "Sets · Testlauf" "Set B" "Set bearbeiten" "Alle Gigs"
-  tippe "Abspielen"; tippe "Set B"; tippe "Pause"
+  # 27.11.: Die drei Tipps in einem adb-Aufruf (vorher geholte Koordinaten), sonst ist der
+  # 8-s-Testsong zu Ende, bevor „Pause“ kommt (war der Grund für die Fehlerkette ab hier).
+  ko_play=$($G wo "Abspielen"); ko_setb=$($G wo "Set B")
+  [ -n "$ko_play" ] && [ -n "$ko_setb" ] && adbs shell "input tap $ko_play; sleep 0.4; input tap $ko_setb; sleep 0.6; input tap $ko_play"
   pruefe set-vorschau 5 "Vorschau · beginnt nach diesem Song" "Zu „Set A“" "Test Drei"
   # Tipp in der Vorschau: der Song steht dort vorne, der laufende bleibt
   tippe "Test Eins"
@@ -251,9 +298,30 @@ ablauf() {
   tippe "2"
   pruefe kapo-filter 5 "Kapo" "alle" "Kapo 2"
   tippe "alle"
+  # 11c (27.11.) Filter „noch nicht dran“: an und wieder aus.
+  tippe "noch nicht dran: aus"
+  pruefe filter-an 4 "noch nicht dran: an"
+  tippe "noch nicht dran: an"
+  # 11d (27.11.) Joker: Reiter leer → festlegen (Talking Revolution) → im Reiter antippen = liegt bereit
+  # (kommt ans Ende des Sets) → Rückgängig. Alles nur auf der Spielwiese.
+  tippe "Joker"
+  pruefe joker-leer 4 "Noch keine Joker" "Joker festlegen"
+  tippe "Joker festlegen"
+  pruefe joker-seite 5 "Joker für Testlauf" "0 Joker"
+  tippe "tippen zum Springen"; tippe "T"
+  tippe "Talking Revolution"
+  pruefe joker-dazu 5 "ist jetzt Joker" "1 Joker"
+  tippe "Fertig"
+  pruefe joker-reiter 5 "Talking Revolution" "Joker bearbeiten"
+  tippe "Talking Revolution"
+  pruefe joker-tipp 5 "steht am Ende und liegt bereit" "Rückgängig"
+  tippe "Rückgängig"
+  pruefe joker-zurueck 5 "Zurückgenommen"
   # 12 Text geht von selbst auf; „Liste“ führt zurück und der Text springt nicht wieder auf
   tippe "Set B"
   wische "Test Eins" rechts
+  # Test Eins lief schon in Set A: die App fragt zu Recht nach (27.11.: Skript blieb hier hängen).
+  warte 3 "Nochmal spielen?" && tippe "Ja, als Nächstes"
   pruefe text-knopf 5 "Jetzt dran" "Test Eins" "Bereit" "Text zeigen"
   tippe "Abspielen"
   pruefe text-auf-set-b 5 "Test Eins" "Liste" "Stopp"
@@ -267,6 +335,16 @@ ablauf() {
   pruefe set-bearbeiten 5 "Bearbeiten" "Umstellen" "Songs"
   tippe "Fertig"
   pruefe zurueck-haupt 5 "Archiv" "Set B"
+  # 14 (27.11.) Gig kopieren über das Gig-Menü (⋯): Name und Datum bestätigen, man landet in der
+  # Kopie mit beiden Sets. Nur auf der Spielwiese, verschwindet beim Aufräumen.
+  tippe "Set B"; tippe "Alle Gigs"
+  pruefe gig-seite 5 "Testlauf" "Set A" "Set B"
+  tippe "Gig bearbeiten"
+  pruefe gig-menue 4 "Joker bearbeiten (1)" "Gig kopieren"
+  tippe "Gig kopieren"
+  warte 4 "Gig kopieren" "OK" >/dev/null && tippe "OK"
+  warte 4 "Datum für" "OK" >/dev/null && tippe "OK"
+  pruefe gig-kopie 6 "ist eine Kopie von „Testlauf“" "Set A" "Set B"
 
   aufraeumen
   bericht
@@ -275,6 +353,7 @@ ablauf() {
 case "${1:-}" in
   bauen) bauen ;;
   installieren) installieren ;;
+  wartend) wartend ;;
   ablauf) ablauf ;;
   alles) bauen; ablauf ;;
   schnell) bauen; installieren; ablauf ;;

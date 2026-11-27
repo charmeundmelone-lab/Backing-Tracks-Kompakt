@@ -34,6 +34,7 @@ import show.jangregersen.buehne.daten.dauerMs
 import show.jangregersen.buehne.daten.gespieltZuruecksetzen
 import show.jangregersen.buehne.daten.gigAendern
 import show.jangregersen.buehne.daten.mitGig
+import show.jangregersen.buehne.daten.kopie
 import show.jangregersen.buehne.daten.ohneGig
 import show.jangregersen.buehne.daten.ohneSet
 import show.jangregersen.buehne.daten.setAendern
@@ -178,6 +179,30 @@ private fun neuerGig(navi: Navi) {
     })
 }
 
+/**
+ * Gig kopieren (27.11.): neuer Name und Datum, dann steht eine Kopie mit allen Sets, Songs,
+ * Songende-Einstellungen und Jokern da, alles wieder ungespielt. Man landet in der Kopie.
+ */
+private fun gigKopieren(navi: Navi, vorlageId: Long) {
+    val vorlage = App.ablage.jetzt.gig(vorlageId) ?: return
+    navi.zu(Seite.Eingabe("Gig kopieren", vorlage.name, hinweis = "Name für die Kopie. Alle Sets, Songs und Joker kommen mit, alles wieder ungespielt.") { name ->
+        if (name.isBlank()) return@Eingabe
+        val neuerName = name.trim()
+        navi.ersetzen(Seite.Eingabe("Datum für „$neuerName“", "", zahl = true, hinweis = "TT.MM.JJJJ, leer lassen = ohne Datum") { text ->
+            val tag = datumLesen(text) ?: 0L
+            val a = App.ablage
+            val quelle = a.jetzt.gig(vorlageId) ?: return@Eingabe
+            // Nummern vorher holen: neueId() ändert den Bestand selbst, nicht innerhalb von aendern { }.
+            val gigId = a.neueId()
+            val setIds = quelle.sets.map { a.neueId() }.iterator()
+            val kopie = quelle.kopie(gigId, neuerName, tag) { setIds.next() }
+            a.aendern { it.mitGig(kopie) }
+            navi.zumGig(gigId)
+            App.buehne.hinweis("„$neuerName“ ist eine Kopie von „${quelle.name}“.")
+        })
+    })
+}
+
 // ── Sets eines Gigs ──────────────────────────────────────────────────────────
 
 @Composable
@@ -195,6 +220,9 @@ fun GigSetsSeite(navi: Navi, gigId: Long) {
             Menue(listOf(
                 "Umbenennen" to { menue = false; navi.zu(Seite.Eingabe("Gig umbenennen", gig.name) { n -> if (n.isNotBlank()) App.ablage.aendern { it.gigAendern(gigId) { g -> g.copy(name = n.trim()) } }; navi.zurueck() }) },
                 "Datum ändern" to { menue = false; navi.zu(Seite.Eingabe("Datum", datumText(gig.datum), zahl = true, hinweis = "TT.MM.JJJJ, leer = ohne Datum") { t -> val d = datumLesen(t); if (d != null) App.ablage.aendern { it.gigAendern(gigId) { g -> g.copy(datum = d) } }; navi.zurueck() }) },
+                // 27.11. (Jans Wunsch aus dem StageTraxx-Vergleich): Joker und Kopie.
+                (if (gig.joker.isEmpty()) "Joker festlegen" else "Joker bearbeiten (${gig.joker.size})") to { menue = false; navi.zu(Seite.Archiv(jokerGigId = gigId)) },
+                "Gig kopieren" to { menue = false; gigKopieren(navi, gigId) },
                 "Gig löschen" to { menue = false; navi.zu(Seite.Frage("Gig löschen?", "„${gig.name}“ mit allen Sets wird gelöscht. Die Songs bleiben im Archiv.", "Löschen") { App.ablage.aendern { it.ohneGig(gigId) }; navi.zurueck(); navi.zurueck() }) }
             )) { menue = false }
             return@Rahmen

@@ -8,6 +8,7 @@
 #   sh werkzeug/geraet.sh wisch "Text" rechts|links   über die Zeile mit diesem Text wischen
 #   sh werkzeug/geraet.sh lang "Text" [n] lange auf die Zeile mit diesem Text drücken
 #   sh werkzeug/geraet.sh xy X Y         Tipp auf Koordinate (nur wenn nötig)
+#   sh werkzeug/geraet.sh wo "Text" [n]  nur die Koordinate ausgeben, nicht tippen
 ADB="$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe"
 D="-s LD20241004967"
 S="$(cd "$(dirname "$0")/.." && pwd)/.geraet"; mkdir -p "$S"
@@ -39,6 +40,23 @@ print('%d %d'%hits[n] if len(hits)>n else '')
 " "$2" "${3:-0}")
     if [ -z "$xy" ]; then echo "NICHT GEFUNDEN: $2"; exit 1; fi
     "$ADB" $D shell input tap $xy; echo "tap $2 @ $xy" ;;
+  wo)
+    # wo "Text" [n]: nur die Mitte des Elements ausgeben, ohne zu tippen (27.11.). Für zeitkritische
+    # Tipp-Folgen: Koordinaten vorher holen, dann mehrere Tipps in einem adb-Aufruf schicken.
+    dump
+    py -I -X utf8 -c "
+import re,sys
+x=open(r'$W/ui.xml',encoding='utf-8').read()
+t=sys.argv[1]; n=int(sys.argv[2]) if len(sys.argv)>2 else 0
+hits=[]
+for m in re.finditer(r'<node [^>]*>',x):
+  a=m.group(0)
+  tx=re.search(r' text=\"([^\"]*)\"',a); cd=re.search(r'content-desc=\"([^\"]*)\"',a)
+  if (tx and tx.group(1)==t) or (cd and cd.group(1)==t):
+    b=re.search(r'bounds=\"\[(\d+),(\d+)\]\[(\d+),(\d+)\]\"',a)
+    hits.append(((int(b.group(1))+int(b.group(3)))//2,(int(b.group(2))+int(b.group(4)))//2))
+print('%d %d'%hits[n] if len(hits)>n else '')
+" "$2" "${3:-0}" ;;
   wisch)
     # wisch "Text" rechts|links [n]: über die Zeile mit diesem Text wischen (Hauptbildschirm, 15.11.).
     dump

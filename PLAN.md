@@ -932,3 +932,14 @@ Play begann ihn von vorn. StageTraxx blendet aus und kennt Doppeltipp-Schutz.
   Kapo/Tonart/Länge und unter Kapo/Tonart in Textansicht und Pause). Werkstatt zeigt die Notiz nicht,
   lässt sie aber stehen (Test `notizVomMuditaUeberstehtSendenVomLaptop`). testlauf.sh nicht angepasst
   (Jan: „ändere nichts“): Schritt 2b kann jetzt den Haken-Fall treffen.
+- [x] K8 Fassung 17 (27.11., gebaut, 76 App- + 29 Werkstatt-Tests grün, NICHT installiert, Mudita war abgezogen):
+  **Joker** (`Gig.joker`, im Abdruck nur wenn nicht leer; Reiter „Joker“ zwischen Set und Archiv: Tipp/rechts
+  = als Nächstes, kommt ans Ende des Sets, links = ans Ende; „Joker festlegen/bearbeiten“ = Archiv im
+  Joker-Modus, Tipp = Joker ja/nein; auch im Gig-Menü ⋯), **Gig kopieren** (Gig-Menü ⋯; `Gig.kopie`, alles
+  ungespielt, Joker mit), **Filter „noch nicht dran“** (Schalter rechts der Tempo-Leiste im Archiv-Reiter und
+  in der Archiv-Seite mit Ziel-Set/Joker, `nochNichtDran`). Werkstatt: Joker-Kasten (hinzufügen/Weg) und
+  „Gig kopieren“ auf der Seite Gigs (API `kopieren`, `jokerHinzu`, `jokerWeg`), an Datenkopie geprüft,
+  eingespielt (installDist). Selbstkontrolle: `geraet.sh wo`, testlauf.sh repariert (Schritt 9 Tipps in
+  einem Rutsch, Schritt 12 bestätigt „Nochmal spielen?“), neue Schritte ton-anzeige, stopp-angehalten,
+  frueh-beendet, notiz, filter-an, joker-*, gig-kopie; `installieren` gibt die Ruhe zurück, `wartend`
+  installiert erst nach 3 min Stille; Prüfliste in CLAUDE.md. Neue Skriptschritte noch nie am Gerät gelaufen.

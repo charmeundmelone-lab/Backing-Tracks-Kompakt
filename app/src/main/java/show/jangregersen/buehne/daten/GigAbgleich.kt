@@ -23,6 +23,8 @@ object GigAbgleich {
             append("|S").append(s.id).append(':').append(s.name)
             s.eintraege.forEach { e -> append(',').append(e.songId).append('/').append(e.ende) }
         }
+        // Joker (27.11.) nur, wenn es welche gibt: So bleiben ältere Abdrücke ohne Joker gültig.
+        if (g.joker.isNotEmpty()) append("|J").append(g.joker.joinToString(","))
     }
 
     /**
@@ -59,7 +61,8 @@ object GigAbgleich {
             val grund = hindernis(neu, a)
             if (grund != null) { nein += "„$name“ ($grund)"; continue }
             val dort = neu.gig(a.gigId)
-            val g = a.gig
+            // Joker, die es auf dem Mudita nicht (mehr) gibt, fallen weg.
+            val g = a.gig?.let { it.copy(joker = it.joker.filter { id -> id in songIds }.distinct()) }
             when {
                 g == null -> {
                     if (dort != null) { neu = neu.copy(gigs = neu.gigs.filterNot { it.id == a.gigId }); ok += "„$name“ gelöscht" }
