@@ -919,3 +919,9 @@ Play begann ihn von vorn. StageTraxx blendet aus und kennt Doppeltipp-Schutz.
 - Offen aus dem Vergleich (erledigt K5): Fehler „Bitte nicht stören“ bleibt nach jedem Öffnen 15 min an (App-Start
   zählt als Show, `letzteAktion` = Startzeit); Vorschlag „DANACH-Schild statt Umsortieren“ (Set behält
   den Plan); testlauf-Schritte 9/12 scheitern am Skript (8-s-Songs zu kurz, Rückfrage „Nochmal spielen?“).
+- [ ] K6 Entwurf „DANACH-Schild statt Umsortieren“ (27.11., `entwuerfe/danach/`, 4 Bilder, im Betrachter
+  vorne als `0-danach-0N.png`). Regeln: Tipp/Wischen rechts auf einen offenen Song verschiebt nichts mehr.
+  Läuft nichts, ist er sofort dran (schwarz, an seinem Platz); läuft etwas, bekommt er das Schild DANACH
+  (dicker Rahmen, ein Schild pro Set, neuer Tipp versetzt es, 8 s Rückgängig). Nach ihm geht es mit dem
+  ersten offenen Song von oben weiter (der Plan). Wunschsong aus dem Archiv kommt ans Ende mit Schild.
+  Wischen links „ans Ende“ bleibt (einziges Umstellen). Set ist nach dem Gig wie geplant. Jans Urteil offen.

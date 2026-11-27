@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>TrikTrak DANACH-Schild</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Barlow+Semi+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<!-- Entwurf "DANACH-Schild statt Umsortieren" (2026-11-27, aus dem Vergleich mit StageTraxx).
+     Optik wie Fassung 14 auf dem Mudita (360x600 = 480x800 bei Faktor 1,333, mit Statusleiste).
+     Ohne #: Übersicht mit Erklärungen. Mit #1 … #4: nur dieser Bildschirm (für die Einzelbilder). -->
+<style>
+  body{margin:0;background:#e9e9e9;font-family:'Barlow Semi Condensed','Arial Narrow',sans-serif}
+  *{box-sizing:border-box}
+  .raster{display:flex;flex-wrap:wrap;gap:28px;padding:24px}
+  figure{margin:0;display:flex;flex-direction:column;gap:10px;width:360px}
+  figcaption{font-size:19px;font-weight:600;line-height:1.25;color:#000}
+  figcaption b{font-family:'Barlow Condensed',sans-serif;font-size:24px;font-weight:800;display:block}
+  .einzeln{background:#fff}
+  .einzeln .raster{padding:0;gap:0}
+  .einzeln figcaption{display:none}
+  .einzeln figure{display:none}
+  .einzeln figure.an{display:flex}
+  .s{width:360px;height:600px;background:#fff;color:#000;display:flex;flex-direction:column;overflow:hidden;position:relative;outline:1px solid #bbb}
+  .einzeln .s{outline:none}
+  .status{height:36px;flex:none;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:500;font-family:Arial,sans-serif}
+  .et{font-size:14px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;line-height:1.1}
+  .ti{font-family:'Barlow Condensed',sans-serif;font-weight:700;line-height:1}
+
+  /* Kopf */
+  .kopf{background:#000;color:#fff;padding:6px 10px 8px;flex:none;display:flex;flex-direction:column;gap:5px}
+  .kopf .et{padding-left:4px}
+  .reiter{display:flex;gap:9px}
+  .rt{height:39px;border:2.5px solid #fff;border-radius:11px;display:flex;align-items:center;justify-content:center;gap:6px;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:25px;color:#fff}
+  .rt.an{background:#fff;color:#000}
+  .rt.set{flex:1.5}.rt.arch{flex:1}
+
+  /* Liste: 5 Zeilen à 63 */
+  .liste{flex:1;position:relative;padding-top:2px}
+  .zeile{height:63px;margin:0 10px 0 10px;padding:0 4px;border-bottom:1px solid #000;display:flex;align-items:center;gap:12px;position:relative;margin-right:22px}
+  .nr{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:25px;width:26px;text-align:center;flex:none}
+  .mitte{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .tt{font-family:'Barlow Condensed',sans-serif;font-size:27px;font-weight:700;line-height:1.05;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .unter{display:flex;gap:7px;align-items:center;font-size:16.5px;font-weight:700;white-space:nowrap}
+  .chip{border:2px solid #000;border-radius:7px;padding:0 5px;font-size:14px;font-weight:700;line-height:1.25}
+  /* jetzt: schwarz */
+  .zeile.jetzt{background:#000;color:#fff;border:none;border-radius:12px;margin-left:6px;padding-left:8px}
+  .zeile.jetzt .nr{background:#fff;color:#000;border-radius:7px;height:32px;line-height:32px}
+  .zeile.jetzt .chip{border-color:#fff}
+  /* gespielt: blass mit Haken */
+  .zeile.gesp{color:#8a8a8a}
+  .haken{width:26px;height:26px;border:2px solid #8a8a8a;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:15px;flex:none;color:#8a8a8a}
+  /* NEU: DANACH-Schild */
+  .zeile.danach{border:3.5px solid #000;border-radius:12px;margin-left:6px;padding-left:8px;margin-top:5px;height:60px}
+  .zeile.danach .schild{position:absolute;top:-12px;left:12px;background:#000;color:#fff;font-size:13px;font-weight:700;letter-spacing:.09em;padding:1px 7px;border-radius:5px}
+  /* gerade umgestellt (nur im Bild "Bisher") */
+  .zeile.neu{background:repeating-linear-gradient(135deg,#fff 0 7px,#ececec 7px 9px)}
+  .punkte{position:absolute;right:6px;top:120px;display:flex;flex-direction:column;gap:8px}
+  .punkte i{width:9px;height:9px;border-radius:5px;border:2px solid #000;display:block}
+  .punkte i.an{background:#000}
+
+  /* Hinweis über der Leiste */
+  .hinweis{position:absolute;left:10px;right:10px;bottom:8px;border:2.5px solid #000;border-radius:12px;background:#fff;display:flex;align-items:center;gap:8px;padding:6px 6px 6px 12px;font-size:17px;font-weight:700;line-height:1.15}
+  .hinweis span{flex:1}
+  .hinweis .k{background:#000;color:#fff;border-radius:9px;padding:7px 10px;font-size:16px;flex:none}
+
+  /* Leiste */
+  .leiste{background:#000;color:#fff;flex:none;padding:5px 12px 8px;display:flex;flex-direction:column}
+  .fort{height:5px;display:flex;gap:2px}
+  .fort i{flex:1;border:1px solid #fff}
+  .fort i.v{background:#fff}
+  .z1{display:flex;justify-content:space-between;height:19px;align-items:center;margin-top:3px}
+  .z2{display:flex;justify-content:space-between;align-items:center;height:40px;gap:10px}
+  .z2 .ti{font-size:27px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .z2 .zeit{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:35px}
+  .z3{display:flex;gap:8px;align-items:center;height:26px}
+  .z3 .ti{font-size:19px;font-family:'Barlow Semi Condensed',sans-serif}
+  .kn{display:flex;gap:8px;margin-top:4px}
+  .kb{height:54px;border:2.5px solid #fff;border-radius:13px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:15px;font-weight:700;gap:1px}
+  .kb.voll{background:#fff;color:#000}
+  .kb .sy{font-size:20px;line-height:1}
+</style>
+</head>
+<body>
+<div class="raster" id="r"></div>
+<script>
+// Ein Set mit 10 Songs (Titel aus Jans Bestand, Längen ungefähr).
+const SET = [
+  ['Englishman in New York','ohne Kapo · Em','4:10'],
+  ['There she goes','Kapo 2 · G','2:44'],
+  ['Two Princes','ohne Kapo · D','4:21'],
+  ['Wonderwall','Kapo 2 · Em','4:18'],
+  ['Perfect','Kapo 1 · G','4:23'],
+  ['Riptide','Kapo 5 · Am','3:24'],
+  ['Jolene','Kapo 4 · C#m','3:11'],
+  ['Tennessee Whiskey','ohne Kapo · A','4:53'],
+  ['Bed of Roses','Kapo 2 · G','5:10'],
+  ['Take on Me','ohne Kapo · A','3:46'],
+];
+const ARCHIV = ['Grenade','Kapo 1 · Dm','3:42'];
+
+function zeile(nr, s, art, schild) {
+  const [t, k, l] = s;
+  const links = art === 'gesp' ? '<div class="haken">✓</div>' : `<div class="nr">${nr}</div>`;
+  const pause = art === 'gesp' ? '' : '<span class="chip">‖ 10 s</span>';
+  return `<div class="zeile ${art}">${schild ? '<div class="schild">DANACH</div>' : ''}${links}
+    <div class="mitte"><div class="tt">${t}</div><div class="unter">${k} · ${l} ${pause}</div></div></div>`;
+}
+function kopf(gespielt, gesamt) {
+  return `<div class="status">13:52</div><div class="kopf"><div class="et">El Circo · ${gespielt} von ${gesamt} gespielt · noch 31 min</div>
+    <div class="reiter"><div class="rt set an">Set 1 <svg width="18" height="11" viewBox="0 0 18 11"><path d="M2 2l7 7 7-7" stroke="#000" stroke-width="3" fill="none"/></svg></div><div class="rt arch">Archiv</div></div></div>`;
+}
+function leiste(wort, titel, kapo, zeit, danach, voll) {
+  let f = ''; for (let i = 0; i < 20; i++) f += `<i class="${i < voll ? 'v' : ''}"></i>`;
+  return `<div class="leiste"><div class="fort">${f}</div>
+    <div class="z1"><span class="et">${wort}</span><span class="et">${kapo}</span></div>
+    <div class="z2"><span class="ti">${titel}</span><span class="zeit">${zeit}</span></div>
+    <div class="z3"><span class="et">Danach</span><span class="ti">${danach}</span></div>
+    <div class="kn"><div class="kb" style="flex:1"><span class="sy">☰</span>Text</div>
+      <div class="kb voll" style="flex:1.5"><span class="sy" style="font-size:26px">❚❚</span></div>
+      <div class="kb" style="flex:1"><span class="sy">■</span>Stopp</div></div></div>`;
+}
+function punkte(seite, n) { let p = ''; for (let i = 1; i <= n; i++) p += `<i class="${i === seite ? 'an' : ''}"></i>`; return `<div class="punkte">${p}</div>`; }
+function bild(listeHtml, hinweis, leisteHtml, gesp, gesamt, seite, seiten) {
+  return `<div class="s">${kopf(gesp, gesamt)}<div class="liste">${listeHtml}${punkte(seite, seiten)}
+    ${hinweis ? `<div class="hinweis"><span>${hinweis}</span><div class="k">Rückgängig</div></div>` : ''}</div>${leisteHtml}</div>`;
+}
+
+const BILDER = [];
+
+// 1 BISHER: Two Princes läuft, Jan tippt Jolene (Platz 7) → Jolene springt auf Platz 4, alles rutscht.
+{
+  const bisher = [SET[0], SET[1], SET[2], SET[6], SET[3]];
+  const arten = ['gesp', 'gesp', 'jetzt', 'neu', ''];
+  const l = bisher.map((s, i) => zeile(i + 1, s, arten[i])).join('');
+  BILDER.push(['Bisher', 'Two Princes läuft. Du tippst auf „Jolene“ (Platz 7). Jolene springt auf Platz 4, alles darunter rutscht eine Zeile nach unten (hier gestreift). Nach dem Gig ist dein Set umgestellt.',
+    bild(l, '„Jolene“ kommt als Nächstes.', leiste('Läuft · 3 / 10', 'Two Princes', 'ohne Kapo · D', '2:41', 'Jolene · Kapo 4', 8), 2, 10, 1, 2)]);
+}
+// 2 NEU: derselbe Moment. Jolene bleibt auf Platz 7 und bekommt das Schild DANACH. Nichts rutscht.
+{
+  const l = SET.slice(5, 10).map((s, i) => zeile(i + 6, s, i === 1 ? 'danach' : '', i === 1)).join('');
+  BILDER.push(['Neu: Schild statt Springen', 'Derselbe Moment. Jolene bleibt auf Platz 7 und bekommt das Schild DANACH. Nichts rutscht, die Seite bleibt, wo sie ist. Unten steht wie immer „Danach: Jolene“.',
+    bild(l, '„Jolene“ kommt als Nächstes.', leiste('Läuft · 3 / 10', 'Two Princes', 'ohne Kapo · D', '2:41', 'Jolene · Kapo 4', 8), 2, 10, 2, 2)]);
+}
+// 3 NEU: Jolene läuft auf ihrem Platz, danach geht der Plan oben weiter (Platz 4).
+{
+  const l = SET.slice(5, 10).map((s, i) => zeile(i + 6, s, i === 1 ? 'jetzt' : '')).join('');
+  BILDER.push(['Neu: danach geht dein Plan weiter', 'Jolene läuft auf ihrem Platz (schwarz). Danach kommt der erste offene Song von oben: Wonderwall auf Platz 4. Du musst nichts zurückstellen.',
+    bild(l, '', leiste('Läuft · 7 / 10', 'Jolene', 'Kapo 4 · C#m', '2:58', 'Wonderwall · Kapo 2', 2), 3, 10, 2, 2)]);
+}
+// 4 NEU: Wunschsong aus dem Archiv kommt ans Ende des Sets und bekommt das Schild.
+{
+  const l = zeile(11, ARCHIV, 'danach', true);
+  BILDER.push(['Neu: Wunschsong aus dem Archiv', 'Ein Song, der nicht im Set steht (hier „Grenade“), kommt ans Ende des Sets und bekommt das Schild. Dein geplantes Set darüber bleibt, wie es war.',
+    bild(l, '„Grenade“ steht am Ende und kommt als Nächstes.', leiste('Läuft · 3 / 11', 'Two Princes', 'ohne Kapo · D', '2:20', 'Grenade · Kapo 1', 9), 2, 11, 3, 3)]);
+}
+
+const r = document.getElementById('r');
+r.innerHTML = BILDER.map(([t, c, h], i) => `<figure data-n="${i + 1}">${h}<figcaption><b>${i + 1} · ${t}</b>${c}</figcaption></figure>`).join('');
+const n = location.hash.slice(1);
+if (n) {
+  document.body.classList.add('einzeln');
+  const f = r.querySelector(`figure[data-n="${n}"]`); if (f) f.classList.add('an');
+}
+</script>
+</body>
+</html>
