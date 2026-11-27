@@ -309,7 +309,7 @@ private fun SetZeile(nr: Int, s: Song, e: Eintrag, art: SetArt, mitAutomatik: Bo
             Modifier.fillMaxSize()
                 .then(when {
                     jetzt -> Modifier.padding(start = 6.dp, end = 12.dp, top = 1.dp, bottom = 1.dp).clip(form).background(Schwarz).semantics { contentDescription = "Jetzt dran" }
-                    danach -> Modifier.padding(start = 6.dp, end = 12.dp, top = 7.dp, bottom = 1.dp).clip(form).border(3.5.dp, Schwarz, form).semantics { contentDescription = "Danach dran" }
+                    danach -> Modifier.padding(start = 6.dp, end = 12.dp, top = 4.dp, bottom = 0.dp).clip(form).border(3.dp, Schwarz, form).semantics { contentDescription = "Danach dran" }
                     else -> Modifier.padding(horizontal = 10.dp)
                 })
                 .combinedClickable(interactionSource = quelle, indication = null, onClick = onTipp, onLongClick = onLang)
@@ -338,9 +338,9 @@ private fun SetZeile(nr: Int, s: Song, e: Eintrag, art: SetArt, mitAutomatik: Bo
             }
         }
         if (danach) {
-            // Das Schild sitzt auf der oberen Rahmenkante, wie im Entwurf.
-            Box(Modifier.padding(start = 20.dp).clip(RoundedCornerShape(5.dp)).background(Schwarz).padding(horizontal = 7.dp)) {
-                T("DANACH", textStil(13.sp, Weiss, FontWeight.Bold).knapp(), zeilen = 1, ueberlauf = TextOverflow.Visible)
+            // Das Schild sitzt rechts auf der oberen Rahmenkante: links stünde es im Titel (am Gerät gesehen).
+            Box(Modifier.align(Alignment.TopEnd).padding(end = 24.dp).clip(RoundedCornerShape(5.dp)).background(Schwarz).padding(horizontal = 7.dp)) {
+                T("DANACH", textStil(12.sp, Weiss, FontWeight.Bold).knapp(), zeilen = 1, ueberlauf = TextOverflow.Visible)
             }
         }
         if (!jetzt && !danach) Linie(Modifier.align(Alignment.BottomCenter).padding(horizontal = 10.dp))
