@@ -913,7 +913,8 @@ Play begann ihn von vorn. StageTraxx blendet aus und kennt Doppeltipp-Schutz.
   AudioTrack.setVolume), dann an den Anfang. Play während des Ausblendens = von vorn.
   Songende während des Ausblendens zählt nicht (spielt = false sofort).
 - [x] K3 testlauf.sh Schritte „stopp-scharf“, „stopp-ausgeblendet“.
-- [ ] K4 Installieren (Jans Ja), testlauf, Ausblenden mit eigenen Ohren prüfen (Jan).
+- [x] K4a Installiert 27.11. ~13:19 (Jans Ja), Daten gleich, Kopie `.geraet/fassung13-2026-11-27.apk`. testlauf: stopp-scharf + stopp-ausgeblendet OK (zweiter Tipp in der letzten Sekunde: Song zählt nicht als gespielt, steht wieder am Anfang), Rest wie vorher (Skriptfehler ab Schritt 9).
+- [ ] K4 Jan prüft das Ausblenden mit eigenen Ohren.
 - Offen aus dem Vergleich: Fehler „Bitte nicht stören“ bleibt nach jedem Öffnen 15 min an (App-Start
   zählt als Show, `letzteAktion` = Startzeit); Vorschlag „DANACH-Schild statt Umsortieren“ (Set behält
   den Plan); testlauf-Schritte 9/12 scheitern am Skript (8-s-Songs zu kurz, Rückfrage „Nochmal spielen?“).

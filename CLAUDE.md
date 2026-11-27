@@ -31,7 +31,9 @@ Ablauf-Code.
 
 ## Übergabe an die nächste Session (geschrieben 2026-11-15, ca. 00:55; Nachträge D, E, F unten drüber)
 
-**Stand 21.11. ~18:15: Fassung 12 GEBAUT, NICHT INSTALLIERT (Arbeitsliste J): Set wählen trotz angehaltenem Song, Kapo-Filter im Archiv, Show-Modus (Bildschirm wach, stille Tonspur gegen Knacksen, Lautstärke/Ruhe bleiben in der Set-Pause), Akku-Sparen im Leerlauf, Vorschau des Folge-Sets, letztes Set gemerkt. APK `.geraet/fassung12-2026-11-21.apk`. Offen J6: installieren (Jans Ja), testlauf, Stille messen.**
+**Stand 27.11. ~13:25: Fassung 13 INSTALLIERT (Arbeitsliste K): Stopp will während des Songs einen zweiten Tipp („Nochmal tippen“, 4 s) und blendet 1,5 s aus. Offen: Jan hört das Ausblenden; Fehler „Bitte nicht stören“ bleibt nach jedem App-Start 15 min an (siehe K); Vorschlag DANACH-Schild statt Umsortieren. Rückweg `.geraet/fassung12-2026-11-21.apk`.**
+
+**Stand 21.11. ~18:15 (installiert 18:20): Fassung 12 (Arbeitsliste J): Set wählen trotz angehaltenem Song, Kapo-Filter im Archiv, Show-Modus (Bildschirm wach, stille Tonspur gegen Knacksen, Lautstärke/Ruhe bleiben in der Set-Pause), Akku-Sparen im Leerlauf, Vorschau des Folge-Sets, letztes Set gemerkt. APK `.geraet/fassung12-2026-11-21.apk`. Offen J6: installieren (Jans Ja), testlauf, Stille messen.**
 
 **Stand 21.11. ~15:00: Fassung 11 INSTALLIERT (Arbeitsliste I, Bedienung nach der alten Backing-Tracks-App): Setliste in fester Reihenfolge, gespielte blass, aktueller schwarz; Tipp = auswählen (läuft etwas: als Nächstes), lang drücken = Einstellungen, Archiv genauso; feste Schriftgrößen (PassenderTitel kürzt mit „…“); Leiste = jetziger Song groß + Zeit, darunter „Danach: … · Kapo“, immer Text · Play · Stopp. testlauf 28/28. Offen I8: Jan probiert. Achtung: Jans Set 1 war am 21.11. komplett gespielt und umsortiert (seine Daten).**
 
