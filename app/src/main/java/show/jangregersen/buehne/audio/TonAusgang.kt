@@ -25,6 +25,8 @@ object TonAusgang {
             Art.KOPFHOERER -> "TON: KOPFHÖRER"
             Art.LAUTSPRECHER -> "TON: LAUTSPRECHER"
         }
+        /** Noch kürzer fürs Schild neben dem Zustand, z. B. „LAUTSPRECHER“. */
+        val kurz: String get() = text.removePrefix("TON: ")
     }
 
     fun bestimmen(c: Context, geroutet: AudioDeviceInfo?): Stand {

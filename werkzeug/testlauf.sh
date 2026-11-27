@@ -71,7 +71,9 @@ installieren() {
 wartend() {
   still=0; ende=$(( $(date +%s) + 3600 ))
   while [ "$(date +%s)" -lt $ende ]; do
-    if spielt; then still=0; else still=$((still + 15)); fi
+    # Fehlt der Mudita (Kabel ab), zählt das nicht als Stille (27.11. am Gerät gesehen).
+    if ! "$ADB" devices | grep -q "LD20241004967.*device"; then still=0
+    elif spielt; then still=0; else still=$((still + 15)); fi
     if [ $still -ge 180 ]; then echo "3 min still um $(date +%H:%M)"; installieren; return; fi
     sleep 15
   done

@@ -684,12 +684,14 @@ private fun PlayerLeiste(navi: Navi) {
                 else -> (if (z.spielt) "Läuft" else if (angefangen) "Angehalten" else "Bereit") + (platz?.let { " · $it" } ?: "")
             }
             // 27.11.: Wohin der Ton geht. USB (der Adapter zur PA) steht klein hinter dem Zustand;
-            // alles andere ersetzt ihn als weißes Schild, damit es vor dem Start auffällt.
+            // alles andere als weißes Schild daneben, damit es vor dem Start auffällt. Der Zustand
+            // (Bereit/Läuft) bleibt immer stehen (am Gerät gesehen: das Schild hatte ihn verdrängt).
             val ton by App.buehne.ausgang.collectAsState()
             if (song != null && ton.art != TonAusgang.Art.USB) {
-                Box(Modifier.weight(1f)) {
-                    Box(Modifier.clip(RoundedCornerShape(5.dp)).background(Weiss).padding(horizontal = 6.dp).semantics { contentDescription = ton.text }) {
-                        T(ton.text, textStil(14.sp, Schwarz, FontWeight.Bold).knapp(), zeilen = 1, ueberlauf = TextOverflow.Visible)
+                Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Etikett(wort, Modifier.weight(1f, fill = false), Weiss)
+                    Box(Modifier.clip(RoundedCornerShape(5.dp)).background(Weiss).padding(horizontal = 5.dp).semantics { contentDescription = ton.text }) {
+                        T(ton.kurz, textStil(13.sp, Schwarz, FontWeight.Bold).knapp(), zeilen = 1, ueberlauf = TextOverflow.Visible)
                     }
                 }
             } else Etikett(if (song != null) "$wort · USB" else wort, Modifier.weight(1f), Weiss)
