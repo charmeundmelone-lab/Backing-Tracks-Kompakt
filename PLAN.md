@@ -899,3 +899,21 @@ kam die Bildschirmsperre, gelegentlich knackte es über die PA. Unsinniges finde
 - [x] J6a Installiert 21.11. ~18:20 (Jans Ja), Daten gleich. testlauf 13 OK / 20 FEHLT: alles Folgefehler aus Schritt 9 (8-s-Testsong war vor dem Tipp auf „Pause“ schon zu Ende, Set B begann dann richtig). set-trotz-pause und kapo-filter OK. Vorschau am Gerät NICHT geprüft. Lehre: force-stop im aufraeumen lässt „Bitte nicht stören“ an, weil der Show-Modus es nach Home noch 15 min hält → aufraeumen anpassen. Jan behält Fassung 12 für den Gig am 21.11. abends.
 - [ ] J6 Mit Jans Ja installieren, testlauf, Stille per `dumpsys media.audio_flinger`
   prüfen (Standby: no während der Pause), dann Jan an der PA probieren lassen.
+
+## Arbeitsliste K – Fassung 13 (27.11., Vergleich mit StageTraxx 4.1)
+
+Jan ließ die Bedienlogik mit StageTraxx vergleichen (Handbuch, nur iOS/Mac) und wählte daraus
+„Stopp sicherer machen“. Befund: Stopp liegt neben Play, ein Tipp schnitt den Song hart ab und
+Play begann ihn von vorn. StageTraxx blendet aus und kennt Doppeltipp-Schutz.
+
+- [x] K1 Stopp während ein Song läuft: erster Tipp macht den Knopf scharf (weiß bzw. schwarz,
+  „Nochmal tippen“, 4 s), erst der zweite hält an (`Buehne.stoppTipp`). Angehalten, in der Pause
+  zwischen Songs und beim Probehören weiter ein Tipp. Kein echter Doppeltipp, weil E-Ink träge ist.
+- [x] K2 Stopp blendet 1,5 s aus (`Engine.ausblendenUndStoppen`, `Mischpult.lautstaerke` über
+  AudioTrack.setVolume), dann an den Anfang. Play während des Ausblendens = von vorn.
+  Songende während des Ausblendens zählt nicht (spielt = false sofort).
+- [x] K3 testlauf.sh Schritte „stopp-scharf“, „stopp-ausgeblendet“.
+- [ ] K4 Installieren (Jans Ja), testlauf, Ausblenden mit eigenen Ohren prüfen (Jan).
+- Offen aus dem Vergleich: Fehler „Bitte nicht stören“ bleibt nach jedem Öffnen 15 min an (App-Start
+  zählt als Show, `letzteAktion` = Startzeit); Vorschlag „DANACH-Schild statt Umsortieren“ (Set behält
+  den Plan); testlauf-Schritte 9/12 scheitern am Skript (8-s-Songs zu kurz, Rückfrage „Nochmal spielen?“).

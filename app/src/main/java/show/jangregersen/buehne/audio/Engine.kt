@@ -9,6 +9,10 @@ import kotlin.math.pow
 
 private const val TAG = "Engine"
 
+/** So lange blendet Stopp einen laufenden Song aus. */
+const val AUSBLENDEN_MS = 1500L
+private const val AUSBLENDEN_TAKT_MS = 40L
+
 /**
  * Spielt einen Song (eine Stereo-Datei oder mehrere Einzelspuren) über ein [Mischpult] ab:
  * alle Spuren laufen sample-genau gemeinsam in einer Tonausgabe. Band liegt fest links,
@@ -38,6 +42,7 @@ class Engine(private val context: Context) {
     // ── Laden ────────────────────────────────────────────────────────────────
 
     fun laden(songId: Long, spuren: List<Spur>, mix: Map<String, Int>) {
+        ausblendNr++; blendetAus = false
         val v = vorrat
         if (v != null && v.songId == songId && v.spuren == spuren) {
             vorrat = null
@@ -58,15 +63,51 @@ class Engine(private val context: Context) {
         vorrat = bauen(songId, spuren).also { g -> mixAnwenden(g, mix) }
     }
 
-    fun entladen() { freigeben(aktuell); aktuell = null }
+    fun entladen() { ausblendNr++; blendetAus = false; freigeben(aktuell); aktuell = null }
 
     // ── Wiedergabe ───────────────────────────────────────────────────────────
 
-    fun play() { pult?.play() }
+    fun play() { ausblendenAbbrechen(); pult?.play() }
 
-    fun pause() { pult?.pause() }
+    fun pause() { pult?.pause(); ausblendenAbbrechen() }
 
-    fun stop() { pult?.let { it.pause(); it.springen(0L) } }
+    fun stop() { pult?.let { it.pause(); it.springen(0L) }; ausblendenAbbrechen() }
+
+    // ── Ausblenden (27.11., Jan: „Stopp sicherer machen“) ───────────────────
+    // Stopp schnitt den Song hart ab. Jetzt wird er leiser bis still, dann angehalten und an den
+    // Anfang gestellt. Jeder andere Befehl (Play, Pause, Stopp, neuer Song) bricht das Ausblenden ab
+    // und stellt die Lautstärke zurück.
+
+    private var ausblendNr = 0
+    var blendetAus = false; private set
+
+    fun ausblendenUndStoppen(dauerMs: Long = AUSBLENDEN_MS, fertig: () -> Unit = {}) {
+        val p = pult ?: run { fertig(); return }
+        val nr = ++ausblendNr
+        blendetAus = true
+        val schritte = (dauerMs / AUSBLENDEN_TAKT_MS).toInt().coerceAtLeast(1)
+        var i = 0
+        val schritt = object : Runnable {
+            override fun run() {
+                if (nr != ausblendNr || pult !== p) return
+                i++
+                // Quadratisch: klingt gleichmäßiger leiser als eine gerade Linie.
+                val rest = 1f - i.toFloat() / schritte
+                p.lautstaerke(rest * rest)
+                if (i < schritte) { haupt.postDelayed(this, AUSBLENDEN_TAKT_MS); return }
+                p.pause(); p.springen(0L); p.lautstaerke(1f)
+                blendetAus = false
+                fertig()
+            }
+        }
+        haupt.post(schritt)
+    }
+
+    private fun ausblendenAbbrechen() {
+        ausblendNr++
+        blendetAus = false
+        pult?.lautstaerke(1f)
+    }
 
     fun seek(ms: Long) {
         val p = pult ?: return

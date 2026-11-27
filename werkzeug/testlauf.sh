@@ -164,6 +164,15 @@ ablauf() {
   pruefe text-automatisch 5 "Test Eins" "Liste" "Angehalten" "Stopp"
   tippe "Stopp"
   pruefe stopp-anfang 5 "Archiv" "Jetzt dran" "Test Eins" "Bereit" "Abspielen"
+  # 2b (27.11.) Stopp, während der Song läuft: erster Tipp macht den Knopf scharf („Nochmal tippen“),
+  # erst der zweite hält an (Song blendet aus, steht am Anfang). Zweiter Tipp blind auf dieselbe
+  # Stelle, weil das Fenster nur 4 s offen ist und der Testsong nur 8 s dauert.
+  tippe "Abspielen"
+  vorne || abbruch "TrikTrak ist nicht vorne."
+  xy=$($G tap "Stopp" | sed -n 's/^tap .* @ //p')
+  pruefe stopp-scharf 1 "Nochmal tippen zum Stoppen"
+  [ -n "$xy" ] && $G xy $xy >/dev/null
+  pruefe stopp-ausgeblendet 6 "Archiv" "Jetzt dran" "Test Eins" "Bereit" "Abspielen"
   # 3 Pausen-Kästchen: Tipp schaltet weiter (Test Zwei, das zweite Kästchen: 20 s → 30 s)
   tippe "Pause umschalten" 1
   pruefe pause-kaestchen 4 "30 s"

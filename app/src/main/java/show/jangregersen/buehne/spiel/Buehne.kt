@@ -43,6 +43,9 @@ private const val SHOW_NACHLAUF_MS = 60 * 60_000L
 /** Ist TrikTrak nicht zu sehen (Home gedrückt, Bildschirm von Hand aus), endet die Show schneller. */
 private const val SHOW_NACHLAUF_VERSTECKT_MS = 15 * 60_000L
 
+/** So lange wartet der Stopp-Knopf auf den zweiten Tipp, während ein Song läuft (27.11.). */
+private const val STOPP_SCHARF_MS = 4000L
+
 /**
  * Herz der App: welcher Song liegt bereit oder läuft, welches Set ist aktiv, und die
  * Show-Automatik zwischen den Songs. Lebt in der Application (nicht in einer Activity), damit
@@ -76,7 +79,9 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         /** Hinweis mit Knopf "Rückgängig" nach dem Antippen eines Songs (verschwindet nach 8 s). */
         val rueckgaengig: String? = null,
         /** Zählt jeden frischen Start eines Set-Songs (ab 0:00). Der Hauptbildschirm öffnet dann den Text (20.11.). */
-        val startNr: Int = 0
+        val startNr: Int = 0,
+        /** Stopp wurde einmal getippt, während der Song läuft: der nächste Tipp hält an (27.11.). */
+        val stoppScharf: Boolean = false
     )
 
     /** Stand vor dem letzten Antippen, für "Rückgängig". */
@@ -96,6 +101,7 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
 
     private var pauseJob: Job? = null
     private var hinweisJob: Job? = null
+    private var scharfJob: Job? = null
     private var endeBehandelt = false
     /** Song, der vor dem Probehören bereitlag. */
     private var vorProbe: Long? = null
@@ -154,6 +160,8 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
     private fun takt() {
         val z = _zustand.value
         showPruefen(z)
+        // Stopp „scharf“ gilt nur, solange der Song läuft (Songende, Pause-Knopf usw. nehmen es zurück).
+        if (z.stoppScharf && !z.spielt) { scharfJob?.cancel(); _zustand.update { it.copy(stoppScharf = false) } }
         if (z.setId != null && z.setId != gemerktesSet && !z.probe) {
             gemerktesSet = z.setId
             runCatching { merkDatei.writeText(z.setId.toString()) }
@@ -295,6 +303,9 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
     fun playPause() {
         val z = _zustand.value
         if (z.pause != null) { pauseUeberspringen(); return }
+        if (z.stoppScharf) { scharfJob?.cancel(); _zustand.update { it.copy(stoppScharf = false) } }
+        // Play, während Stopp gerade ausblendet: Song beginnt wieder von vorn (Stopp = an den Anfang).
+        if (engine.blendetAus) { engine.stop(); _position.value = 0; abspielen(); return }
         if (!engine.hatSpuren) {
             val setId = z.setId ?: return
             val erster = ablage.jetzt.set(setId)?.ersterOffener() ?: run { hinweis("Alle Songs im Set sind gespielt."); return }
@@ -314,6 +325,30 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         }
         engine.stop(); _position.value = 0
         _zustand.update { it.copy(spielt = false) }
+    }
+
+    /**
+     * Stopp-Knopf (27.11., Jan: „Stopp sicherer machen“). Er liegt direkt neben Play; ein Fehlgriff
+     * schnitt bisher den Song ab, und Play begann ihn von vorn. Jetzt gilt: Läuft ein Song, macht der
+     * erste Tipp den Knopf „scharf“ (Aufschrift „Nochmal tippen“, [STOPP_SCHARF_MS] lang), erst der
+     * zweite hält an. Dann blendet der Song aus ([AUSBLENDEN_MS]) statt hart abzubrechen und steht
+     * wieder am Anfang. Angehalten, in der Pause zwischen zwei Songs und beim Probehören reicht ein
+     * Tipp (dort bricht nichts Hörbares ab). true = hat angehalten.
+     */
+    fun stoppTipp(): Boolean {
+        val z = _zustand.value
+        if (z.pause != null || z.probe || !z.spielt) { stopp(); return true }
+        scharfJob?.cancel()
+        if (!z.stoppScharf) {
+            _zustand.update { it.copy(stoppScharf = true) }
+            scharfJob = haupt.launch { delay(STOPP_SCHARF_MS); _zustand.update { it.copy(stoppScharf = false) } }
+            return false
+        }
+        val songId = z.songId
+        // spielt = false sofort: Läuft der Song während des Ausblendens zu Ende, zählt das nicht als Songende.
+        _zustand.update { it.copy(stoppScharf = false, spielt = false) }
+        engine.ausblendenUndStoppen { if (_zustand.value.songId == songId && !_zustand.value.spielt) _position.value = 0 }
+        return true
     }
 
     /** Pause/Ansage abbrechen und den nächsten Song sofort starten. */

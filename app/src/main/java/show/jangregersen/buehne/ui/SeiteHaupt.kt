@@ -626,10 +626,18 @@ private fun PlayerLeiste(navi: Navi) {
                 if (pause != null) T("Jetzt starten", textStil(14.sp, f, FontWeight.Bold), zeilen = 1)
             }
             // Stopp: anhalten und an den Anfang, der Song bleibt dran (20.11.); in der Pause: Automatik anhalten.
-            LeistenKnopf(Modifier.weight(1f), aktiv = angespielt || pause != null || z.probe,
-                beschreibung = if (pause != null) "Anhalten" else "Stopp", onClick = { App.buehne.stopp() }) { f ->
-                Symbol(Sym.STOP, f, 18.dp)
-                T(if (pause != null) "Anhalten" else "Stopp", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
+            // 27.11.: Läuft der Song, will Stopp einen zweiten Tipp (Knopf wird weiß: „Nochmal tippen“).
+            val scharf = z.stoppScharf && z.spielt
+            LeistenKnopf(Modifier.weight(1f), voll = scharf, aktiv = angespielt || pause != null || z.probe,
+                beschreibung = when { pause != null -> "Anhalten"; scharf -> "Nochmal tippen zum Stoppen"; else -> "Stopp" },
+                onClick = { App.buehne.stoppTipp() }) { f ->
+                if (scharf) {
+                    T("Nochmal", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
+                    T("tippen", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
+                } else {
+                    Symbol(Sym.STOP, f, 18.dp)
+                    T(if (pause != null) "Anhalten" else "Stopp", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
+                }
             }
         }
     }

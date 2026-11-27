@@ -136,12 +136,23 @@ fun BuehneSeite(navi: Navi, zurueckAmEnde: Boolean = true) {
             when {
                 z.probe -> SymbolKnopf(Sym.STOP, "Stopp", Modifier.weight(1f), hoehe = 62.dp, groesse = 20.dp) { App.buehne.stopp() }
                 // 20.11. (Jan): Stopp = anhalten, an den Anfang, zurück zur Set-Ansicht. Der Song bleibt dran.
-                angespielt -> Knopf(Modifier.weight(1f), Art.UMRISS, 62.dp, beschreibung = "Stopp", onClick = {
-                    App.buehne.stopp(); navi.zurSetliste()
-                }) { f ->
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Symbol(Sym.STOP, f, 18.dp)
-                        T("Stopp", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
+                // 27.11.: Läuft der Song, will Stopp einen zweiten Tipp (Knopf wird schwarz: „Nochmal tippen“),
+                // dann blendet er aus und es geht zur Set-Ansicht.
+                angespielt -> {
+                    val scharf = z.stoppScharf && z.spielt
+                    Knopf(Modifier.weight(1f), if (scharf) Art.VOLL else Art.UMRISS, 62.dp,
+                        beschreibung = if (scharf) "Nochmal tippen zum Stoppen" else "Stopp", onClick = {
+                        if (App.buehne.stoppTipp()) navi.zurSetliste()
+                    }) { f ->
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            if (scharf) {
+                                T("Nochmal", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
+                                T("tippen", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
+                            } else {
+                                Symbol(Sym.STOP, f, 18.dp)
+                                T("Stopp", textStil(15.sp, f, FontWeight.Bold), zeilen = 1)
+                            }
+                        }
                     }
                 }
                 // 21.11.: immer dieselben Knöpfe wie in der Leiste; vor dem Start ist Stopp nur ausgegraut.
