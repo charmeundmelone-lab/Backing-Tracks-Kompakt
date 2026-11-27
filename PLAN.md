@@ -915,6 +915,7 @@ Play begann ihn von vorn. StageTraxx blendet aus und kennt Doppeltipp-Schutz.
 - [x] K3 testlauf.sh Schritte „stopp-scharf“, „stopp-ausgeblendet“.
 - [x] K4a Installiert 27.11. ~13:19 (Jans Ja), Daten gleich, Kopie `.geraet/fassung13-2026-11-27.apk`. testlauf: stopp-scharf + stopp-ausgeblendet OK (zweiter Tipp in der letzten Sekunde: Song zählt nicht als gespielt, steht wieder am Anfang), Rest wie vorher (Skriptfehler ab Schritt 9).
 - [ ] K4 Jan prüft das Ausblenden mit eigenen Ohren.
-- Offen aus dem Vergleich: Fehler „Bitte nicht stören“ bleibt nach jedem Öffnen 15 min an (App-Start
+- [x] K5 Fassung 14 (27.11. ~13:35, installiert): Show beginnt erst mit Ton (Song/Pause/Ansage), App-Start und Antippen verlängern nur eine laufende Show (`letzteAktion` = NIE, `beruehrt`). Vorher blieb „Bitte nicht stören“ nach jedem Öffnen 15 min an. Mit `files/test-leise` schaltet die App die Ruhe nie ein (testlauf beendet hart). Geprüft: öffnen → Ruhe an (gewollt, B23), Home → sofort aus; testlauf → danach aus, 26 OK, Daten gleich. Kopie `.geraet/fassung14-2026-11-27.apk`.
+- Offen aus dem Vergleich (erledigt K5): Fehler „Bitte nicht stören“ bleibt nach jedem Öffnen 15 min an (App-Start
   zählt als Show, `letzteAktion` = Startzeit); Vorschlag „DANACH-Schild statt Umsortieren“ (Set behält
   den Plan); testlauf-Schritte 9/12 scheitern am Skript (8-s-Songs zu kurz, Rückfrage „Nochmal spielen?“).

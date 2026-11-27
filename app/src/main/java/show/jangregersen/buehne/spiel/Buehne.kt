@@ -43,6 +43,9 @@ private const val SHOW_NACHLAUF_MS = 60 * 60_000L
 /** Ist TrikTrak nicht zu sehen (Home gedrückt, Bildschirm von Hand aus), endet die Show schneller. */
 private const val SHOW_NACHLAUF_VERSTECKT_MS = 15 * 60_000L
 
+/** „Noch nie“ für [Buehne.letzteAktion]: weit genug zurück, dass jede Nachlaufzeit abgelaufen ist. */
+private const val NIE = Long.MIN_VALUE / 4
+
 /** So lange wartet der Stopp-Knopf auf den zweiten Tipp, während ein Song läuft (27.11.). */
 private const val STOPP_SCHARF_MS = 4000L
 
@@ -111,14 +114,22 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
     /** Show läuft: ein Set ist aktiv und es wurde in der letzten Stunde gespielt oder getippt (21.11.). */
     private val _show = MutableStateFlow(false)
     val showLaeuft: StateFlow<Boolean> = _show.asStateFlow()
-    @Volatile private var letzteAktion = SystemClock.elapsedRealtime()
+    /**
+     * Zeitpunkt des letzten Tons oder Tipps in einer laufenden Show. Beim Start „nie“ (27.11.): Vorher
+     * zählte schon das Öffnen der App als Show, und „Bitte nicht stören“ blieb danach 15 min an, auch
+     * wenn Jan TrikTrak nur kurz angesehen hatte (Anrufe kamen stumm an).
+     */
+    @Volatile private var letzteAktion = NIE
     private var dienstLaeuft = false
 
     /** TrikTrak ist gerade zu sehen (MainActivity onStart/onStop). */
     @Volatile var sichtbar = false
 
-    /** Jan hat den Bildschirm berührt (MainActivity). */
-    fun beruehrt() { letzteAktion = SystemClock.elapsedRealtime() }
+    /**
+     * Jan hat den Bildschirm berührt oder die App geöffnet (MainActivity). Verlängert nur eine Show,
+     * die schon läuft (nach dem ersten Song oder in der Set-Pause). Anfangen kann sie nur mit Ton.
+     */
+    fun beruehrt() { if (_show.value) letzteAktion = SystemClock.elapsedRealtime() }
 
     /**
      * Zuletzt gewähltes Set (21.11., Jan: nach einem Neustart hieß es „Noch kein Set gewählt“).

@@ -61,8 +61,11 @@ object VolleLautstaerke {
     fun pruefen(): Boolean {
         val c = ctx ?: return true
         val halten = sichtbar || laeuft()
-        if (halten) ShowRuhe.an(c) else ShowRuhe.aus(c)
-        if (File(c.filesDir, "test-leise").exists()) {
+        val testLeise = File(c.filesDir, "test-leise").exists()
+        // Testläufe (test-leise) schalten "Bitte nicht stören" nie ein (27.11.): Das Testskript beendet
+        // die App am Ende hart, dann blieb die Ruhe an, und Anrufe kamen stumm an.
+        if (halten && !testLeise) ShowRuhe.an(c) else ShowRuhe.aus(c)
+        if (testLeise) {
             _gedrosselt.value = halten && File(c.filesDir, "test-gedrosselt").exists()
             return true
         }
