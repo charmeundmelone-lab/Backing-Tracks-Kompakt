@@ -173,6 +173,15 @@ ablauf() {
   pruefe stopp-scharf 1 "Nochmal tippen zum Stoppen"
   [ -n "$xy" ] && $G xy $xy >/dev/null
   pruefe stopp-ausgeblendet 6 "Archiv" "Jetzt dran" "Test Eins" "Bereit" "Abspielen"
+  # 2c (27.11.) DANACH-Schild: Song angespielt (pausiert), anderen Song antippen = Schild, nichts rückt.
+  tippe "Abspielen"; tippe "Pause"
+  tippe "Zur Setliste"
+  tippe "Test Drei"
+  pruefe danach-schild 5 "Danach dran" "Test Drei“ kommt als Nächstes" "Rückgängig"
+  tippe "Rückgängig"
+  pruefe danach-zurueck 5 "Zurückgenommen"
+  tippe "Stopp"
+  pruefe danach-stopp 5 "Jetzt dran" "Test Eins" "Bereit" "Abspielen"
   # 3 Pausen-Kästchen: Tipp schaltet weiter (Test Zwei, das zweite Kästchen: 20 s → 30 s)
   tippe "Pause umschalten" 1
   pruefe pause-kaestchen 4 "30 s"

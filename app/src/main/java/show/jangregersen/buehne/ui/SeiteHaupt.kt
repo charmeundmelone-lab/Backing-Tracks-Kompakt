@@ -62,7 +62,7 @@ import show.jangregersen.buehne.daten.Ende
 import show.jangregersen.buehne.daten.Song
 import show.jangregersen.buehne.daten.dauerMs
 import show.jangregersen.buehne.daten.ersterOffener
-import show.jangregersen.buehne.daten.naechsterNach
+import show.jangregersen.buehne.daten.naechster
 import show.jangregersen.buehne.daten.schonImGig
 import show.jangregersen.buehne.daten.wasKommt
 import show.jangregersen.buehne.daten.wiederholungsFrage
@@ -253,7 +253,8 @@ private fun SetBereich(navi: Navi, setId: Long) {
                     }
                     else -> WischZeile(e.songId, rechts = "ALS NÄCHSTES", links = "ANS ENDE",
                         onRechts = { App.buehne.vorziehen(setId, s.id) }, onLinks = { App.buehne.ansEnde(setId, s.id) }) {
-                        SetZeile(i + 1, s, e, SetArt.OFFEN, mitAutomatik, tippen, lang)
+                        // 27.11.: Angetippt, während ein Song läuft = Schild DANACH, der Song bleibt an seinem Platz.
+                        SetZeile(i + 1, s, e, if (e.songId == z.danachIn(setId)) SetArt.DANACH else SetArt.OFFEN, mitAutomatik, tippen, lang)
                     }
                 }
             }
@@ -269,7 +270,7 @@ private fun SetBereich(navi: Navi, setId: Long) {
 /** Höhe jeder Zeile im Reiter „Set“ (SeitenListe braucht eine feste Höhe). */
 private val SET_ZEILE = 63.dp
 
-private enum class SetArt { OFFEN, JETZT, GESPIELT }
+private enum class SetArt { OFFEN, JETZT, GESPIELT, DANACH }
 
 /** Kleines Schild mit Rand (z. B. „hält an“), so flach wie möglich. */
 @Composable
@@ -287,22 +288,32 @@ private fun metaZeile(s: Song) = listOf(
     if (s.dauerMs > 0) zeit(s.dauerMs) else ""
 ).filter { it.isNotBlank() }.joinToString(" · ")
 
-/** Eine Zeile der Setliste. JETZT = schwarz hinterlegt, GESPIELT = blass mit Haken. */
+/**
+ * Eine Zeile der Setliste. JETZT = schwarz hinterlegt, GESPIELT = blass mit Haken, DANACH (27.11.) =
+ * dicker Rahmen mit schwarzem Schild „DANACH“ oben links: angetippt, kommt als Nächstes, bleibt aber
+ * an seinem Platz (Entwurf `entwuerfe/danach`).
+ */
 @OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
 @Composable
 private fun SetZeile(nr: Int, s: Song, e: Eintrag, art: SetArt, mitAutomatik: Boolean, onTipp: () -> Unit, onLang: () -> Unit) {
     val jetzt = art == SetArt.JETZT
     val gespielt = art == SetArt.GESPIELT
+    val danach = art == SetArt.DANACH
     val vorne = when { jetzt -> Weiss; gespielt -> Grau; else -> Schwarz }
     val haeltAn = mitAutomatik && e.ende == Ende.ANHALTEN
     val ansage = s.ansageVorher.isNotBlank() || s.ansageNachher.isNotBlank()
     val quelle = remember { MutableInteractionSource() }
+    val form = RoundedCornerShape(12.dp)
     Box(Modifier.fillMaxWidth().height(SET_ZEILE)) {
         Row(
             Modifier.fillMaxSize()
-                .then(if (jetzt) Modifier.padding(start = 6.dp, end = 12.dp, top = 1.dp, bottom = 1.dp).clip(RoundedCornerShape(12.dp)).background(Schwarz).semantics { contentDescription = "Jetzt dran" } else Modifier.padding(horizontal = 10.dp))
+                .then(when {
+                    jetzt -> Modifier.padding(start = 6.dp, end = 12.dp, top = 1.dp, bottom = 1.dp).clip(form).background(Schwarz).semantics { contentDescription = "Jetzt dran" }
+                    danach -> Modifier.padding(start = 6.dp, end = 12.dp, top = 7.dp, bottom = 1.dp).clip(form).border(3.5.dp, Schwarz, form).semantics { contentDescription = "Danach dran" }
+                    else -> Modifier.padding(horizontal = 10.dp)
+                })
                 .combinedClickable(interactionSource = quelle, indication = null, onClick = onTipp, onLongClick = onLang)
-                .padding(start = if (jetzt) 12.dp else 8.dp, end = if (jetzt) 8.dp else 10.dp),
+                .padding(start = if (jetzt || danach) 12.dp else 8.dp, end = if (jetzt || danach) 8.dp else 10.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)
         ) {
             // Links: Nummer (jetzt: weißes Kästchen), gespielt: Haken.
@@ -326,7 +337,13 @@ private fun SetZeile(nr: Int, s: Song, e: Eintrag, art: SetArt, mitAutomatik: Bo
                 }
             }
         }
-        if (!jetzt) Linie(Modifier.align(Alignment.BottomCenter).padding(horizontal = 10.dp))
+        if (danach) {
+            // Das Schild sitzt auf der oberen Rahmenkante, wie im Entwurf.
+            Box(Modifier.padding(start = 20.dp).clip(RoundedCornerShape(5.dp)).background(Schwarz).padding(horizontal = 7.dp)) {
+                T("DANACH", textStil(13.sp, Weiss, FontWeight.Bold).knapp(), zeilen = 1, ueberlauf = TextOverflow.Visible)
+            }
+        }
+        if (!jetzt && !danach) Linie(Modifier.align(Alignment.BottomCenter).padding(horizontal = 10.dp))
     }
 }
 
@@ -566,7 +583,7 @@ private fun PlayerLeiste(navi: Navi) {
     val danach = when {
         song == null -> null
         folgeSet != null -> b.song(folgeSet.ersterOffener()?.songId)
-        else -> b.song(set?.naechsterNach(song.id)?.songId)
+        else -> b.song(set?.let { s -> s.naechster(song.id, z.danachIn(s.id)) }?.songId)
     }
 
     // 21.11. wie die alte App: oben der jetzige Song groß mit seiner Zeit, darunter "Danach: …".

@@ -49,7 +49,7 @@ import show.jangregersen.buehne.daten.Ende
 import show.jangregersen.buehne.daten.Song
 import show.jangregersen.buehne.daten.pauseDanach
 import show.jangregersen.buehne.daten.ersterOffener
-import show.jangregersen.buehne.daten.naechsterNach
+import show.jangregersen.buehne.daten.naechster
 import show.jangregersen.buehne.daten.wasKommt
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -99,7 +99,7 @@ fun BuehneSeite(navi: Navi, zurueckAmEnde: Boolean = true) {
     }
 
     val platz = set?.eintraege?.indexOfFirst { it.songId == song.id }?.let { if (it >= 0) "${it + 1} / ${set.eintraege.size}" else null }
-    val naechsterEintrag = set?.naechsterNach(song.id)
+    val naechsterEintrag = set?.let { s -> s.naechster(song.id, z.danachIn(s.id)) }
     // Gewähltes Folge-Set (B: Set-Wechsel nur nach dem laufenden Song): "Danach" zeigt dessen ersten Song.
     val folgeSet = b.set(z.setDanach)
     val naechster = if (folgeSet != null) b.song(folgeSet.ersterOffener()?.songId) else b.song(naechsterEintrag?.songId)
@@ -121,7 +121,7 @@ fun BuehneSeite(navi: Navi, zurueckAmEnde: Boolean = true) {
         if (!z.spielt && pos == 0L && !z.probe && song.lyrics.isNotBlank()) KapoTonart(song, 30.sp, 10.dp, Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp))
         Box(Modifier.weight(1f).fillMaxWidth()) {
             if (song.lyrics.isNotBlank()) LyricsBereich(song, z.dauerMs)
-            else OhneText(song, if (z.probe || folgeSet != null) emptyList() else set?.wasKommt(song.id)?.drop(2).orEmpty(), set?.id)
+            else OhneText(song, if (z.probe || folgeSet != null) emptyList() else set?.let { s -> s.wasKommt(song.id, z.danachIn(s.id)) }?.drop(2).orEmpty(), set?.id)
         }
         if (!z.probe) DanachBlock(naechster, song, endeHier, naechster == null, folgeSet?.name, z.rueckgaengig != null)
         // Drei Knöpfe, immer an derselben Stelle (15.11.): Liste · Play/Pause · Beenden bzw. Überspringen.

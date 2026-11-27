@@ -90,14 +90,20 @@ fun Bestand.ohneSet(setId: Long): Bestand =
     copy(gigs = gigs.map { g -> g.copy(sets = g.sets.filterNot { it.id == setId }) })
 
 /**
- * Der Song, der nach [aktuellId] dran ist: erster ungespielter Eintrag hinter dem aktuellen,
- * sonst der erste ungespielte überhaupt (der aktuelle zählt nie).
+ * Der Song, der nach [aktuellId] dran ist (27.11., DANACH-Schild statt Umsortieren): Trägt ein
+ * offener Song das Schild ([danachId]), kommt er. Sonst der erste offene Song von oben, also Jans
+ * Plan in seiner Reihenfolge. Der aktuelle zählt nie.
  */
-fun SetListe.naechsterNach(aktuellId: Long?): Eintrag? {
-    val idx = eintraege.indexOfFirst { it.songId == aktuellId }
-    val dahinter = if (idx >= 0) eintraege.drop(idx + 1).firstOrNull { !it.gespielt && it.songId != aktuellId } else null
-    return dahinter ?: eintraege.firstOrNull { !it.gespielt && it.songId != aktuellId }
-}
+fun SetListe.naechster(aktuellId: Long?, danachId: Long?): Eintrag? =
+    eintraege.firstOrNull { it.songId == danachId && !it.gespielt && it.songId != aktuellId }
+        ?: eintraege.firstOrNull { !it.gespielt && it.songId != aktuellId }
+
+/**
+ * Mit welchem Song ein Set beginnt: der mit dem Schild ([danachId], z. B. in der Vorschau des
+ * Folge-Sets angetippt), sonst der erste offene.
+ */
+fun SetListe.anfang(danachId: Long?): Eintrag? =
+    eintraege.firstOrNull { it.songId == danachId && !it.gespielt } ?: ersterOffener()
 
 fun SetListe.ersterOffener(): Eintrag? = eintraege.firstOrNull { !it.gespielt }
 
@@ -129,24 +135,14 @@ fun Bestand.testlauf(heute: Long): Bestand {
 }
 
 /**
- * Jans eine Regel (15.11.): Antippen = kommt als Nächstes dran. [aktuellId] ist der Song, der
- * gerade läuft oder bereitliegt. [laeuft] = er spielt (oder wurde angespielt und pausiert): dann
- * kommt [songId] direkt dahinter. Sonst (er liegt nur bereit, auch während der Pause davor) kommt
- * [songId] direkt davor und wird selbst der bereite Song. Fehlt [songId] im Set, wird er aufgenommen;
- * war er gespielt, gilt er wieder als offen.
+ * Antippen = kommt als Nächstes dran (Jans eine Regel, 15.11.), seit 27.11. ohne Umsortieren: Der
+ * Song bleibt an seinem Platz (die Bühne gibt ihm das Schild DANACH oder legt ihn bereit). Hier
+ * passiert nur: Fehlt [songId] im Set (Wunschsong aus dem Archiv), kommt er ans Ende; war er
+ * gespielt, gilt er wieder als offen. Jans geplante Reihenfolge bleibt.
  */
-fun Bestand.vorziehen(setId: Long, songId: Long, aktuellId: Long?, laeuft: Boolean): Bestand = setAendern(setId) { s ->
-    if (songId == aktuellId) return@setAendern s
-    val e = (s.eintraege.firstOrNull { it.songId == songId } ?: Eintrag(songId, ende = s.ueblichesEnde())).copy(gespielt = false)
-    val rest = s.eintraege.filterNot { it.songId == songId }.toMutableList()
-    val anker = rest.indexOfFirst { it.songId == aktuellId }
-    val idx = when {
-        anker >= 0 && laeuft -> anker + 1
-        anker >= 0 -> anker
-        else -> rest.indexOfFirst { !it.gespielt }.let { if (it < 0) rest.size else it }
-    }
-    rest.add(idx, e)
-    s.copy(eintraege = rest)
+fun Bestand.einplanen(setId: Long, songId: Long): Bestand = setAendern(setId) { s ->
+    if (s.eintraege.none { it.songId == songId }) s.copy(eintraege = s.eintraege + Eintrag(songId, ende = s.ueblichesEnde()))
+    else s.copy(eintraege = s.eintraege.map { if (it.songId == songId) it.copy(gespielt = false) else it })
 }
 
 /** Wo ein Song im Gig schon steht (Jans Wunsch 15.11.: keine Wiederholung ohne Rückfrage). */
@@ -176,14 +172,14 @@ fun Bestand.wiederholungsFrage(setId: Long, songId: Long): String? {
 }
 
 /**
- * Reihenfolge, in der die offenen Songs wirklich drankommen: ab [aktuellId] bis zum Ende, danach
- * die offenen davor (die holt die Automatik am Schluss, siehe [naechsterNach]).
+ * Reihenfolge, in der die Songs wirklich drankommen (wie [naechster]): der aktuelle, dann der mit
+ * dem Schild, dann alle übrigen offenen von oben.
  */
-fun SetListe.wasKommt(aktuellId: Long?): List<Eintrag> {
-    val idx = eintraege.indexOfFirst { it.songId == aktuellId }
-    val offen = { e: Eintrag -> !e.gespielt || e.songId == aktuellId }
-    return if (idx < 0) eintraege.filter(offen)
-    else eintraege.drop(idx).filter(offen) + eintraege.take(idx).filter(offen)
+fun SetListe.wasKommt(aktuellId: Long?, danachId: Long? = null): List<Eintrag> {
+    val jetzt = eintraege.filter { it.songId == aktuellId }.take(1)
+    val danach = eintraege.filter { it.songId == danachId && !it.gespielt && it.songId != aktuellId }.take(1)
+    val rest = eintraege.filter { !it.gespielt && it.songId != aktuellId && it.songId != danach.firstOrNull()?.songId }
+    return jetzt + danach + rest
 }
 
 /**

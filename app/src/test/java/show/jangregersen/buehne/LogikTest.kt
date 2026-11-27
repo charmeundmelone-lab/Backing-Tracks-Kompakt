@@ -16,11 +16,12 @@ import show.jangregersen.buehne.daten.pauseSpeichern
 import show.jangregersen.buehne.daten.pauseDanach
 import show.jangregersen.buehne.daten.schonImGig
 import show.jangregersen.buehne.daten.wiederholungsFrage
-import show.jangregersen.buehne.daten.naechsterNach
+import show.jangregersen.buehne.daten.naechster
+import show.jangregersen.buehne.daten.anfang
 import show.jangregersen.buehne.daten.schieben
 import show.jangregersen.buehne.daten.verschieben
 import show.jangregersen.buehne.daten.eintragAendern
-import show.jangregersen.buehne.daten.vorziehen
+import show.jangregersen.buehne.daten.einplanen
 import show.jangregersen.buehne.daten.ansEnde
 import show.jangregersen.buehne.daten.wasKommt
 import show.jangregersen.buehne.daten.testlauf
@@ -62,11 +63,41 @@ class LogikTest {
 
     @Test fun naechster() {
         var b = bestand()
-        assertEquals(2L, b.set(100)!!.naechsterNach(1)!!.songId)
+        assertEquals(2L, b.set(100)!!.naechster(1, null)!!.songId)
         b = b.copy(gigs = b.gigs.map { g -> g.copy(sets = g.sets.map { s -> s.copy(eintraege = s.eintraege.map { if (it.songId <= 3) it.copy(gespielt = true) else it }) }) })
-        assertEquals(4L, b.set(100)!!.naechsterNach(3)!!.songId)
-        assertEquals(5L, b.set(100)!!.naechsterNach(4)!!.songId)
-        assertNull(b.set(100)!!.naechsterNach(5).let { if (it?.songId == 4L) null else it }?.takeIf { false })
+        assertEquals(4L, b.set(100)!!.naechster(3, null)!!.songId)
+        assertEquals(5L, b.set(100)!!.naechster(4, null)!!.songId)
+        assertEquals(4L, b.set(100)!!.naechster(5, null)!!.songId)
+        // Letzter offener Song läuft: nichts mehr danach.
+        assertNull(b.eintragAendern(100, 4) { it.copy(gespielt = true) }.set(100)!!.naechster(5, null))
+    }
+
+    /** 27.11. (DANACH-Schild statt Umsortieren): Das Schild geht vor, danach weiter mit dem Plan von oben. */
+    @Test fun danachSchild() {
+        var b = bestand().eintragAendern(100, 1) { it.copy(gespielt = true) }.eintragAendern(100, 2) { it.copy(gespielt = true) }
+        // Song 3 läuft, Song 5 hat das Schild: erst 5, die Reihenfolge im Set bleibt.
+        assertEquals(5L, b.set(100)!!.naechster(3, 5)!!.songId)
+        assertEquals(listOf(1L, 2L, 3L, 4L, 5L), ids(b))
+        // Nach Song 5 (jetzt gespielt) geht der Plan oben weiter: Song 4.
+        b = b.eintragAendern(100, 3) { it.copy(gespielt = true) }
+        assertEquals(4L, b.set(100)!!.naechster(5, null)!!.songId)
+        // Ein gespieltes oder der laufende Song taugt nicht als Schild.
+        assertEquals(4L, b.set(100)!!.naechster(5, 1)!!.songId)
+        assertEquals(4L, b.set(100)!!.naechster(5, 5)!!.songId)
+        // Wer zuerst dran ist, wenn das Set beginnt (Vorschau des Folge-Sets).
+        assertEquals(1L, bestand().set(100)!!.anfang(null)!!.songId)
+        assertEquals(4L, bestand().set(100)!!.anfang(4)!!.songId)
+    }
+
+    /** Antippen sortiert nichts mehr um: Wunschsong kommt ans Ende, gespielter wird wieder offen. */
+    @Test fun einplanenOhneUmsortieren() {
+        var b = bestand().copy(songs = bestand().songs + Song(9, "Wunsch", pfad = "p9"))
+        assertEquals(ids(b), ids(b.einplanen(100, 4)))
+        b = b.einplanen(100, 9)
+        assertEquals(listOf(1L, 2L, 3L, 4L, 5L, 9L), ids(b))
+        b = b.eintragAendern(100, 2) { it.copy(gespielt = true) }.einplanen(100, 2)
+        assertEquals(listOf(1L, 2L, 3L, 4L, 5L, 9L), ids(b))
+        assertEquals(false, b.set(100)!!.eintraege.first { it.songId == 2L }.gespielt)
     }
 
     @Test fun verschiebenUndAlsNaechstes() {
@@ -79,7 +110,6 @@ class LogikTest {
         assertEquals(listOf(5L, 2L, 4L, 3L, 1L), b.set(100)!!.eintraege.map { it.songId })
         b = bestand().alsNaechstes(100, 5, 2)
         assertEquals(listOf(1L, 2L, 5L, 3L, 4L), b.set(100)!!.eintraege.map { it.songId })
-        assertEquals(5L, b.set(100)!!.naechsterNach(2)!!.songId)
     }
 
     private fun ids(b: Bestand) = b.set(100)!!.eintraege.map { it.songId }
@@ -122,38 +152,13 @@ class LogikTest {
         assertEquals(9L, ids(b).last())
     }
 
-    @Test fun vorziehenWaehrendSongLaeuft() {
-        // Song 2 läuft: der angetippte (5) kommt direkt danach.
-        val b = bestand().vorziehen(100, 5, 2, laeuft = true)
-        assertEquals(listOf(1L, 2L, 5L, 3L, 4L), ids(b))
-        assertEquals(5L, b.set(100)!!.naechsterNach(2)!!.songId)
-    }
-
-    @Test fun vorziehenWennNurBereit() {
-        // Song 2 liegt nur bereit (oder wartet in der Pause): der angetippte kommt davor und ist selbst dran.
-        val b = bestand().vorziehen(100, 5, 2, laeuft = false)
-        assertEquals(listOf(1L, 5L, 2L, 3L, 4L), ids(b))
-        assertEquals(2L, b.set(100)!!.naechsterNach(5)!!.songId)
-    }
-
-    @Test fun vorziehenNimmtFremdenSongAufUndHoltGespieltenZurueck() {
-        var b = bestand().copy(songs = bestand().songs + Song(9, "Wunsch", pfad = "p9"))
-        b = b.vorziehen(100, 9, 3, laeuft = true)
-        assertEquals(listOf(1L, 2L, 3L, 9L, 4L, 5L), ids(b))
-        b = b.eintragAendern(100, 1) { it.copy(gespielt = true) }.vorziehen(100, 1, 3, laeuft = true)
-        assertEquals(listOf(2L, 3L, 1L, 9L, 4L, 5L), ids(b))
-        assertEquals(false, b.set(100)!!.eintraege.first { it.songId == 1L }.gespielt)
-        // Der laufende Song selbst ändert nichts.
-        assertEquals(ids(b), ids(b.vorziehen(100, 3, 3, laeuft = true)))
-    }
-
     @Test fun wunschsongUebernimmtAutomatikDesSets() {
         // Set mit Show-Automatik (letzter Song hält an): ein Wunschsong darf die Automatik nicht stoppen.
         var b = bestand().setAendern(100) { s -> s.copy(eintraege = s.eintraege.mapIndexed { i, e -> e.copy(ende = if (i < 4) Ende.WEITER else Ende.ANHALTEN) }) }
-        b = b.copy(songs = b.songs + Song(9, "Wunsch", pfad = "p9")).vorziehen(100, 9, 2, laeuft = true)
+        b = b.copy(songs = b.songs + Song(9, "Wunsch", pfad = "p9")).einplanen(100, 9)
         assertEquals(Ende.WEITER, b.set(100)!!.eintraege.first { it.songId == 9L }.ende)
         // Set ohne Automatik: neuer Song hält an wie alle.
-        val c = bestand().copy(songs = bestand().songs + Song(9, "Wunsch", pfad = "p9")).vorziehen(100, 9, 2, laeuft = true)
+        val c = bestand().copy(songs = bestand().songs + Song(9, "Wunsch", pfad = "p9")).einplanen(100, 9)
         assertEquals(Ende.ANHALTEN, c.set(100)!!.eintraege.first { it.songId == 9L }.ende)
     }
 
@@ -176,9 +181,11 @@ class LogikTest {
         b = b.eintragAendern(100, 1) { it.copy(gespielt = true) }.eintragAendern(100, 2) { it.copy(gespielt = true) }
         // Song 3 läuft, Song 1/2 gespielt: angezeigt werden 3, 4, 5.
         assertEquals(listOf(3L, 4L, 5L), b.set(100)!!.wasKommt(3).map { it.songId })
-        // Ein übersprungener Song vor dem laufenden kommt am Schluss (wie die Automatik es spielt).
+        // Ein übersprungener Song vor dem laufenden kommt als Nächstes (seit 27.11.: Plan von oben).
         b = b.eintragAendern(100, 2) { it.copy(gespielt = false) }
-        assertEquals(listOf(3L, 4L, 5L, 2L), b.set(100)!!.wasKommt(3).map { it.songId })
+        assertEquals(listOf(3L, 2L, 4L, 5L), b.set(100)!!.wasKommt(3).map { it.songId })
+        // Mit Schild auf Song 5: der kommt direkt nach dem laufenden.
+        assertEquals(listOf(3L, 5L, 2L, 4L), b.set(100)!!.wasKommt(3, 5).map { it.songId })
         // Ohne laufenden Song: alle offenen in Reihenfolge.
         assertEquals(listOf(2L, 3L, 4L, 5L), b.set(100)!!.wasKommt(null).map { it.songId })
     }

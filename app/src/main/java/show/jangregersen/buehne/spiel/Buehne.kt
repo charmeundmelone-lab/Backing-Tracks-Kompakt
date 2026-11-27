@@ -26,9 +26,10 @@ import show.jangregersen.buehne.daten.Song
 import show.jangregersen.buehne.daten.pauseDanach
 import show.jangregersen.buehne.daten.eintragAendern
 import show.jangregersen.buehne.daten.ersterOffener
-import show.jangregersen.buehne.daten.naechsterNach
+import show.jangregersen.buehne.daten.naechster
+import show.jangregersen.buehne.daten.anfang
 import show.jangregersen.buehne.daten.setAendern
-import show.jangregersen.buehne.daten.vorziehen
+import show.jangregersen.buehne.daten.einplanen
 import show.jangregersen.buehne.daten.ansEnde
 import java.io.File
 
@@ -84,11 +85,22 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         /** Zählt jeden frischen Start eines Set-Songs (ab 0:00). Der Hauptbildschirm öffnet dann den Text (20.11.). */
         val startNr: Int = 0,
         /** Stopp wurde einmal getippt, während der Song läuft: der nächste Tipp hält an (27.11.). */
-        val stoppScharf: Boolean = false
-    )
+        val stoppScharf: Boolean = false,
+        /**
+         * Song mit dem Schild DANACH (27.11., statt Umsortieren): angetippt, während ein Song lief.
+         * Er bleibt an seinem Platz im Set und kommt als Nächstes; danach geht es mit dem ersten
+         * offenen Song von oben weiter. Ein Schild auf einmal.
+         */
+        val danach: Wahl? = null
+    ) {
+        /** Song mit dem Schild in [setId], sonst null. */
+        fun danachIn(setId: Long?): Long? = danach?.takeIf { it.setId == setId }?.songId
+    }
+
+    data class Wahl(val setId: Long, val songId: Long)
 
     /** Stand vor dem letzten Antippen, für "Rückgängig". */
-    private class Vorher(val setId: Long, val eintraege: List<show.jangregersen.buehne.daten.Eintrag>, val songId: Long?, val laeuft: Boolean, val songIdDanach: Long?)
+    private class Vorher(val setId: Long, val eintraege: List<show.jangregersen.buehne.daten.Eintrag>, val songId: Long?, val laeuft: Boolean, val songIdDanach: Long?, val danach: Wahl? = null)
     private var vorher: Vorher? = null
     private var rueckJob: Job? = null
 
@@ -218,7 +230,7 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         val b = ablage.jetzt
         val set = b.set(setId) ?: return
         val ende = set.eintraege.firstOrNull { it.songId == songId }?.ende ?: Ende.ANHALTEN
-        val naechster = set.naechsterNach(songId)
+        val naechster = set.naechster(songId, _zustand.value.danachIn(setId))
         if (naechster == null) {
             setFertig(setId)
             return
@@ -319,7 +331,7 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         if (engine.blendetAus) { engine.stop(); _position.value = 0; abspielen(); return }
         if (!engine.hatSpuren) {
             val setId = z.setId ?: return
-            val erster = ablage.jetzt.set(setId)?.ersterOffener() ?: run { hinweis("Alle Songs im Set sind gespielt."); return }
+            val erster = ablage.jetzt.set(setId)?.anfang(z.danachIn(setId)) ?: run { hinweis("Alle Songs im Set sind gespielt."); return }
             ablage.jetzt.song(erster.songId)?.let { laden(it, setId) }
         }
         if (engine.spielt) { engine.pause(); _zustand.update { it.copy(spielt = false) } }
@@ -380,7 +392,7 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
             ablage.aendern { it.eintragAendern(setId, songId) { e -> e.copy(gespielt = true) } }
         }
         if (setDanachBeginnen()) return
-        val naechster = ablage.jetzt.set(setId)?.naechsterNach(songId)
+        val naechster = ablage.jetzt.set(setId)?.naechster(songId, _zustand.value.danachIn(setId))
         if (naechster == null) { setFertig(setId); return }
         ablage.jetzt.song(naechster.songId)?.let { laden(it, setId) }
         _zustand.update { it.copy(spielt = false) }
@@ -446,10 +458,11 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
             pauseJob?.cancel(); engine.notizStoppen()
             _zustand.update { it.copy(pause = null, spielt = false) }
         }
-        _zustand.update { if (it.setId != setId) it.copy(setDurch = null, setDanach = null) else it.copy(setDanach = null) }
+        // Ein Schild in einem anderen Set gilt nicht mehr; eins in diesem Set bestimmt den Anfang (unten).
+        _zustand.update { (if (it.setId != setId) it.copy(setDurch = null, setDanach = null) else it.copy(setDanach = null)).copy(danach = it.danach?.takeIf { d -> d.setId == setId }) }
         val z = _zustand.value
         if (z.spielt) { _zustand.update { it.copy(setId = setId, probe = false) }; return }
-        val erster = ablage.jetzt.set(setId)?.ersterOffener()
+        val erster = ablage.jetzt.set(setId)?.anfang(_zustand.value.danachIn(setId))
         if (erster == null) {
             engine.entladen()
             _zustand.update { it.copy(setId = setId, songId = null, probe = false, dauerMs = 0) }
@@ -459,39 +472,43 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
     }
 
     /**
-     * Jans eine Regel (15.11.): Antippen = kommt als Nächstes dran. Läuft ein Song, kommt der
-     * angetippte danach. In der Pause zwischen zwei Songs ersetzt er den wartenden Song, der
-     * Countdown läuft weiter. Läuft nichts, liegt er sofort bereit. Danach gibt es 8 s lang
-     * "Rückgängig". Ergebnis: Text für Jan, oder null, wenn nichts zu tun war.
+     * Jans eine Regel (15.11.): Antippen = kommt als Nächstes dran. Seit 27.11. (Vergleich mit
+     * StageTraxx, Jans Ja zum Entwurf `entwuerfe/danach`) ohne Umsortieren: Der Song bleibt an
+     * seinem Platz, Jans geplante Reihenfolge bleibt. Läuft ein Song, bekommt der angetippte das
+     * Schild DANACH (ein Schild auf einmal, ein neuer Tipp versetzt es). Läuft nichts, liegt er sofort
+     * bereit; in der Pause zwischen zwei Songs ersetzt er den wartenden, der Countdown läuft weiter.
+     * Danach geht es mit dem ersten offenen Song von oben weiter. Ein Wunschsong aus dem Archiv kommt
+     * ans Ende des Sets. 8 s lang "Rückgängig".
      */
     fun vorziehen(setId: Long, songId: Long) {
         val z = _zustand.value
         if (z.probe) { hinweis("Erst das Probehören beenden."); return }
         if (songId == z.songId && setId == z.setId) return
         val song = ablage.jetzt.song(songId) ?: return
+        val vorEintraege = ablage.jetzt.set(setId)?.eintraege ?: return
+        val neu = vorEintraege.none { it.songId == songId }
+        ablage.aendern { it.einplanen(setId, songId) }
+        val amEnde = if (neu) " steht am Ende und" else ""
         // 21.11.: Antippen in einem ANDEREN Set, während ein Song läuft (Vorschau des Folge-Sets):
-        // Der laufende Song bleibt unberührt. Der angetippte steht dort vorne, das Set beginnt danach.
+        // Der laufende Song bleibt unberührt. Das Set beginnt danach, und zwar mit dem angetippten.
         if (angespielt() && z.setId != null && z.setId != setId && ablage.jetzt.set(z.setId) != null) {
-            val vor = ablage.jetzt.set(setId)?.eintraege ?: return
-            ablage.aendern { it.vorziehen(setId, songId, null, false) }
-            _zustand.update { it.copy(setDanach = setId) }
+            _zustand.update { it.copy(setDanach = setId, danach = Wahl(setId, songId)) }
             val name = ablage.jetzt.set(setId)?.name ?: "Set"
-            merken(Vorher(setId, vor, z.songId, true, z.songId), "Nach diesem Song: „$name“ mit „${song.titel}“.")
+            merken(Vorher(setId, vorEintraege, z.songId, true, z.songId, z.danach), "Nach diesem Song: „$name“ mit „${song.titel}“.")
             return
         }
         val laeuft = angespielt() && z.setId == setId
-        val vorEintraege = ablage.jetzt.set(setId)?.eintraege ?: return
-        ablage.aendern { it.vorziehen(setId, songId, z.songId.takeIf { z.setId == setId }, laeuft) }
         val text: String
         if (laeuft) {
+            _zustand.update { it.copy(danach = Wahl(setId, songId)) }
             z.songId?.let { vorladen(setId, it) }
-            text = "„${song.titel}“ kommt als Nächstes."
+            text = "„${song.titel}“$amEnde kommt als Nächstes."
         } else {
             laden(song, setId)
-            _zustand.update { it.copy(setDurch = null, setDanach = null) }
-            text = if (z.pause != null) "„${song.titel}“ kommt nach der Pause." else "„${song.titel}“ liegt bereit."
+            _zustand.update { it.copy(setDurch = null, setDanach = null, danach = null) }
+            text = if (z.pause != null) "„${song.titel}“$amEnde kommt nach der Pause." else "„${song.titel}“$amEnde liegt bereit."
         }
-        merken(Vorher(setId, vorEintraege, z.songId, laeuft, _zustand.value.songId), text)
+        merken(Vorher(setId, vorEintraege, z.songId, laeuft, _zustand.value.songId, z.danach), text)
     }
 
     /**
@@ -507,7 +524,7 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         ablage.aendern { it.ansEnde(setId, songId) }
         if (z.setId == setId) z.songId?.let { vorladen(setId, it) }
         // laeuft = true: Rückgängig stellt nur die Reihenfolge zurück und lädt den aktuellen Song nicht neu.
-        merken(Vorher(setId, vorEintraege, z.songId, true, z.songId), "„${song.titel}“ steht jetzt am Ende.")
+        merken(Vorher(setId, vorEintraege, z.songId, true, z.songId, z.danach), "„${song.titel}“ steht jetzt am Ende.")
     }
 
     private fun merken(v: Vorher, text: String) {
@@ -527,10 +544,12 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         if (!nochGleich) { hinweis("Geht nicht mehr, der Song hat schon begonnen."); return }
         ablage.aendern { it.setAendern(v.setId) { s -> s.copy(eintraege = v.eintraege) } }
         if (v.laeuft) {
+            _zustand.update { it.copy(danach = v.danach) }
             z.songId?.let { vorladen(v.setId, it) }
         } else {
             val alt = ablage.jetzt.song(v.songId)
             if (alt != null) laden(alt, v.setId) else { engine.entladen(); _position.value = 0; _zustand.update { it.copy(songId = null, dauerMs = 0) } }
+            _zustand.update { it.copy(danach = v.danach) }
         }
         hinweis("Zurückgenommen.")
     }
@@ -624,12 +643,13 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         }
         engine.laden(song.id, spuren, song.mix)
         _position.value = 0
-        _zustand.update { it.copy(songId = song.id, setId = setId ?: it.setId, probe = probe, dauerMs = song.dauerMs, spielt = false) }
+        // Der Song mit dem Schild ist jetzt selbst dran: das Schild hat seine Arbeit getan.
+        _zustand.update { it.copy(songId = song.id, setId = setId ?: it.setId, probe = probe, dauerMs = song.dauerMs, spielt = false, danach = it.danach?.takeIf { d -> d.songId != song.id }) }
         if (!probe && setId != null) vorladen(setId, song.id)
     }
 
     private fun vorladen(setId: Long, songId: Long) {
-        val n = ablage.jetzt.set(setId)?.naechsterNach(songId) ?: return
+        val n = ablage.jetzt.set(setId)?.naechster(songId, _zustand.value.danachIn(setId)) ?: return
         val s = ablage.jetzt.song(n.songId) ?: return
         haupt.launch {
             val spuren = withContext(Dispatchers.IO) { Spuren.finden(app, s.pfad) }
