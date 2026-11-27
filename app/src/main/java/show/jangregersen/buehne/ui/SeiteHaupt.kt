@@ -52,6 +52,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import show.jangregersen.buehne.audio.TonAusgang
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -329,7 +330,10 @@ private fun SetZeile(nr: Int, s: Song, e: Eintrag, art: SetArt, mitAutomatik: Bo
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
                 PassenderTitel(s.titel, { titelStil(it, vorne).knapp() }, 26)
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    T(metaZeile(s), textStil(16.sp, vorne, FontWeight.SemiBold), Modifier.weight(1f, fill = false), zeilen = 1)
+                    // 27.11.: Hat der Song, der jetzt dran ist, eine Notiz, steht sie hier statt Kapo/Tonart/Länge
+                    // (die stehen unten in der Leiste ohnehin).
+                    val notizHier = jetzt && s.notiz.isNotBlank()
+                    T(if (notizHier) s.notiz else metaZeile(s), textStil(16.sp, vorne, if (notizHier) FontWeight.Bold else FontWeight.SemiBold), Modifier.weight(1f, fill = false), zeilen = 1)
                     if (!gespielt) {
                         if (ansage) Symbol(Sym.MIKRO, vorne, 15.dp)
                         if (haeltAn) Schildchen("hält an", vorne) else PausenKaestchen(s, vorne, kompakt = true)
@@ -602,7 +606,16 @@ private fun PlayerLeiste(navi: Navi) {
                 z.probe -> "Probe"
                 else -> (if (z.spielt) "Läuft" else if (angefangen) "Angehalten" else "Bereit") + (platz?.let { " · $it" } ?: "")
             }
-            Etikett(wort, Modifier.weight(1f), Weiss)
+            // 27.11.: Wohin der Ton geht. USB (der Adapter zur PA) steht klein hinter dem Zustand;
+            // alles andere ersetzt ihn als weißes Schild, damit es vor dem Start auffällt.
+            val ton by App.buehne.ausgang.collectAsState()
+            if (song != null && ton.art != TonAusgang.Art.USB) {
+                Box(Modifier.weight(1f)) {
+                    Box(Modifier.clip(RoundedCornerShape(5.dp)).background(Weiss).padding(horizontal = 6.dp).semantics { contentDescription = ton.text }) {
+                        T(ton.text, textStil(14.sp, Schwarz, FontWeight.Bold).knapp(), zeilen = 1, ueberlauf = TextOverflow.Visible)
+                    }
+                }
+            } else Etikett(if (song != null) "$wort · USB" else wort, Modifier.weight(1f), Weiss)
             if (song != null) Etikett(listOf(if (song.kapo > 0) "Kapo ${song.kapo}" else "ohne Kapo", song.tonart.trim()).filter { it.isNotBlank() }.joinToString(" · "), farbe = Weiss)
         }
         // Zeile 2: der jetzige Song groß, rechts seine Restzeit (bzw. Länge, in der Pause der Countdown).

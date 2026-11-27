@@ -925,3 +925,10 @@ Play begann ihn von vorn. StageTraxx blendet aus und kennt Doppeltipp-Schutz.
   (dicker Rahmen, ein Schild pro Set, neuer Tipp versetzt es, 8 s Rückgängig). Nach ihm geht es mit dem
   ersten offenen Song von oben weiter (der Plan). Wunschsong aus dem Archiv kommt ans Ende mit Schild.
   Wischen links „ans Ende“ bleibt (einziges Umstellen). Set ist nach dem Gig wie geplant. Jans Urteil offen.
+- [x] K7 Fassung 16 (27.11., gebaut, Tests grün, NICHT installiert): Stopp nach mehr als der Hälfte = Song
+  beendet (3 s Ausblenden, Haken, nächster liegt bereit, `songBeendet`), davor wie bisher; Anzeige, wohin
+  der Ton geht (`audio/TonAusgang.kt`, Leiste: „BEREIT · 1/3 · USB“ bzw. weißes Schild „TON: BLUETOOTH“);
+  Notiz pro Song (`Song.notiz`, nur am Mudita in den Song-Einstellungen, steht in der Jetzt-Zeile statt
+  Kapo/Tonart/Länge und unter Kapo/Tonart in Textansicht und Pause). Werkstatt zeigt die Notiz nicht,
+  lässt sie aber stehen (Test `notizVomMuditaUeberstehtSendenVomLaptop`). testlauf.sh nicht angepasst
+  (Jan: „ändere nichts“): Schritt 2b kann jetzt den Haken-Fall treffen.

@@ -61,7 +61,7 @@ object BestandJson {
         put("markenVorlaeufig", s.markenVorlaeufig); put("zeilenZeiten", s.zeilenZeiten); put("originalMs", s.originalMs)
         put("ansageVorher", s.ansageVorher); put("ansageVorherMs", s.ansageVorherMs)
         put("ansageNachher", s.ansageNachher); put("ansageNachherMs", s.ansageNachherMs)
-        put("pauseSek", s.pauseSek)
+        put("pauseSek", s.pauseSek); put("notiz", s.notiz)
         put("mix", JSONObject().apply { s.mix.forEach { (k, v) -> put(k, v) } })
     }
 
@@ -79,7 +79,7 @@ object BestandJson {
             markenVorlaeufig = o.optBoolean("markenVorlaeufig"), zeilenZeiten = o.optString("zeilenZeiten"), originalMs = o.optLong("originalMs"),
             ansageVorher = o.optString("ansageVorher"), ansageVorherMs = o.optLong("ansageVorherMs"),
             ansageNachher = o.optString("ansageNachher"), ansageNachherMs = o.optLong("ansageNachherMs"),
-            pauseSek = o.optInt("pauseSek"), mix = mix
+            pauseSek = o.optInt("pauseSek"), mix = mix, notiz = o.optString("notiz")
         )
     }
 

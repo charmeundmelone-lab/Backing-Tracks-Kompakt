@@ -20,6 +20,9 @@ object Stille {
 
     val an: Boolean get() = spur != null
 
+    /** Gerät, an das Android die stille Spur leitet (für [TonAusgang], wenn kein Song geladen ist). */
+    val geroutet: android.media.AudioDeviceInfo? get() = runCatching { spur?.routedDevice }.getOrNull()
+
     fun an() {
         if (spur != null) return
         runCatching {

@@ -526,11 +526,20 @@ private fun AnsageAnsicht(navi: Navi, pause: show.jangregersen.buehne.spiel.Bueh
  */
 @Composable
 fun KapoTonart(song: Song, groesse: TextUnit = 44.sp, innen: Dp = 12.dp, modifier: Modifier = Modifier) {
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        listOf("Kapo" to (if (song.kapo > 0) "${song.kapo}" else "ohne"), "Tonart" to song.tonart.ifBlank { "–" }).forEach { (et, wert) ->
-            Column(Modifier.weight(1f).border(2.5.dp, Schwarz, RoundedCornerShape(14.dp)).padding(horizontal = innen, vertical = innen * 0.6f)) {
-                Etikett(et)
-                T(wert, titelStil(groesse).copy(lineHeight = groesse * 1.02f), zeilen = 1)
+    Column(modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            listOf("Kapo" to (if (song.kapo > 0) "${song.kapo}" else "ohne"), "Tonart" to song.tonart.ifBlank { "–" }).forEach { (et, wert) ->
+                Column(Modifier.weight(1f).border(2.5.dp, Schwarz, RoundedCornerShape(14.dp)).padding(horizontal = innen, vertical = innen * 0.6f)) {
+                    Etikett(et)
+                    T(wert, titelStil(groesse).copy(lineHeight = groesse * 1.02f), zeilen = 1)
+                }
+            }
+        }
+        // 27.11.: Notiz für die Bühne (Song-Einstellungen), groß und fett direkt unter Kapo und Tonart.
+        if (song.notiz.isNotBlank()) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                Etikett("Notiz")
+                T(song.notiz, textStil(if (groesse.value >= 40f) 26.sp else 22.sp, Schwarz, FontWeight.Bold), Modifier.weight(1f), zeilen = 2)
             }
         }
     }

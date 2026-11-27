@@ -86,6 +86,9 @@ class Mischpult(context: Context, private val quellen: List<Quelle>, val pegel: 
         }
     }
 
+    /** Gerät, an das Android diese Tonausgabe gerade leitet (USB-Adapter, Bluetooth, Lautsprecher …). */
+    val geroutet: android.media.AudioDeviceInfo? get() = runCatching { track.routedDevice }.getOrNull()
+
     /** Lautstärke dieser Tonausgabe, 0..1 (Ausblenden beim Stopp, 27.11.). Wirkt sofort, auch auf schon gepufferten Ton. */
     fun lautstaerke(v: Float) { runCatching { track.setVolume(v.coerceIn(0f, 1f)) } }
 

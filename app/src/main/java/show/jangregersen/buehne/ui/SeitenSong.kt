@@ -70,6 +70,9 @@ import java.text.Normalizer
 
 private fun songAendern(id: Long, f: (Song) -> Song) = App.ablage.aendern { it.songAendern(id, f) }
 
+/** Längste Notiz pro Song (27.11.): soll in einer, höchstens zwei Bühnenzeilen Platz haben. */
+private const val NOTIZ_MAX = 60
+
 // ── Song-Karte im Set ────────────────────────────────────────────────────────
 
 @Composable
@@ -125,6 +128,17 @@ fun SongKarteSeite(navi: Navi, setId: Long, songId: Long) {
                 T("Am\nEnde", etikettStil(), Modifier.width(76.dp), zeilen = 2)
                 Segmente(listOf("Weiter", "Anhalten"), if (e.ende == Ende.ANHALTEN) 1 else 0, Modifier.weight(1f), hoehe = 50.dp) { i ->
                     App.ablage.aendern { it.eintragAendern(setId, songId) { x -> x.copy(ende = if (i == 1) Ende.ANHALTEN else Ende.WEITER) } }
+                }
+            }
+            // 27.11. (aus dem StageTraxx-Vergleich, Jans Ja): kurze Notiz für die Bühne, steht dann in
+            // der „Jetzt dran“-Zeile, vor dem Start in der Textansicht und in der Pause davor.
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                T("Notiz", etikettStil(), Modifier.width(64.dp), zeilen = 1)
+                TextKnopf(song.notiz.ifBlank { "Notiz schreiben" }, Modifier.weight(1f), if (song.notiz.isBlank()) Art.GESTRICHELT else Art.UMRISS, 50.dp, 17.sp) {
+                    navi.zu(Seite.Eingabe("Notiz für „${song.titel}“", song.notiz, hinweis = "Kurz, z. B. „Drop D“ oder „Einsatz nach 2 Takten“. Leer = keine Notiz.") { t ->
+                        songAendern(songId) { it.copy(notiz = t.trim().take(NOTIZ_MAX)) }
+                        navi.zurueck()
+                    })
                 }
             }
         }

@@ -16,6 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import show.jangregersen.buehne.audio.AUSBLENDEN_ENDE_MS
+import show.jangregersen.buehne.audio.TonAusgang
 import show.jangregersen.buehne.audio.Engine
 import show.jangregersen.buehne.audio.Spuren
 import show.jangregersen.buehne.audio.Stille
@@ -117,6 +119,10 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
     private var pauseJob: Job? = null
     private var hinweisJob: Job? = null
     private var scharfJob: Job? = null
+
+    /** Wohin der Ton gerade geht (27.11.), jede Sekunde im Takt geprüft. */
+    private val _ausgang = MutableStateFlow(TonAusgang.Stand(TonAusgang.Art.LAUTSPRECHER, ""))
+    val ausgang: StateFlow<TonAusgang.Stand> = _ausgang.asStateFlow()
     private var endeBehandelt = false
     /** Song, der vor dem Probehören bereitlag. */
     private var vorProbe: Long? = null
@@ -183,6 +189,8 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
     private fun takt() {
         val z = _zustand.value
         showPruefen(z)
+        runCatching { TonAusgang.bestimmen(app, engine.geroutet ?: Stille.geroutet) }.getOrNull()
+            ?.let { if (it != _ausgang.value) _ausgang.value = it }
         // Stopp „scharf“ gilt nur, solange der Song läuft (Songende, Pause-Knopf usw. nehmen es zurück).
         if (z.stoppScharf && !z.spielt) { scharfJob?.cancel(); _zustand.update { it.copy(stoppScharf = false) } }
         if (z.setId != null && z.setId != gemerktesSet && !z.probe) {
@@ -360,7 +368,12 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
      */
     fun stoppTipp(): Boolean {
         val z = _zustand.value
-        if (z.pause != null || z.probe || !z.spielt) { stopp(); return true }
+        if (z.pause != null || z.probe) { stopp(); return true }
+        // 27.11. (aus dem StageTraxx-Vergleich, Jans Ja): Nach mehr als der Hälfte beendet Jan den
+        // Song absichtlich (z. B. Outro abgekürzt). Dann blendet er langsam aus, bekommt den Haken,
+        // und der nächste Song liegt bereit. Vorher (Fehlstart) kurz ausblenden, zurück an den Anfang.
+        val beendet = z.setId != null && z.songId != null && engine.dauerMs > 0 && engine.positionMs * 2 >= engine.dauerMs
+        if (!z.spielt) { if (beendet && angespielt()) songBeendet() else stopp(); return true }
         scharfJob?.cancel()
         if (!z.stoppScharf) {
             _zustand.update { it.copy(stoppScharf = true) }
@@ -370,8 +383,22 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
         val songId = z.songId
         // spielt = false sofort: Läuft der Song während des Ausblendens zu Ende, zählt das nicht als Songende.
         _zustand.update { it.copy(stoppScharf = false, spielt = false) }
-        engine.ausblendenUndStoppen { if (_zustand.value.songId == songId && !_zustand.value.spielt) _position.value = 0 }
+        val nochGleich = { _zustand.value.songId == songId && !_zustand.value.spielt }
+        if (beendet) engine.ausblendenUndStoppen(AUSBLENDEN_ENDE_MS) { if (nochGleich()) songBeendet() }
+        else engine.ausblendenUndStoppen { if (nochGleich()) _position.value = 0 }
         return true
+    }
+
+    /** Jan hat den Song absichtlich beendet: Haken, der nächste Song liegt bereit, nichts startet von selbst. */
+    private fun songBeendet() {
+        val z = _zustand.value
+        val titel = ablage.jetzt.song(z.songId)?.titel ?: return
+        val setId = z.setId ?: return
+        // Beginnt danach ein anderes Set oder ist das Set zu Ende, sagt das weiter() selbst.
+        val eigenerHinweis = z.setDanach == null && ablage.jetzt.set(setId)?.naechster(z.songId, z.danachIn(setId)) != null
+        weiter("gestoppt")
+        val kommt = ablage.jetzt.song(_zustand.value.songId)?.titel
+        if (eigenerHinweis && kommt != null) hinweis("„$titel“ beendet. „$kommt“ liegt bereit.")
     }
 
     /** Pause/Ansage abbrechen und den nächsten Song sofort starten. */
@@ -382,13 +409,13 @@ class Buehne(private val app: Application, private val ablage: Ablage) {
     }
 
     /** Nächsten Song bereitlegen (laufender gilt als gespielt). Auf der Bühne: "Überspringen". */
-    fun weiter() {
+    fun weiter(art: String = "übersprungen") {
         val z = _zustand.value
         if (z.pause != null) { pauseUeberspringen(); return }
         val setId = z.setId ?: return
         val songId = z.songId
         if (songId != null) {
-            protokoll("übersprungen", songId, setId, null)
+            protokoll(art, songId, setId, if (art == "übersprungen") null else engine.positionMs)
             ablage.aendern { it.eintragAendern(setId, songId) { e -> e.copy(gespielt = true) } }
         }
         if (setDanachBeginnen()) return

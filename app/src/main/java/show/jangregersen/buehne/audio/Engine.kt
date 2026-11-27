@@ -9,8 +9,10 @@ import kotlin.math.pow
 
 private const val TAG = "Engine"
 
-/** So lange blendet Stopp einen laufenden Song aus. */
+/** So lange blendet Stopp einen laufenden Song aus (Fehlstart, vor der Hälfte). */
 const val AUSBLENDEN_MS = 1500L
+/** So lange blendet Stopp aus, wenn Jan den Song absichtlich beendet (nach der Hälfte), wie ein Fade-out. */
+const val AUSBLENDEN_ENDE_MS = 3000L
 private const val AUSBLENDEN_TAKT_MS = 40L
 
 /**
@@ -38,6 +40,8 @@ class Engine(private val context: Context) {
     val positionMs: Long get() = pult?.let { p -> p.positionFrames * 1000 / p.rate }.also { fehlerPruefen() } ?: 0L
     val dauerMs: Long get() = pult?.let { p -> if (p.frames > 0) p.frames * 1000 / p.rate else 0L } ?: 0L
     val istZuEnde: Boolean get() = pult?.zuEnde == true
+    /** Wohin Android den geladenen Song leitet (null = nichts geladen). */
+    val geroutet: android.media.AudioDeviceInfo? get() = pult?.geroutet
 
     // ── Laden ────────────────────────────────────────────────────────────────
 

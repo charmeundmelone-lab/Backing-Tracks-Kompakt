@@ -47,6 +47,20 @@ class WerkstattTest {
         assertEquals(3, b.bestand.song(3)!!.kapo)
     }
 
+    /** 27.11.: Die Bühnen-Notiz wird nur am Mudita eingetragen. Sie übersteht Speichern/Laden und das Senden vom Laptop. */
+    @Test fun notizVomMuditaUeberstehtSendenVomLaptop() {
+        val start = Song(7, "Jolene", pfad = "p", lyrics = "[Strophe 1]\nalt", notiz = "Drop D")
+        assertEquals("Drop D", BestandJson.ausJson(JSONObject(muditaJson(start))).song(7)!!.notiz)
+        val a = Arbeit(kotlin.io.path.createTempDirectory("arbeit").toFile())
+        a.vomGeraet(muditaJson(start))
+        a.aendern(7) { it.copy(lyrics = "[Strophe 1]\nneu") }
+        val laptop = BestandJson.eingangAus(JSONObject(a.zumSenden())).single()
+        // Inzwischen hat Jan die Notiz am Mudita geändert: die vom Mudita gilt.
+        val aufDemMudita = Abgleich.textUndTeile(start.copy(notiz = "Einsatz nach 2 Takten"), laptop)
+        assertEquals("Einsatz nach 2 Takten", aufDemMudita.notiz)
+        assertEquals("[Strophe 1]\nneu", aufDemMudita.lyrics)
+    }
+
     @Test fun amLaptopGeaenderterKapoGehtZumMudita() {
         val a = Arbeit(kotlin.io.path.createTempDirectory("arbeit").toFile())
         val start = Song(5, "Riptide", pfad = "p", kapo = 0, bpm = 100)

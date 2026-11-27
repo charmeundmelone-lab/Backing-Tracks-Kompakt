@@ -49,7 +49,9 @@ data class Song(
     /** Stille Pause nach diesem Song in Sekunden (nur wenn keine Ansage da ist). */
     val pauseSek: Int = 0,
     /** Mixer: Spurname -> Stufe 0..10, negativ = stumm (Betrag = Stufe vor dem Stummschalten). */
-    val mix: Map<String, Int> = emptyMap()
+    val mix: Map<String, Int> = emptyMap(),
+    /** Kurze Notiz für die Bühne (27.11.), z. B. „Drop D“ oder „Einsatz nach 2 Takten“. Nur am Mudita einzutragen. */
+    val notiz: String = ""
 )
 
 /**
